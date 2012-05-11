@@ -10,7 +10,8 @@ typedef enum
 	LEVEL_CRIT,
 	LEVEL_WARN,
 	LEVEL_INFO,
-	LEVEL_DEBUG
+	LEVEL_DEBUG,
+	LEVE_NBT_DEBUG
 } bedrock_log_level;
 
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);

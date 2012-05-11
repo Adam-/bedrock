@@ -1,5 +1,5 @@
 
-typedef enum
+enum
 {
 	TAG_END,
 	TAG_BYTE,
@@ -13,4 +13,4 @@ typedef enum
 	TAG_LIST,
 	TAG_COMPOUND,
 	TAG_INT_ARRAY
-} nbt_tag;
+};
