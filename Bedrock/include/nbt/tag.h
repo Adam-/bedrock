@@ -1,4 +1,9 @@
+#ifndef BEDROCK_NBT_TAG_H
+#define BEDROCK_NBT_TAG_H
+
 #include "util/list.h"
+
+#include <stdint.h>
 
 enum
 {
@@ -49,3 +54,5 @@ typedef struct _nbt_tag
 	payload;
 
 } nbt_tag;
+
+#endif // BEDROCK_NBT_TAG_H

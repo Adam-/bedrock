@@ -1,11 +1,7 @@
 #include "server/bedrock.h"
 #include "nbt/nbt.h"
 #include "util/memory.h"
-
-uint16_t endian_test_i = 0x0001;
-char *endian_test_c = (char *) &endian_test_i;
-
-#define IS_LITTLE_ENDIAN *endian_test_c == 0x01
+#include "util/endian.h"
 
 static bool read_bytes(unsigned char *dest, size_t dst_size, const unsigned char **src, size_t *src_size, bool swap)
 {
@@ -20,18 +16,8 @@ static bool read_bytes(unsigned char *dest, size_t dst_size, const unsigned char
 	*src += dst_size;
 	*src_size -= dst_size;
 
-	if (swap && IS_LITTLE_ENDIAN)
-	{
-		unsigned char *s = dest, *e = dest + dst_size - 1;
-
-		for (; s < e; ++s, --e)
-		{
-			unsigned char t = *s;
-
-			*s = *e;
-			*e = t;
-		}
-	}
+	if (swap)
+		convert_from_big_endian(dest, dst_size);
 
 	return true;
 }

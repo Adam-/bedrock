@@ -10,6 +10,8 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 	compression_buffer *buf;
 	int i;
 
+	bedrock_assert_ret(len > 0, NULL);
+
 	z_stream stream = {
 			.zalloc = Z_NULL,
 			.zfree = Z_NULL,

@@ -1,3 +1,6 @@
+#ifndef BEDROCK_UTIL_LIST_H
+#define BEDROCK_UTIL_LIST_H
+
 #include "util.h"
 
 typedef struct _bedrock_node
@@ -35,4 +38,6 @@ extern void *bedrock_list_del_node(bedrock_list *list, bedrock_node *node);
 extern bool bedrock_list_has_data(bedrock_list *list, const void *data);
 
 extern void bedrock_list_clear(bedrock_list *t);
+
+#endif // BEDROCK_UTIL_LIST_H
 
