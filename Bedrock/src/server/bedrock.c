@@ -16,11 +16,11 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 
 bool bedrock_running = true;
 
-#include "server/region.h"
+#include "server/world.h"
 
 int main(int argc, char **argv)
 {
-	bedrock_region *region = bedrock_region_create("/home/adam/cNBT/r.0.0.mca", 0, 0);
+	/*bedrock_region *region = bedrock_region_create("/home/adam/cNBT/r.0.0.mca", 0, 0);
 	bedrock_node *n;
 
 	bedrock_region_load(region);
@@ -33,8 +33,18 @@ int main(int argc, char **argv)
 		nbt_ascii_dump(tag);
 	}
 
-	bedrock_region_free(region);
+	bedrock_region_free(region);*/
+	bedrock_world *world = bedrock_world_create("world", "/home/adam/cNBT");
+	assert(world);
+
+	bedrock_world_load(world);
+	assert(world->data);
+	nbt_ascii_dump(world->data);
+
+	bedrock_world_free(world);
 	printf("Done!\n");
+
+
 
 	/*bedrock_io_init();
 	init_listener();

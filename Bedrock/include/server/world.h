@@ -1,4 +1,5 @@
 #include "util/list.h"
+#include "nbt/tag.h"
 
 #include <limits.h>
 
@@ -6,6 +7,7 @@ typedef struct
 {
 	char name[128];
 	char path[PATH_MAX];
+	nbt_tag *data;
 	bedrock_list regions;
 } bedrock_world;
 

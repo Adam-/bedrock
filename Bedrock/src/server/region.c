@@ -99,14 +99,12 @@ void bedrock_region_load(bedrock_region *region)
 		}
 
 		tag = nbt_parse(cb->data, cb->length);
+		compression_free_buffer(cb);
 		if (tag == NULL)
 		{
 			bedrock_log(LEVEL_CRIT, "region: Unable to NBT parse region at offset %d in %s", offset, region->path);
-			compression_free_buffer(cb);
 			continue;
 		}
-
-		compression_free_buffer(cb);
 
 		bedrock_list_add(&region->columns, tag);
 		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded region at offset %d in %s", offset, region->path);
