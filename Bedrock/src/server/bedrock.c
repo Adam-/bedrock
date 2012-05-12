@@ -23,6 +23,7 @@ bool bedrock_running = true;
 #include <errno.h>
 #include <fcntl.h>
 //#include "util/list.h"
+#include "compression/compression.h"
 
 static void dump_tag(nbt_tag *t)
 {
@@ -104,19 +105,21 @@ static void dump_tag(nbt_tag *t)
 int main(int argc, char **argv)
 {
 	struct stat sb;
-	int fd = open("/home/adam/cNBT/level", O_RDONLY);
+	int fd = open("/home/adam/cNBT/level.dat", O_RDONLY);
 	assert(fd >= 0);
 	assert(fstat(fd, &sb) == 0);
 	char *p = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	assert(p != MAP_FAILED);
 	close(fd);
 
-	int i;
-	for (i = 0; i < 10; ++i)
-		printf("%d\n", p[i]);
-	nbt_tag *t = nbt_parse(p, sb.st_size);
+	compression_buffer *cb = compression_decompress(p, sb.st_size);
+	munmap(p, sb.st_size);
+
+	assert(cb);
+	nbt_tag *t = nbt_parse(cb->data, cb->length);
 	assert(t);
 	dump_tag(t);
+	compression_free_buffer(cb);
 	printf("DONE\n");
 
 	/*bedrock_io_init();
