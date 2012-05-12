@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "compression/compression.h"
+#include "util/util.h"
 #include <zlib.h>
 
 #define CHUNK_SIZE 4096
@@ -31,11 +32,13 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 
 	do
 	{
-		if (buf->capacity - buf->length < CHUNK_SIZE)
+		while (buf->capacity - buf->length < CHUNK_SIZE)
 		{
 			buf->capacity *= 2;
 			buf->data = bedrock_realloc(buf->data, buf->capacity);
 		}
+
+		bedrock_assert_do(buf->capacity - buf->length >= CHUNK_SIZE, break);
 
 		stream.next_out = buf->data + buf->length;
 		stream.avail_out = CHUNK_SIZE;

@@ -48,6 +48,9 @@ int main(int argc, char **argv)
 		copy = copy << 24 | (copy & 0xFF00) << 8 | (copy & 0xFF0000) >> 8 | copy >> 24;
 		//rintf("%d\n", copy);
 
+		if (copy == 0)
+			continue;
+
 //		printf("used %d, offset * 4096 %d\n", copy & 0xFF, copy >> 8);
 		char *p2 = p + ((copy >> 8) * 4096);
 		int *ptr2 = p2;
@@ -57,14 +60,18 @@ int main(int argc, char **argv)
 
 		char type = *p2++;
 
-		printf("TYPE: %d, len %d\n", type, len);
+		//printf("TYPE: %d, len %d\n", type, len);
 		compression_buffer *cb = compression_decompress(p2, len);
+		assert(cb);
 
 		nbt_tag *t = nbt_parse(cb->data, cb->length);
+		compression_free_buffer(cb);
+		//compression_free_buffer(cb);
 		assert(t);
-		nbt_ascii_dump(t);
+		//nbt_ascii_dump(t);
+		nbt_free(t);
 
-		exit(0);
+		//exit(0);
 	}
 
 	//for (moo = 0; moo < 1024; ++moo, ++ptr); // modified?

@@ -13,6 +13,7 @@ typedef enum bool_ { false, true } bool;
 #ifndef DEBUG
 # define bedrock_assert(var)
 # define bedrock_assert_ret(var, ret)
+# define bedrock_assert_do(var, what)
 #else
 # define bedrock_assert(var) \
 	if (!(var)) \
@@ -25,6 +26,12 @@ typedef enum bool_ { false, true } bool;
 	{ \
 		printf("Debug assertion failed: %s:%d\n", __FILE__, __LINE__); \
 		return (ret); \
+	}
+# define bedrock_assert_do(var, what) \
+	if (!(var)) \
+	{ \
+		printf("Debug assertion failed: %s:%d\n", __FILE__, __LINE__); \
+		what; \
 	}
 #endif
 
