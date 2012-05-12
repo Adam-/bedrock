@@ -123,7 +123,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 				if (nested_tag == NULL)
 					break;
 
-				bedrock_log(LEVE_NBT_DEBUG, "nbt: Read compound tag in '%s', named '%s'", tag->name, nested_tag->name);
+				bedrock_log(LEVE_NBT_DEBUG, "nbt: Read compound tag in '%s', named '%s'", tag->name ? tag->name : "(unknown)", nested_tag->name);
 				bedrock_list_add(&tag->payload.tag_compound, nested_tag);
 			}
 

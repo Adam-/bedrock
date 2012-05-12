@@ -45,21 +45,21 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 		{
 			bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
 			compression_free_buffer(buf);
-			return;
+			return NULL;
 		}
 
 		buf->length += CHUNK_SIZE - stream.avail_out;
 	}
-	while (stream.avail_out == 0);
+	while (i == Z_OK);
+
+	inflateEnd(&stream);
 
 	if (i != Z_STREAM_END)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: EOF reached but not end of stream?");
 		compression_free_buffer(buf);
-		return;
+		return NULL;
 	}
-
-	inflateEnd(&stream);
 
 	return buf;
 }
