@@ -215,3 +215,101 @@ void nbt_free(nbt_tag *tag)
 	bedrock_free(tag);
 }
 
+static void recursive_dump_tag(nbt_tag *t, int level)
+{
+	int r;
+	for (r = 0; r < level; ++r)
+		printf("	");
+
+	const char *name = t->name ? t->name : "";
+
+	switch (t->type)
+	{
+		case TAG_END:
+			break;
+		case TAG_BYTE:
+			printf("TAG_Byte(%s): %d\n", name, t->payload.tag_byte);
+			break;
+		case TAG_SHORT:
+			printf("TAG_Short(%s): %d\n", name, t->payload.tag_short);
+			break;
+		case TAG_INT:
+			printf("TAG_Int(%s): %d\n", name, t->payload.tag_int);
+			break;
+		case TAG_LONG:
+			printf("TAG_Long(%s): %ld\n", name, t->payload.tag_long);
+			break;
+		case TAG_FLOAT:
+			printf("TAG_Float(%s): %f\n", name, t->payload.tag_float);
+			break;
+		case TAG_DOUBLE:
+			printf("TAG_Double(%s): %f\n", name, t->payload.tag_double);
+			break;
+		case TAG_BYTE_ARRAY:
+		{
+			struct nbt_tag_byte_array *tba = &t->payload.tag_byte_array;
+			printf("TAG_ByteArray(%s): length %d\n", name, tba->length);
+			break;
+		}
+		case TAG_STRING:
+		{
+			printf("TAG_String(%s): %s\n", name, t->payload.tag_string);
+			break;
+		}
+		case TAG_LIST:
+		{
+			printf("TAG_List(%s): length %d\n", name, t->payload.tag_list.count);
+			for (r = 0; r < level; ++r)
+				printf("	");
+			printf("{\n");
+
+			bedrock_node *n;
+			LIST_FOREACH(&t->payload.tag_list, n)
+			{
+				nbt_tag *t2 = n->data;
+				recursive_dump_tag(t2, level + 1);
+			}
+
+			for (r = 0; r < level; ++r)
+				printf("	");
+			printf("}\n");
+			break;
+		}
+		case TAG_COMPOUND:
+		{
+			printf("TAG_Compound(%s): length %ld\n", name, t->payload.tag_list.count);
+			for (r = 0; r < level; ++r)
+				printf("	");
+			printf("{\n");
+
+			bedrock_node *n;
+			LIST_FOREACH(&t->payload.tag_list, n)
+			{
+				nbt_tag *t2 = n->data;
+				recursive_dump_tag(t2, level + 1);
+			}
+
+			for (r = 0; r < level; ++r)
+				printf("	");
+			printf("}\n");
+			break;
+		}
+		case TAG_INT_ARRAY:
+		{
+			struct nbt_tag_int_array *tia = &t->payload.tag_int_array;
+			printf("TAG_IntArray(%s): length: %d\n", name, tia->length);
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+void nbt_ascii_dump(nbt_tag *tag)
+{
+	printf("Dumping NBT...\n");
+	recursive_dump_tag(tag, 0);
+	printf("Done!\n");
+}
+
+
