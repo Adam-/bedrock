@@ -26,24 +26,30 @@ void bedrock_io_shutdown()
 
 void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 {
-	struct epoll_event event;
-
-	event.data.fd = fd->fd;
-	event.events = fd->ops;
+	unsigned int ops = fd->ops;
 
 	if (remove & OP_READ)
-		event.events &= ~EPOLLIN;
-	 if (remove & OP_WRITE)
-		event.events &= ~EPOLLOUT;
+		ops &= ~OP_READ;
+	if (remove & OP_WRITE)
+		ops &= ~OP_WRITE;
 
 	if (add & OP_READ)
-		event.events |= EPOLLIN;
+		ops |= OP_READ;
 	if (add & OP_WRITE)
-		event.events |= EPOLLOUT;
+		ops |= OP_WRITE;
 
-	if (event.events != fd->ops)
+	if (ops != fd->ops)
 	{
+		struct epoll_event event;
 		int op;
+
+		event.data.fd = fd->fd;
+		event.events = 0;
+
+		if (ops & OP_READ)
+			event.events |= EPOLLIN;
+		if (ops & OP_WRITE)
+			event.events |= EPOLLOUT;
 
 		if (fd->ops == 0)
 			op = EPOLL_CTL_ADD;
@@ -58,7 +64,7 @@ void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 			abort();
 		}
 
-		fd->ops = event.events;
+		fd->ops = ops;
 	}
 }
 

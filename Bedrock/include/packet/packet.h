@@ -6,4 +6,6 @@ enum
 	LOGIN_REQUEST = 0x01
 };
 
-extern int parse_incoming_packet(bedrock_client *client, const unsigned char *buffer, size_t len);
+extern int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len);
+
+extern int packet_read_int(const unsigned char *buffer, size_t offset, void *dest, size_t dest_size);

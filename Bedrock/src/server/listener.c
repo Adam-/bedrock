@@ -36,8 +36,8 @@ static void accept_client(bedrock_fd *fd, void *unused)
 
 	memcpy(&client->fd.addr, &addr, addrlen);
 
-	client->fd.read_handler = bedrock_client_read;
-	client->fd.write_handler = bedrock_client_write;
+	client->fd.read_handler = bedrock_client_event_read;
+	client->fd.write_handler = bedrock_client_event_write;
 
 	client->fd.read_data = client;
 	client->fd.write_data = client;
