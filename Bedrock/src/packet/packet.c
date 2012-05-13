@@ -85,7 +85,7 @@ void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *of
 	}
 
 	memcpy(dest, buffer + *offset, dest_size);
-	convert_from_big_endian(dest, dest_size);
+	convert_endianness(dest, dest_size);
 	*offset += dest_size;
 }
 

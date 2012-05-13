@@ -7,7 +7,7 @@ static char *endian_test_c = (char *) &endian_test_i;
 
 #define IS_LITTLE_ENDIAN *endian_test_c == 0x01
 
-void convert_from_big_endian(unsigned char *data, size_t size)
+void convert_endianness(unsigned char *data, size_t size)
 {
 	unsigned char *s = data, *e = data + size - 1;
 

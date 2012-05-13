@@ -150,7 +150,8 @@ void client_send(bedrock_client *client, void *data, size_t size)
 		return;
 	}
 
-	memcpy(client->out_buffer, data, size);
+	memcpy(client->out_buffer + client->out_buffer_len, data, size);
+	convert_endianness(client->out_buffer + client->out_buffer_len, size);
 	client->out_buffer_len += size;
 
 	bedrock_assert(client->out_buffer_len <= sizeof(client->out_buffer));

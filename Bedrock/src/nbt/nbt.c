@@ -17,7 +17,7 @@ static bool read_bytes(unsigned char *dest, size_t dst_size, const unsigned char
 	*src_size -= dst_size;
 
 	if (swap)
-		convert_from_big_endian(dest, dst_size);
+		convert_endianness(dest, dst_size);
 
 	return true;
 }

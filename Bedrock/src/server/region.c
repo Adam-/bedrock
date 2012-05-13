@@ -66,7 +66,7 @@ void region_load(bedrock_region *region)
 		nbt_tag *tag;
 
 		memcpy(&offset, f, sizeof(offset));
-		convert_from_big_endian(&offset, sizeof(offset));
+		convert_endianness(&offset, sizeof(offset));
 
 		if (offset == 0)
 			continue;
@@ -85,7 +85,7 @@ void region_load(bedrock_region *region)
 		f_offset = file_base + (offset * REGION_SECTOR_SIZE);
 
 		memcpy(&length, f_offset, sizeof(length));
-		convert_from_big_endian(&length, sizeof(length));
+		convert_endianness(&length, sizeof(length));
 		f_offset += sizeof(length);
 
 		f_offset++;
