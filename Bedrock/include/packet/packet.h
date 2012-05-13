@@ -2,14 +2,10 @@
 
 enum
 {
-	KEEP_ALIVE    = 0x00,
-	LOGIN_REQUEST = 0x01,
-	HANDSHAKE     = 0x02
-};
-
-enum
-{
-	ALLOW_UNAUTHED = 1 << 0
+	KEEP_ALIVE      = 0x00,
+	LOGIN_REQUEST   = 0x01,
+	HANDSHAKE       = 0x02,
+	PLAYER_POS_LOOK = 0x0D,
 };
 
 enum

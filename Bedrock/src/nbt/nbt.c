@@ -201,6 +201,74 @@ void nbt_free(nbt_tag *tag)
 	bedrock_free(tag);
 }
 
+static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
+{
+	size_t i;
+	nbt_tag *t = tag;
+
+	bedrock_assert_ret(tag != NULL, NULL);
+
+	for (i = 0; i < size; ++i)
+	{
+		const char *name = va_arg(list, const char *);
+		bedrock_node *n;
+
+		bedrock_assert_ret(t->type == TAG_LIST || t->type == TAG_COMPOUND, NULL);
+
+		/* List and compound are union'd to be the same */
+		LIST_FOREACH(&t->payload.tag_list, n)
+		{
+			nbt_tag *t2 = n->data;
+
+			if (!strcmp(t2->name, name))
+			{
+				t = t2;
+				break;
+			}
+		}
+	}
+
+	return t;
+}
+
+nbt_tag *nbt_get(nbt_tag *tag, size_t size, ...)
+{
+	va_list list;
+	va_start(list, size);
+
+	tag = nbt_get_from_valist(tag, size, list);
+
+	va_end(list);
+
+	return tag;
+}
+
+const void *nbt_read_int(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
+{
+	va_list list;
+	va_start(list, size);
+
+	tag = nbt_get_from_valist(tag, size, list);
+	bedrock_assert_ret(tag->type == type, NULL);
+
+	va_end(list);
+
+	return &tag->payload;
+}
+
+const char *nbt_read_string(nbt_tag *tag, size_t size, ...)
+{
+	va_list list;
+	va_start(list, size);
+
+	tag = nbt_get_from_valist(tag, size, list);
+	bedrock_assert_ret(tag->type == TAG_STRING, NULL);
+
+	va_end(list);
+
+	return tag->payload.tag_string;
+}
+
 static void recursive_dump_tag(nbt_tag *t, int level)
 {
 	int r;

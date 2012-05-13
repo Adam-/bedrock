@@ -11,9 +11,15 @@
 typedef enum bool_ { false, true } bool;
 
 #ifndef DEBUG
-# define bedrock_assert(var)
-# define bedrock_assert_ret(var, ret)
-# define bedrock_assert_do(var, what)
+# define bedrock_assert(var) \
+	if (!(var)) \
+		return;
+# define bedrock_assert_ret(var, ret) \
+	if (!(var)) \
+		return (ret);
+# define bedrock_assert_do(var, what) \
+	if (!(var)) \
+		what;
 #else
 # define bedrock_assert(var) \
 	if (!(var)) \

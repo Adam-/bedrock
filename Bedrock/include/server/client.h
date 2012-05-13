@@ -8,10 +8,11 @@
 
 typedef enum
 {
-	STATE_UNAUTHENTICATED, /* Not at all authenticated */
-	STATE_HANDSHAKING,     /* Doing connection handshake */
-	STATE_LOGGING_IN,      /* Logging in, after handshake */
-	STATE_AUTHENTICATED
+	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
+	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
+	STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
+	STATE_BURSTING        = 1 << 3,     /* After logging in, doing initial burst */
+	STATE_AUTHENTICATED   = 1 << 4      /* Authenticated and in the game */
 } bedrock_client_authentication_state;
 
 typedef struct
@@ -28,7 +29,8 @@ typedef struct
 	char ip[INET6_ADDRSTRLEN];
 	bedrock_client_authentication_state authenticated;
 
-	bedrock_world *world;
+	nbt_tag *data;			/* player's .dat file */
+	bedrock_world *world;	/* world they are in */
 } bedrock_client;
 
 extern bedrock_list client_list;
@@ -44,7 +46,7 @@ extern void client_event_write(bedrock_fd *fd, void *data);
 extern const char *client_get_ip(bedrock_client *client);
 
 extern void client_send_header(bedrock_client *client, uint8_t header);
-extern void client_send_int(bedrock_client *client, void *data, size_t size);
+extern void client_send_int(bedrock_client *client, const void *data, size_t size);
 extern void client_send_string(bedrock_client *client, const char *string);
 
 extern bool client_valid_username(const char *name);

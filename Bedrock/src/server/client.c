@@ -19,13 +19,14 @@ static bedrock_list exiting_client_list;
 bedrock_client *client_create()
 {
 	bedrock_client *client = bedrock_malloc(sizeof(bedrock_client));
+	client->authenticated = STATE_UNAUTHENTICATED;
 	bedrock_list_add(&client_list, client);
 	return client;
 }
 
 bool client_load(bedrock_client *client)
 {
-	/*char path[PATH_MAX];
+	char path[PATH_MAX];
 	int fd;
 	struct stat file_info;
 	unsigned char *file_base;
@@ -49,7 +50,37 @@ bool client_load(bedrock_client *client)
 		close(fd);
 		return false;
 	}
-	XXXX work */
+
+	file_base = mmap(NULL, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	if (file_base == MAP_FAILED)
+	{
+		bedrock_log(LEVEL_CRIT, "client: Unable to map player information file %s - %s", path, strerror(errno));
+		close(fd);
+		return false;
+	}
+
+	close(fd);
+
+	cb = compression_decompress(file_base, file_info.st_size);
+	munmap(file_base, file_info.st_size);
+	if (cb == NULL)
+	{
+		bedrock_log(LEVEL_CRIT, "client: Unable to inflate player information file %s", path);
+		return false;
+	}
+
+	tag = nbt_parse(cb->data, cb->length);
+	compression_free_buffer(cb);
+	if (tag == NULL)
+	{
+		bedrock_log(LEVEL_CRIT, "client: Unable to NBT parse world information file %s", path);
+		return false;
+	}
+
+	client->data = tag;
+	bedrock_log(LEVEL_DEBUG, "client: Successfully loaded player information file for %s", client->name);
+
+	return true;
 }
 
 static void client_free(bedrock_client *client)
@@ -174,7 +205,7 @@ void client_send_header(bedrock_client *client, uint8_t header)
 	client_send_int(client, &header, sizeof(header));
 }
 
-void client_send_int(bedrock_client *client, void *data, size_t size)
+void client_send_int(bedrock_client *client, const void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL);
 

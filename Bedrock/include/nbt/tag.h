@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-enum
+typedef enum
 {
 	TAG_END,
 	TAG_BYTE,
@@ -19,7 +19,7 @@ enum
 	TAG_LIST,
 	TAG_COMPOUND,
 	TAG_INT_ARRAY
-};
+} nbt_tag_type;
 
 typedef struct _nbt_tag
 {

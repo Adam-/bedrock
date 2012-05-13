@@ -43,6 +43,8 @@ void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 		struct epoll_event event;
 		int op;
 
+		memset(&event, 0, sizeof(event)); /* To make valgrind shut up */
+
 		event.data.fd = fd->fd;
 		event.events = 0;
 
