@@ -8,6 +8,7 @@ int packet_keep_alive(bedrock_client *client, const unsigned char *buffer, size_
 
 	packet_read_int(buffer, len, &offset, &id, sizeof(id));
 
+	client_send_header(client, KEEP_ALIVE);
 	client_send_int(client, &id, sizeof(id));
 
 	bedrock_assert_ret(offset == 5, -1);
@@ -84,6 +85,22 @@ int packet_handshake(bedrock_client *client, const unsigned char *buffer, size_t
 	client_send_header(client, HANDSHAKE);
 	client_send_string(client, "-");
 
+	return offset;
+}
+
+int packet_position(bedrock_client *client, const unsigned char *buffer, size_t len)
+{
+	size_t offset = 1;
+	double x, y, stance, z;
+	uint8_t on_ground;
+
+	packet_read_int(buffer, len, &offset, &x, sizeof(x));
+	packet_read_int(buffer, len, &offset, &y, sizeof(y));
+	packet_read_int(buffer, len, &offset, &stance, sizeof(stance));
+	packet_read_int(buffer, len, &offset, &z, sizeof(z));
+	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
+
+	bedrock_assert_ret(offset == 34, -1);
 	return offset;
 }
 

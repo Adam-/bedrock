@@ -1,5 +1,4 @@
 #include "server/bedrock.h"
-#include "server/world.h"
 #include "server/region.h"
 #include "util/memory.h"
 #include "compression/compression.h"

@@ -3,6 +3,7 @@
 #include "util/endian.h"
 #include "nbt/nbt.h"
 #include "compression/compression.h"
+#include "util/memory.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,12 +15,12 @@
 #define REGION_HEADER_SIZE 1024
 #define REGION_SECTOR_SIZE 4096
 
-bedrock_region *region_create(const char *path, int x, int z)
+bedrock_region *region_create(bedrock_world *world, int x, int z)
 {
 	bedrock_region *region = bedrock_malloc(sizeof(bedrock_region));
 	region->x = x;
 	region->z = z;
-	strncpy(region->path, path, sizeof(region->path));
+	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
 	region->columns.free = nbt_free;
 	return region;
 }
