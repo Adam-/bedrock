@@ -24,7 +24,7 @@ bedrock_world *bedrock_world_create(const char *name, const char *path)
 	return world;
 }
 
-void bedrock_world_load(bedrock_world *world)
+bool bedrock_world_load(bedrock_world *world)
 {
 	char path[PATH_MAX];
 	int fd;
@@ -39,14 +39,14 @@ void bedrock_world_load(bedrock_world *world)
 	if (fd == -1)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to load world information for %s from %s - %s", world->name, path, strerror(errno));
-		return;
+		return false;
 	}
 
 	if (fstat(fd, &file_info) != 0)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to stat world information file %s - %s", path, strerror(errno));
 		close(fd);
-		return;
+		return false;
 	}
 
 	file_base = mmap(NULL, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
@@ -54,7 +54,7 @@ void bedrock_world_load(bedrock_world *world)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to map world information file %s - %s", path, strerror(errno));
 		close(fd);
-		return;
+		return false;
 	}
 
 	close(fd);
@@ -64,7 +64,7 @@ void bedrock_world_load(bedrock_world *world)
 	if (cb == NULL)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to inflate world information file %s", path);
-		return;
+		return false;
 	}
 
 	tag = nbt_parse(cb->data, cb->length);
@@ -72,11 +72,13 @@ void bedrock_world_load(bedrock_world *world)
 	if (tag == NULL)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to NBT parse world information file %s", path);
-		return;
+		return false;
 	}
 
 	world->data = tag;
 	bedrock_log(LEVEL_DEBUG, "world: Successfully loaded world information file %s", path);
+
+	return true;
 }
 
 void bedrock_world_free(bedrock_world *world)

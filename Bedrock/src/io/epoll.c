@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "io/io.h"
+#include "server/config.h"
 
 #include <sys/epoll.h>
 #include <errno.h>
@@ -11,7 +12,7 @@ void bedrock_io_init()
 	int fd = epoll_create(1024);
 	if (fd < 0)
 	{
-		bedrock_log(LEVEL_CRIT, "Unable to open epoll fd - %s", strerror(errno));
+		bedrock_log(LEVEL_CRIT, "io: Unable to open epoll fd - %s", strerror(errno));
 		abort();
 	}
 
@@ -53,7 +54,7 @@ void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 
 		if (epoll_ctl(efd.fd, op, fd->fd, &event) != 0)
 		{
-			bedrock_log(LEVEL_CRIT, "Unable to modify epoll event - %s", strerror(errno));
+			bedrock_log(LEVEL_CRIT, "io: Unable to modify epoll event - %s", strerror(errno));
 			abort();
 		}
 
@@ -66,14 +67,17 @@ void bedrock_io_process()
 	struct epoll_event events[128];
 	int num, i;
 
-	num = epoll_wait(efd.fd, events, sizeof(events) / sizeof(struct epoll_event), 1);
+	num = epoll_wait(efd.fd, events, sizeof(events) / sizeof(struct epoll_event), 1 * 1000);
+	bedrock_log(LEVEL_IO_DEBUG, "io: epoll returned %d results", num);
 
 	if (num < 0)
 	{
 		if (errno != EINTR)
-			bedrock_log(LEVEL_CRIT, "Unable to epoll wait - %s", strerror(errno));
+			bedrock_log(LEVEL_CRIT, "io: Unable to epoll wait - %s", strerror(errno));
 		return;
 	}
+
+	bedrock_update_time();
 
 	for (i = 0; i < num; ++i)
 	{
@@ -84,12 +88,12 @@ void bedrock_io_process()
 		if (ev->events & (EPOLLIN | EPOLLHUP | EPOLLERR))
 		{
 			if (fd->read_handler != NULL)
-				fd->read_handler(fd);
+				fd->read_handler(fd, fd->read_data);
 		}
 		if (ev->events & (EPOLLOUT | EPOLLHUP | EPOLLERR))
 		{
 			if (fd->write_handler != NULL)
-				fd->write_handler(fd);
+				fd->write_handler(fd, fd->write_data);
 		}
 	}
 }

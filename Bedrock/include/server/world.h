@@ -14,4 +14,5 @@ typedef struct
 extern bedrock_list world_list;
 
 extern bedrock_world *bedrock_world_create(const char *name, const char *path);
+extern bool bedrock_world_load(bedrock_world *world);
 extern void bedrock_world_free(bedrock_world *world);

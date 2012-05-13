@@ -1,5 +1,41 @@
 #include "server/bedrock.h"
+#include "server/world.h"
+#include "server/config.h"
+#include "server/listener.h"
 #include "io/io.h"
+
+#include <time.h>
+#include <errno.h>
+
+bool bedrock_running = true;
+struct timespec bedrock_time = { 0, 0 };
+uint16_t bedrock_tick = 0;
+static struct timespec last_tick;
+
+void bedrock_update_time()
+{
+	uint64_t diff;
+	uint16_t tick_diff;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &bedrock_time) == -1)
+	{
+		bedrock_log(LEVEL_WARN, "bedrock: Unable to update clock - %s", strerror(errno));
+		return;
+	}
+
+	/* This is in nano seconds, which is 10^-9 */
+	diff = (bedrock_time.tv_sec * 1000000000 + bedrock_time.tv_nsec) - (last_tick.tv_sec * 1000000000 + last_tick.tv_sec);
+	/* Get milli seconds */
+	diff /= 1000000;
+
+	tick_diff = diff / BEDROCK_TICK_LENGTH;
+	if (tick_diff > 0)
+	{
+		last_tick = bedrock_time;
+		bedrock_tick += tick_diff;
+		bedrock_tick %= BEDROCK_DAY_LENGTH;
+	}
+}
 
 void bedrock_log(bedrock_log_level level, const char *msg, ...)
 {
@@ -14,47 +50,25 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 		fprintf(stdout, "%s\n", buffer);
 }
 
-bool bedrock_running = true;
-
-#include "server/world.h"
-
 int main(int argc, char **argv)
 {
-	/*bedrock_region *region = bedrock_region_create("/home/adam/cNBT/r.0.0.mca", 0, 0);
-	bedrock_node *n;
+	clock_gettime(CLOCK_MONOTONIC, &last_tick);
 
-	bedrock_region_load(region);
+	bedrock_world *world = bedrock_world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
+	if (bedrock_world_load(world) == false)
+		exit(1);
 
-	printf("List size %d\n", region->columns.count);
-
-	LIST_FOREACH(&region->columns, n)
-	{
-		nbt_tag *tag = n->data;
-		nbt_ascii_dump(tag);
-	}
-
-	bedrock_region_free(region);*/
-	bedrock_world *world = bedrock_world_create("world", "/home/adam/cNBT");
-	assert(world);
-
-	bedrock_world_load(world);
-	assert(world->data);
-	nbt_ascii_dump(world->data);
-
-	bedrock_world_free(world);
-	printf("Done!\n");
-
-
-
-	/*bedrock_io_init();
+	bedrock_io_init();
 	init_listener();
 
 	while (bedrock_running)
 	{
 		bedrock_io_process();
+		bedrock_client_process_exits();
 	}
 
-	bedrock_io_shutdown();*/
+	bedrock_io_shutdown();
+	bedrock_world_free(world);
 
 	return 0;
 }

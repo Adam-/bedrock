@@ -19,8 +19,10 @@ typedef struct _bedrock_fd
 	unsigned int ops;
 	bool open;
 
-	void (*read_handler)(struct _bedrock_fd *);
-	void (*write_handler)(struct _bedrock_fd *);
+	void (*read_handler)(struct _bedrock_fd *, void *data);
+	void *read_data;
+	void (*write_handler)(struct _bedrock_fd *, void *data);
+	void *write_data;
 
 	union
 	{
