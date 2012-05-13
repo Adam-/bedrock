@@ -1,15 +1,6 @@
 #include "server/bedrock.h"
-#include "server/packet.h"
-
-static int packet_keep_alive(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	return 0;
-}
-
-static int packet_login_request(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	return 0;
-}
+#include "packet/packet.h"
+#include "packet/packet_handler.h"
 
 static struct c2s_packet_handler
 {
@@ -51,9 +42,8 @@ int parse_incoming_packet(bedrock_client *client, const unsigned char *buffer, s
 	}
 
 	i = handler->handler(client, buffer, len);
-	bedrock_assert_ret(i != 0, -1);
 
-	if (i == -1)
+	if (i <= 0)
 	{
 		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - invalid format, dropping client", id, bedrock_client_get_ip(client));
 		bedrock_client_exit(client);

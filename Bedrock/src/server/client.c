@@ -2,7 +2,7 @@
 #include "server/client.h"
 #include "util/memory.h"
 #include "io/io.h"
-#include "server/packet.h"
+#include "packet/packet.h"
 
 #include <arpa/inet.h>
 
