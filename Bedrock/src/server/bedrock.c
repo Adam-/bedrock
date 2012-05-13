@@ -1,5 +1,4 @@
 #include "server/bedrock.h"
-#include "server/world.h"
 #include "server/config.h"
 #include "server/listener.h"
 #include "server/client.h"

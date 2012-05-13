@@ -16,3 +16,4 @@ extern bedrock_list world_list;
 extern bedrock_world *world_create(const char *name, const char *path);
 extern bool world_load(bedrock_world *world);
 extern void world_free(bedrock_world *world);
+extern bedrock_world *world_find(const char *name);

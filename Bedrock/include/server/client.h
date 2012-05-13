@@ -4,6 +4,7 @@
 #include "util/fd.h"
 #include "util/list.h"
 #include "server/config.h"
+#include "server/world.h"
 
 typedef enum
 {
@@ -26,11 +27,14 @@ typedef struct
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
 	bedrock_client_authentication_state authenticated;
+
+	bedrock_world *world;
 } bedrock_client;
 
 extern bedrock_list client_list;
 
 extern bedrock_client *client_create();
+extern bool client_load(bedrock_client *client);
 extern void client_exit(bedrock_client *client);
 extern void client_process_exits();
 
@@ -40,7 +44,9 @@ extern void client_event_write(bedrock_fd *fd, void *data);
 extern const char *client_get_ip(bedrock_client *client);
 
 extern void client_send_header(bedrock_client *client, uint8_t header);
-extern void client_send(bedrock_client *client, void *data, size_t size);
+extern void client_send_int(bedrock_client *client, void *data, size_t size);
 extern void client_send_string(bedrock_client *client, const char *string);
+
+extern bool client_valid_username(const char *name);
 
 #endif // BEDROCK_SERVER_CLIENT_H

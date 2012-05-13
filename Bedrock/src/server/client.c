@@ -3,8 +3,15 @@
 #include "util/memory.h"
 #include "io/io.h"
 #include "packet/packet.h"
+#include "compression/compression.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <errno.h>
 #include <arpa/inet.h>
+#include <ctype.h>
 
 bedrock_list client_list;
 static bedrock_list exiting_client_list;
@@ -14,6 +21,35 @@ bedrock_client *client_create()
 	bedrock_client *client = bedrock_malloc(sizeof(bedrock_client));
 	bedrock_list_add(&client_list, client);
 	return client;
+}
+
+bool client_load(bedrock_client *client)
+{
+	/*char path[PATH_MAX];
+	int fd;
+	struct stat file_info;
+	unsigned char *file_base;
+	compression_buffer *cb;
+	nbt_tag *tag;
+
+	bedrock_assert(client != NULL && client->world != NULL);
+
+	snprintf(path, sizeof(path), "%s/players/%s.dat", client->world->path, client->name);
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+	{
+		bedrock_log(LEVEL_CRIT, "client: Unable to load player information for %s from %s - %s", client->name, path, strerror(errno));
+		return false;
+	}
+
+	if (fstat(fd, &file_info) != 0)
+	{
+		bedrock_log(LEVEL_CRIT, "client: Unable to stat player information file %s - %s", path, strerror(errno));
+		close(fd);
+		return false;
+	}
+	XXXX work */
 }
 
 static void client_free(bedrock_client *client)
@@ -135,10 +171,10 @@ const char *client_get_ip(bedrock_client *client)
 void client_send_header(bedrock_client *client, uint8_t header)
 {
 	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%x for %s (%s)", header, *client->name ? client->name : "(unknown)", client_get_ip(client));
-	client_send(client, &header, sizeof(header));
+	client_send_int(client, &header, sizeof(header));
 }
 
-void client_send(bedrock_client *client, void *data, size_t size)
+void client_send_int(bedrock_client *client, void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL);
 
@@ -167,7 +203,7 @@ void client_send_string(bedrock_client *client, const char *string)
 
 	len = strlen(string);
 
-	client_send(client, &len, sizeof(len));
+	client_send_int(client, &len, sizeof(len));
 
 	if (client->out_buffer_len + (len * 2) > sizeof(client->out_buffer))
 	{
@@ -182,4 +218,22 @@ void client_send_string(bedrock_client *client, const char *string)
 		client->out_buffer[client->out_buffer_len++] = 0;
 		client->out_buffer[client->out_buffer_len++] = *string++;
 	}
+}
+
+bool client_valid_username(const char *name)
+{
+	int i, len;
+
+	bedrock_assert_ret(name != NULL, false);
+
+	len = strlen(name);
+
+	if (len < BEDROCK_USERNAME_MIN || len > BEDROCK_USERNAME_MAX - 1)
+		return false;
+
+	for (i = 0; i < len; ++i)
+		if (!isalnum(name[i]) && name[i] != '_')
+			return false;
+
+	return true;
 }

@@ -110,4 +110,6 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 	for (i = 0, j = 1; i < length * 2; ++i, j += 2)
 		dest[i] = *(buffer + *offset + j);
 	dest[length] = 0;
+
+	*offset += length * 2;
 }

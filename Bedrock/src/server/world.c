@@ -90,3 +90,18 @@ void world_free(bedrock_world *world)
 	bedrock_list_del(&world_list, world);
 	bedrock_free(world);
 }
+
+bedrock_world *world_find(const char *name)
+{
+	bedrock_node *n;
+
+	LIST_FOREACH(&world_list, n)
+	{
+		bedrock_world *world = n->data;
+
+		if (!strcmp(world->name, name))
+			return world;
+	}
+
+	return NULL;
+}

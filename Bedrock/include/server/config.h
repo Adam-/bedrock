@@ -11,5 +11,7 @@
 /* Day length, in ticks */
 #define BEDROCK_DAY_LENGTH 24000
 
-/* Max username (with trailing \0), is there a standard for this? */
-#define BEDROCK_USERNAME_MAX 64
+/* Min username length */
+#define BEDROCK_USERNAME_MIN 2
+/* Max username length (with trailing \0), is there a standard for this? */
+#define BEDROCK_USERNAME_MAX 17
