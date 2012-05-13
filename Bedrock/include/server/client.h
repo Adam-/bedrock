@@ -4,6 +4,13 @@
 #include "util/fd.h"
 #include "util/list.h"
 
+typedef enum
+{
+	STATE_UNAUTHENTICATED,
+	STATE_AUTHENTICATING,
+	STATE_AUTHENTICATED
+} bedrock_client_authentication_state;
+
 typedef struct
 {
 	bedrock_fd fd;
@@ -16,6 +23,7 @@ typedef struct
 
 	char name[128];
 	char ip[INET6_ADDRSTRLEN];
+	bedrock_client_authentication_state authenticated;
 } bedrock_client;
 
 extern bedrock_list client_list;
