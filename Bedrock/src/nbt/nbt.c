@@ -75,7 +75,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			CHECK_RETURN(read_bytes(tag->payload.tag_string, str_len, data, size, false), error);
 			tag->payload.tag_string[str_len] = 0;
 
-			bedrock_log(LEVE_NBT_DEBUG, "nbt: Read string tag '%s'", tag->payload.tag_string);
+			bedrock_log(LEVEL_NBT_DEBUG, "nbt: Read string tag '%s'", tag->payload.tag_string);
 
 			break;
 		}
@@ -109,7 +109,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 				if (nested_tag == NULL)
 					break;
 
-				bedrock_log(LEVE_NBT_DEBUG, "nbt: Read compound tag in '%s', named '%s'", tag->name ? tag->name : "(unknown)", nested_tag->name);
+				bedrock_log(LEVEL_NBT_DEBUG, "nbt: Read compound tag in '%s', named '%s'", tag->name ? tag->name : "(unknown)", nested_tag->name);
 				bedrock_list_add(&tag->payload.tag_compound, nested_tag);
 			}
 
@@ -155,7 +155,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	CHECK_RETURN(read_bytes(tag->name, name_length, data, size, false), error);
 	tag->name[name_length] = 0;
 
-	bedrock_log(LEVE_NBT_DEBUG, "nbt: Read named tag '%s' of length %d of type %d", tag->name ? tag->name : "(unknown)", name_length, tag->type);
+	bedrock_log(LEVEL_NBT_DEBUG, "nbt: Read named tag '%s' of length %d of type %d", tag->name ? tag->name : "(unknown)", name_length, tag->type);
 
 	return read_unnamed_tag(tag, data, size);
 

@@ -45,7 +45,5 @@ int packet_handshake(bedrock_client *client, const unsigned char *buffer, size_t
 	client_send_header(client, HANDSHAKE);
 	client_send_string(client, "-");
 
-	printf("GOT %s\n", username);
-
 	return offset;
 }
