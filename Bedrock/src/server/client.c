@@ -80,10 +80,36 @@ void client_event_read(bedrock_fd *fd, void *data)
 void client_event_write(bedrock_fd *fd, void *data)
 {
 	bedrock_client *client = data;
+	int i;
 
-	//if (client->out_buffer_len == 0)
+	if (client->out_buffer_len == 0)
+	{
+		io_set(&client->fd, 0, OP_WRITE);
+		if (client->fd.ops == 0)
+			client_exit(client);
+		return;
+	}
 
-	// If no more data is queued and read isn't wanted shut down
+	i = send(fd->fd, client->out_buffer, client->out_buffer_len, 0);
+	if (i <= 0)
+	{
+		bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		io_set(fd, 0, OP_READ | OP_WRITE);
+		client_exit(client);
+		return;
+	}
+
+	client->out_buffer_len -= i;
+	if (client->out_buffer_len > 0)
+	{
+		memmove(client->out_buffer, client->out_buffer + i, client->out_buffer_len);
+	}
+	else
+	{
+		io_set(&client->fd, 0, OP_WRITE);
+		if (client->fd.ops == 0)
+			client_exit(client);
+	}
 }
 
 const char *client_get_ip(bedrock_client *client)
@@ -106,8 +132,16 @@ const char *client_get_ip(bedrock_client *client)
 	return "(unknown)";
 }
 
+void client_send_header(bedrock_client *client, uint8_t header)
+{
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%x for %s (%s)", header, *client->name ? client->name : "(unknown)", client_get_ip(client));
+	client_send(client, &header, sizeof(header));
+}
+
 void client_send(bedrock_client *client, void *data, size_t size)
 {
+	bedrock_assert(client != NULL && data != NULL);
+
 	if (client->out_buffer_len + size > sizeof(client->out_buffer))
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -122,4 +156,29 @@ void client_send(bedrock_client *client, void *data, size_t size)
 	bedrock_assert(client->out_buffer_len <= sizeof(client->out_buffer));
 
 	io_set(&client->fd, OP_WRITE, 0);
+}
+
+void client_send_string(bedrock_client *client, const char *string)
+{
+	uint16_t len, i;
+
+	bedrock_assert(client != NULL && string != NULL);
+
+	len = strlen(string);
+
+	client_send(client, &len, sizeof(len));
+
+	if (client->out_buffer_len + (len * 2) > sizeof(client->out_buffer))
+	{
+		if (bedrock_list_has_data(&exiting_client_list, client) == false)
+			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		client_exit(client);
+		return;
+	}
+
+	for (i = 0; i < len; ++i)
+	{
+		client->out_buffer[client->out_buffer_len++] = 0;
+		client->out_buffer[client->out_buffer_len++] = *string++;
+	}
 }

@@ -16,7 +16,8 @@ typedef enum
 	LEVEL_INFO,
 	LEVEL_DEBUG,
 	LEVE_NBT_DEBUG,
-	LEVEL_IO_DEBUG
+	LEVEL_IO_DEBUG,
+	LEVEL_PACKET_DEBUG
 } bedrock_log_level;
 
 extern void bedrock_update_time();

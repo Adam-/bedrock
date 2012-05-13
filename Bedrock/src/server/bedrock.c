@@ -2,6 +2,7 @@
 #include "server/world.h"
 #include "server/config.h"
 #include "server/listener.h"
+#include "server/client.h"
 #include "io/io.h"
 
 #include <time.h>

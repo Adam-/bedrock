@@ -12,6 +12,12 @@ enum
 	ALLOW_UNAUTHED = 1 << 0
 };
 
+enum
+{
+	ERROR_INVALID_FORMAT = -1,
+	ERROR_UNEXPECTED = -2
+};
+
 extern int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len);
 
 extern void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size);

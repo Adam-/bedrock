@@ -46,16 +46,29 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 
 	if (handler->flags & ALLOW_UNAUTHED == 0 && client->authenticated != STATE_AUTHENTICATED)
 	{
-		bedrock_log(LEVEL_WARN, "Disallowed packet 0x%x from unauthenticated client %s - dropping client", id, bedrock_client_get_ip(client));
+		bedrock_log(LEVEL_WARN, "Disallowed packet 0x%x from unauthenticated client %s - dropping client", id, client_get_ip(client));
 		bedrock_client_exit(client);
 		return -1;
 	}
+
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Got packet 0x%x from %s (%s)", id, *client->name ? client->name : "(unknown)", client_get_ip(client));
 
 	i = handler->handler(client, buffer, len);
 
 	if (i <= 0)
 	{
-		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - invalid format, dropping client", id, client_get_ip(client));
+		const char *error = "unknown error";
+		switch (i)
+		{
+			case ERROR_INVALID_FORMAT:
+				error = "invalid format";
+				break;
+			case ERROR_UNEXPECTED:
+				error = "unexpected";
+				break;
+		}
+
+		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - %s, dropping client", id, client_get_ip(client), error);
 		client_exit(client);
 		return -1;
 	}

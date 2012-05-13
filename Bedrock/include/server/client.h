@@ -7,8 +7,9 @@
 
 typedef enum
 {
-	STATE_UNAUTHENTICATED,
-	STATE_AUTHENTICATING,
+	STATE_UNAUTHENTICATED, /* Not at all authenticated */
+	STATE_HANDSHAKING,     /* Doing connection handshake */
+	STATE_LOGGING_IN,      /* Logging in, after handshake */
 	STATE_AUTHENTICATED
 } bedrock_client_authentication_state;
 
@@ -38,6 +39,8 @@ extern void client_event_write(bedrock_fd *fd, void *data);
 
 extern const char *client_get_ip(bedrock_client *client);
 
+extern void client_send_header(bedrock_client *client, uint8_t header);
 extern void client_send(bedrock_client *client, void *data, size_t size);
+extern void client_send_string(bedrock_client *client, const char *string);
 
 #endif // BEDROCK_SERVER_CLIENT_H
