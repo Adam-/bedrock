@@ -9,18 +9,18 @@
 bedrock_list client_list;
 static bedrock_list exiting_client_list;
 
-bedrock_client *bedrock_client_create()
+bedrock_client *client_create()
 {
 	bedrock_client *client = bedrock_malloc(sizeof(bedrock_client));
 	bedrock_list_add(&client_list, client);
 	return client;
 }
 
-static void bedrock_client_free(bedrock_client *client)
+static void client_free(bedrock_client *client)
 {
-	bedrock_log(LEVEL_DEBUG, "client: Exiting client from %s", bedrock_client_get_ip(client));
+	bedrock_log(LEVEL_DEBUG, "client: Exiting client from %s", client_get_ip(client));
 
-	bedrock_io_set(&client->fd.fd, 0, ~0);
+	io_set(&client->fd.fd, 0, ~0);
 	bedrock_fd_close(&client->fd);
 
 	bedrock_list_del(&client_list, client);
@@ -28,13 +28,13 @@ static void bedrock_client_free(bedrock_client *client)
 	bedrock_free(client);
 }
 
-void bedrock_client_exit(bedrock_client *client)
+void client_exit(bedrock_client *client)
 {
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 		bedrock_list_add(&exiting_client_list, client);
 }
 
-void bedrock_client_process_exits()
+void client_process_exits()
 {
 	bedrock_node *n;
 
@@ -42,22 +42,22 @@ void bedrock_client_process_exits()
 	{
 		bedrock_client *client = n->data;
 
-		bedrock_client_free(client);
+		client_free(client);
 	}
 
 	bedrock_list_clear(&exiting_client_list);
 }
 
-void bedrock_client_event_read(bedrock_fd *fd, void *data)
+void client_event_read(bedrock_fd *fd, void *data)
 {
 	bedrock_client *client = data;
 
 	int i = recv(fd->fd, client->in_buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
-		bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", bedrock_client_get_ip(client));
-		bedrock_io_set(fd, 0, OP_READ | OP_WRITE);
-		bedrock_client_exit(client);
+		bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		io_set(fd, 0, OP_READ | OP_WRITE);
+		client_exit(client);
 		return;
 	}
 
@@ -77,7 +77,7 @@ void bedrock_client_event_read(bedrock_fd *fd, void *data)
 	}
 }
 
-void bedrock_client_event_write(bedrock_fd *fd, void *data)
+void client_event_write(bedrock_fd *fd, void *data)
 {
 	bedrock_client *client = data;
 
@@ -86,7 +86,7 @@ void bedrock_client_event_write(bedrock_fd *fd, void *data)
 	// If no more data is queued and read isn't wanted shut down
 }
 
-const char *bedrock_client_get_ip(bedrock_client *client)
+const char *client_get_ip(bedrock_client *client)
 {
 	bedrock_assert_ret(client != NULL, NULL);
 
@@ -106,13 +106,13 @@ const char *bedrock_client_get_ip(bedrock_client *client)
 	return "(unknown)";
 }
 
-void bedrock_client_send(bedrock_client *client, void *data, size_t size)
+void client_send(bedrock_client *client, void *data, size_t size)
 {
 	if (client->out_buffer_len + size > sizeof(client->out_buffer))
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
-			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", bedrock_client_get_ip(client));
-		bedrock_client_exit(client);
+			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		client_exit(client);
 		return;
 	}
 
@@ -121,5 +121,5 @@ void bedrock_client_send(bedrock_client *client, void *data, size_t size)
 
 	bedrock_assert(client->out_buffer_len <= sizeof(client->out_buffer));
 
-	bedrock_io_set(&client->fd, OP_WRITE, 0);
+	io_set(&client->fd, OP_WRITE, 0);
 }

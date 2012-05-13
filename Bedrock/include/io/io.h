@@ -6,7 +6,7 @@ typedef enum
 	OP_WRITE = 1 << 1
 } bedrock_io_ops;
 
-extern void bedrock_io_init();
-extern void bedrock_io_shutdown();
-extern void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove);
-extern void bedrock_io_process();
+extern void io_init();
+extern void io_shutdown();
+extern void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove);
+extern void io_process();

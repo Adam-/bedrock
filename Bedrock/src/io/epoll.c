@@ -7,7 +7,7 @@
 
 static bedrock_fd efd;
 
-void bedrock_io_init()
+void io_init()
 {
 	int fd = epoll_create(1024);
 	if (fd < 0)
@@ -19,12 +19,12 @@ void bedrock_io_init()
 	bedrock_fd_open(&efd, fd, false, "epoll file descriptor");
 }
 
-void bedrock_io_shutdown()
+void io_shutdown()
 {
 	bedrock_fd_close(&efd);
 }
 
-void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
+void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 {
 	unsigned int ops = fd->ops;
 
@@ -68,7 +68,7 @@ void bedrock_io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 	}
 }
 
-void bedrock_io_process()
+void io_process()
 {
 	struct epoll_event events[128];
 	int num, i;

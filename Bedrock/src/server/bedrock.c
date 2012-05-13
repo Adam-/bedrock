@@ -54,21 +54,21 @@ int main(int argc, char **argv)
 {
 	clock_gettime(CLOCK_MONOTONIC, &last_tick);
 
-	bedrock_world *world = bedrock_world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
-	if (bedrock_world_load(world) == false)
+	bedrock_world *world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
+	if (world_load(world) == false)
 		exit(1);
 
-	bedrock_io_init();
-	init_listener();
+	io_init();
+	listener_init();
 
 	while (bedrock_running)
 	{
-		bedrock_io_process();
-		bedrock_client_process_exits();
+		io_process();
+		client_process_exits();
 	}
 
-	bedrock_io_shutdown();
-	bedrock_world_free(world);
+	io_shutdown();
+	world_free(world);
 
 	return 0;
 }

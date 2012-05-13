@@ -14,17 +14,17 @@
 
 bedrock_list world_list;
 
-bedrock_world *bedrock_world_create(const char *name, const char *path)
+bedrock_world *world_create(const char *name, const char *path)
 {
 	bedrock_world *world = bedrock_malloc(sizeof(bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
-	world->regions.free = bedrock_region_free;
+	world->regions.free = region_free;
 	bedrock_list_add(&world_list, world);
 	return world;
 }
 
-bool bedrock_world_load(bedrock_world *world)
+bool world_load(bedrock_world *world)
 {
 	char path[PATH_MAX];
 	int fd;
@@ -81,7 +81,7 @@ bool bedrock_world_load(bedrock_world *world)
 	return true;
 }
 
-void bedrock_world_free(bedrock_world *world)
+void world_free(bedrock_world *world)
 {
 	if (world->data != NULL)
 		nbt_free(world->data);

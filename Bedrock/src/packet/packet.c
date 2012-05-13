@@ -32,15 +32,15 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), packet_compare);
 	if (handler == NULL)
 	{
-		bedrock_log(LEVEL_WARN, "Unrecognized packet 0x%x from %s, dropping client", id, bedrock_client_get_ip(client));
-		bedrock_client_exit(client);
+		bedrock_log(LEVEL_WARN, "Unrecognized packet 0x%x from %s, dropping client", id, client_get_ip(client));
+		client_exit(client);
 		return -1;
 	}
 
 	if (len < handler->len)
 	{
-		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - paylad too short, dropping client", id, bedrock_client_get_ip(client));
-		bedrock_client_exit(client);
+		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - paylad too short, dropping client", id, client_get_ip(client));
+		client_exit(client);
 		return -1;
 	}
 
@@ -55,8 +55,8 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 
 	if (i <= 0)
 	{
-		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - invalid format, dropping client", id, bedrock_client_get_ip(client));
-		bedrock_client_exit(client);
+		bedrock_log(LEVEL_WARN, "Invalid packet 0x%x from %s - invalid format, dropping client", id, client_get_ip(client));
+		client_exit(client);
 		return -1;
 	}
 

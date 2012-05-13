@@ -30,22 +30,22 @@ static void accept_client(bedrock_fd *fd, void *unused)
 
 	bedrock_log(LEVEL_DEBUG, "Accepted client");
 
-	client = bedrock_client_create();
+	client = client_create();
 
 	bedrock_fd_open(&client->fd, client_fd, FD_SOCKET, "client fd");
 
 	memcpy(&client->fd.addr, &addr, addrlen);
 
-	client->fd.read_handler = bedrock_client_event_read;
-	client->fd.write_handler = bedrock_client_event_write;
+	client->fd.read_handler = client_event_read;
+	client->fd.write_handler = client_event_write;
 
 	client->fd.read_data = client;
 	client->fd.write_data = client;
 
-	bedrock_io_set(&client->fd, OP_READ, 0);
+	io_set(&client->fd, OP_READ, 0);
 }
 
-void init_listener()
+void listener_init()
 {
 	static bedrock_fd fd;
 	int listen_fd;
@@ -87,5 +87,5 @@ void init_listener()
 	fd.read_handler = accept_client;
 
 	bedrock_fd_open(&fd, fd.fd, FD_SOCKET, "listener");
-	bedrock_io_set(&fd, OP_READ, 0);
+	io_set(&fd, OP_READ, 0);
 }

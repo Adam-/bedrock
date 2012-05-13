@@ -1,2 +1,2 @@
 
-extern void init_listener();
+extern void listener_init();

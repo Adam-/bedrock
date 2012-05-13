@@ -14,7 +14,7 @@
 #define REGION_HEADER_SIZE 1024
 #define REGION_SECTOR_SIZE 4096
 
-bedrock_region *bedrock_region_create(const char *path, int x, int z)
+bedrock_region *region_create(const char *path, int x, int z)
 {
 	bedrock_region *region = bedrock_malloc(sizeof(bedrock_region));
 	region->x = x;
@@ -24,7 +24,7 @@ bedrock_region *bedrock_region_create(const char *path, int x, int z)
 	return region;
 }
 
-void bedrock_region_load(bedrock_region *region)
+void region_load(bedrock_region *region)
 {
 	int i;
 	struct stat file_info;
@@ -113,7 +113,7 @@ void bedrock_region_load(bedrock_region *region)
 	munmap(file_base, file_info.st_size);
 }
 
-void bedrock_region_free(bedrock_region *region)
+void region_free(bedrock_region *region)
 {
 	bedrock_list_clear(&region->columns);
 	bedrock_free(region);
