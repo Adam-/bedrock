@@ -10,7 +10,7 @@ static struct c2s_packet_handler
 	uint8_t flags;
 	int (*handler)(bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
-	{KEEP_ALIVE,       5,  STATE_BURSTING,   packet_keep_alive},
+	{KEEP_ALIVE,       5,  STATE_BURSTING,        packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,     packet_login_request},
 	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED, packet_handshake},
 	{PLAYER_POS,      34,  STATE_BURSTING,        packet_position},
@@ -26,6 +26,9 @@ static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *ha
 	return 0;
 }
 
+/** Parse a packet. Returns -1 if the packet is invalid or unexpected, 0 if there is not
+ * enough data yet, or the amount of data read from buffer.
+ */
 int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	uint8_t id = *buffer;
@@ -34,21 +37,17 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), packet_compare);
 	if (handler == NULL)
 	{
-		bedrock_log(LEVEL_WARN, "Unrecognized packet 0x%02x from %s, dropping client", id, client_get_ip(client));
+		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s, dropping client", id, client_get_ip(client));
 		client_exit(client);
 		return -1;
 	}
 
 	if (len < handler->len)
-	{
-		bedrock_log(LEVEL_WARN, "Invalid packet 0x%02x from %s - paylad too short, dropping client", id, client_get_ip(client));
-		client_exit(client);
-		return -1;
-	}
+		return 0;
 
 	if ((handler->flags & client->authenticated) == 0)
 	{
-		bedrock_log(LEVEL_WARN, "Unexpected packet 0x%02x from client %s - dropping client", id, client_get_ip(client));
+		bedrock_log(LEVEL_WARN, "packet: Unexpected packet 0x%02x from client %s - dropping client", id, client_get_ip(client));
 		client_exit(client);
 		return -1;
 	}
@@ -59,9 +58,16 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 
 	if (i <= 0)
 	{
-		const char *error = "unknown error";
+		const char *error;
+
 		switch (i)
 		{
+			default:
+			case ERROR_UNKNOWN:
+				error = "unknown error";
+				break;
+			case ERROR_EAGAIN:
+				return 0;
 			case ERROR_INVALID_FORMAT:
 				error = "invalid format";
 				break;
@@ -70,9 +76,9 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 				break;
 		}
 
-		bedrock_log(LEVEL_WARN, "Invalid packet 0x%02x from %s - %s, dropping client", id, client_get_ip(client), error);
+		bedrock_log(LEVEL_WARN, "packet: Invalid packet 0x%02x from %s - %s, dropping client", id, client_get_ip(client), error);
 		client_exit(client);
-		return -1;
+		return 0;
 	}
 
 	return i;
@@ -80,9 +86,9 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 
 void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size)
 {
-	if (*offset == -1 || *offset + dest_size > buffer_size)
+	if (*offset == ERROR_EAGAIN || *offset + dest_size > buffer_size)
 	{
-		*offset = -1;
+		*offset = ERROR_EAGAIN;
 		return;
 	}
 
@@ -101,15 +107,15 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 
 	*dest = 0;
 	/* Remember, this length is length in CHARACTERS */
-	if (*offset == -1 || *offset + (length * 2) > buffer_size)
+	if (*offset == ERROR_EAGAIN || *offset + (length * 2) > buffer_size)
 	{
-		*offset = -1;
+		*offset = ERROR_EAGAIN;
 		return;
 	}
 
 	if (length >= dest_size)
 	{
-		*offset = -1;
+		*offset = ERROR_EAGAIN;
 		return;
 	}
 

@@ -32,6 +32,9 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	packet_read_int(buffer, len, &offset, &b, sizeof(b));
 	packet_read_int(buffer, len, &offset, &b, sizeof(b));
 
+	if (offset == ERROR_EAGAIN)
+		return ERROR_EAGAIN;
+
 	// Check version, should be 29
 
 	client_send_header(client, LOGIN_REQUEST);
@@ -60,6 +63,9 @@ int packet_handshake(bedrock_client *client, const unsigned char *buffer, size_t
 	char *p;
 
 	packet_read_string(buffer, len, &offset, username, sizeof(username));
+
+	if (offset == ERROR_EAGAIN)
+		return ERROR_EAGAIN;
 
 	p = strchr(username, ';');
 	if (p == NULL)

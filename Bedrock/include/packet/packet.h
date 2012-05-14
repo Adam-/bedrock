@@ -11,8 +11,10 @@ enum
 
 enum
 {
-	ERROR_INVALID_FORMAT = -1,
-	ERROR_UNEXPECTED = -2
+	ERROR_UNKNOWN        = 0,
+	ERROR_EAGAIN         = -1,
+	ERROR_INVALID_FORMAT = -2,
+	ERROR_UNEXPECTED     = -3
 };
 
 extern int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len);

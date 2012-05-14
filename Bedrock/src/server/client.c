@@ -119,6 +119,14 @@ void client_event_read(bedrock_fd *fd, void *data)
 {
 	bedrock_client *client = data;
 
+	if (client->in_buffer_len == sizeof(client->in_buffer))
+	{
+		if (bedrock_list_has_data(&exiting_client_list, client) == false)
+			bedrock_log(LEVEL_INFO, "Receive queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		client_exit(client);
+		return;
+	}
+
 	int i = recv(fd->fd, client->in_buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
@@ -130,13 +138,10 @@ void client_event_read(bedrock_fd *fd, void *data)
 
 	client->in_buffer_len += i;
 
-	i = packet_parse(client, client->in_buffer, client->in_buffer_len);
-
-	bedrock_assert(i != 0);
-	bedrock_assert(i == -1 || i <= client->in_buffer_len);
-
-	if (i > 0)
+	while ((i = packet_parse(client, client->in_buffer, client->in_buffer_len)) > 0)
 	{
+		bedrock_assert(i <= client->in_buffer_len);
+
 		client->in_buffer_len -= i;
 
 		if (client->in_buffer_len > 0)
