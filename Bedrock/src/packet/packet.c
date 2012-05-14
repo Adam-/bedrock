@@ -78,7 +78,7 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 
 		bedrock_log(LEVEL_WARN, "packet: Invalid packet 0x%02x from %s - %s, dropping client", id, client_get_ip(client), error);
 		client_exit(client);
-		return 0;
+		return -1;
 	}
 
 	return i;
