@@ -212,6 +212,7 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 	{
 		const char *name = va_arg(list, const char *);
 		bedrock_node *n;
+		bool found = false;
 
 		bedrock_assert_ret(t->type == TAG_LIST || t->type == TAG_COMPOUND, NULL);
 
@@ -223,9 +224,13 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 			if (!strcmp(t2->name, name))
 			{
 				t = t2;
+				found = true;
 				break;
 			}
 		}
+
+		if (found == false)
+			return NULL;
 	}
 
 	return t;
@@ -288,7 +293,7 @@ const void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 	va_start(list, size);
 
 	tag = nbt_get_from_valist(tag, size, list);
-	bedrock_assert_ret(tag->type == type, NULL);
+	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
 
 	va_end(list);
 

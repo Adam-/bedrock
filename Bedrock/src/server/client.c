@@ -130,7 +130,8 @@ void client_event_read(bedrock_fd *fd, void *data)
 	int i = recv(fd->fd, client->in_buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
-		bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		if (bedrock_list_has_data(&exiting_client_list, client) == false)
+			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
 		io_set(fd, 0, OP_READ | OP_WRITE);
 		client_exit(client);
 		return;
@@ -165,7 +166,8 @@ void client_event_write(bedrock_fd *fd, void *data)
 	i = send(fd->fd, client->out_buffer, client->out_buffer_len, 0);
 	if (i <= 0)
 	{
-		bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
+		if (bedrock_list_has_data(&exiting_client_list, client) == false)
+			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
 		io_set(fd, 0, OP_READ | OP_WRITE);
 		client_exit(client);
 		return;

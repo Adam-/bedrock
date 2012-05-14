@@ -74,8 +74,8 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			// DOES THIS GO HERE?
 			// Map Column Allocation (0x32)
 			client_send_header(client, 0x32);
-			client_send_int(client, &region->x, sizeof(region->x));
-			client_send_int(client, &region->z, sizeof(region->z));
+			client_send_int(client, &region->x, sizeof(uint32_t));
+			client_send_int(client, &region->z, sizeof(uint32_t));
 			b = 1;
 			client_send_int(client, &b, sizeof(b));
 
@@ -83,7 +83,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			client_send_header(client, 0x33);
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-			b = 0;
+			b = 1;
 			client_send_int(client, &b, sizeof(b)); // Ground up continuous?
 
 			uint16_t bitmask = 0;
@@ -102,10 +102,11 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			bitmask = 0;
 			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
+			compression_buffer *buf = NULL;
+
 			LIST_FOREACH(&sections->payload.tag_compound, node3)
 			{
 				nbt_tag *sec = node3->data;
-				compression_buffer *buf = NULL;
 
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
 				bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
@@ -127,9 +128,19 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				compression_compress(&buf, blocks->data, blocks->length);
 				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 
-				client_send(client, buf->data, buf->length);
-				compression_free_buffer(buf);
+				blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+				bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
+				compression_compress(&buf, blocks->data, blocks->length);
+				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 			}
+
+			uint32_t ii = buf->length;
+			client_send_int(client, &ii, sizeof(ii));
+			ii = 0;
+			client_send_int(client, &ii, sizeof(ii));
+
+			client_send(client, buf->data, buf->length);
+			compression_free_buffer(buf);
 		}
 	}
 
