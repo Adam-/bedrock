@@ -243,7 +243,46 @@ nbt_tag *nbt_get(nbt_tag *tag, size_t size, ...)
 	return tag;
 }
 
-const void *nbt_read_int(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
+void nbt_copy(nbt_tag *tag, void *dest, size_t dest_size, size_t size, ...)
+{
+	va_list list;
+	va_start(list, size);
+
+	tag = nbt_get_from_valist(tag, size, list);
+	bedrock_assert_do(tag != NULL, goto error);
+
+	switch (tag->type)
+	{
+		case TAG_BYTE:
+			bedrock_assert_do(dest_size == sizeof(uint8_t), goto error);
+			break;
+		case TAG_SHORT:
+			bedrock_assert_do(dest_size == sizeof(uint16_t), goto error);
+			break;
+		case TAG_INT:
+			bedrock_assert_do(dest_size == sizeof(uint32_t), goto error);
+			break;
+		case TAG_LONG:
+			bedrock_assert_do(dest_size == sizeof(uint64_t), goto error);
+			break;
+		case TAG_FLOAT:
+			bedrock_assert_do(dest_size == sizeof(float), goto error);
+			break;
+		case TAG_DOUBLE:
+			bedrock_assert_do(dest_size == sizeof(double), goto error);
+			break;
+		default:
+			bedrock_assert_do(0, goto error);
+			break;
+	}
+
+	memcpy(dest, &tag->payload, dest_size);
+
+ error:
+	va_end(list);
+}
+
+const void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 {
 	va_list list;
 	va_start(list, size);

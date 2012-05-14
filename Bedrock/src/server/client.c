@@ -210,7 +210,7 @@ void client_send_header(bedrock_client *client, uint8_t header)
 	client_send_int(client, &header, sizeof(header));
 }
 
-void client_send_int(bedrock_client *client, const void *data, size_t size)
+void client_send(bedrock_client *client, const void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL);
 
@@ -223,12 +223,23 @@ void client_send_int(bedrock_client *client, const void *data, size_t size)
 	}
 
 	memcpy(client->out_buffer + client->out_buffer_len, data, size);
-	convert_endianness(client->out_buffer + client->out_buffer_len, size);
 	client->out_buffer_len += size;
 
 	bedrock_assert(client->out_buffer_len <= sizeof(client->out_buffer));
 
 	io_set(&client->fd, OP_WRITE, 0);
+}
+
+void client_send_int(bedrock_client *client, const void *data, size_t size)
+{
+	size_t old_len;
+
+	bedrock_assert(client != NULL && data != NULL);
+
+	old_len = client->out_buffer_len;
+	client_send(client, data, size);
+	if (old_len + size == client->out_buffer_len)
+		convert_endianness(client->out_buffer + old_len, size);
 }
 
 void client_send_string(bedrock_client *client, const char *string)

@@ -18,10 +18,12 @@
 bedrock_region *region_create(bedrock_world *world, int x, int z)
 {
 	bedrock_region *region = bedrock_malloc(sizeof(bedrock_region));
+	region->world = world;
 	region->x = x;
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
 	region->columns.free = nbt_free;
+	bedrock_list_add(&world->regions, region);
 	return region;
 }
 
@@ -116,6 +118,7 @@ void region_load(bedrock_region *region)
 
 void region_free(bedrock_region *region)
 {
+	bedrock_list_del(&region->world->regions, region);
 	bedrock_list_clear(&region->columns);
 	bedrock_free(region);
 }

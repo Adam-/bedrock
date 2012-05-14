@@ -1,3 +1,6 @@
+#ifndef BEDROCK_SERVER_WORLD_H
+#define BEDROCK_SERVER_WORLD_H
+
 #include "util/list.h"
 #include "nbt/tag.h"
 
@@ -17,3 +20,5 @@ extern bedrock_world *world_create(const char *name, const char *path);
 extern bool world_load(bedrock_world *world);
 extern void world_free(bedrock_world *world);
 extern bedrock_world *world_find(const char *name);
+
+#endif // BEDROCK_SERVER_WORLD_H

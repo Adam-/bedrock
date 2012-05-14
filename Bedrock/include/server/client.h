@@ -22,7 +22,7 @@ typedef struct
 	unsigned char in_buffer[1024];
 	size_t in_buffer_len;
 
-	unsigned char out_buffer[1024];
+	unsigned char out_buffer[1048560]; // ????????????
 	size_t out_buffer_len;
 
 	char name[BEDROCK_USERNAME_MAX];
@@ -46,6 +46,7 @@ extern void client_event_write(bedrock_fd *fd, void *data);
 extern const char *client_get_ip(bedrock_client *client);
 
 extern void client_send_header(bedrock_client *client, uint8_t header);
+extern void client_send(bedrock_client *client, const void *data, size_t size);
 extern void client_send_int(bedrock_client *client, const void *data, size_t size);
 extern void client_send_string(bedrock_client *client, const char *string);
 

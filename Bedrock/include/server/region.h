@@ -5,6 +5,7 @@
 
 typedef struct
 {
+	bedrock_world *world;
 	int x;
 	int z;
 	char path[PATH_MAX];
