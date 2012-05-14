@@ -54,11 +54,25 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 	client->authenticated = STATE_BURSTING;
 
+	// Time
+	client_send_header(client, 0x04);
+	uint64_t l = 6000;
+	client_send_int(client, &l, sizeof(l));
+
+	// Health
+	client_send_header(client, 0x08);
+	uint16_t s = 20;
+	client_send_int(client, &s, sizeof(s));
+	client_send_int(client, &s, sizeof(s));
+	float f = 5;
+	client_send_int(client, &f, sizeof(f));
+
 	bedrock_node *node;
 	LIST_FOREACH(&client->world->regions, node)
 	{
 		bedrock_region *region = node->data;
 
+		printf("Loop regions, this one is %d %d\n", region->x, region->z);
 		// Map Column Allocation (0x32)
 		/*client_send_header(client, 0x32);
 		client_send_int(client, &region->x, sizeof(region->x));
@@ -71,11 +85,14 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 		{
 			nbt_tag *tag = node2->data;
 
+			printf("Looping columns? Packing %d %d\n", nbt_get(tag, 2, "Level", "xPos")->payload.tag_int, nbt_get(tag, 2, "Level", "zPos")->payload.tag_int);
 			// DOES THIS GO HERE?
 			// Map Column Allocation (0x32)
 			client_send_header(client, 0x32);
-			client_send_int(client, &region->x, sizeof(uint32_t));
-			client_send_int(client, &region->z, sizeof(uint32_t));
+			//client_send_int(client, &region->x, sizeof(uint32_t));
+			//client_send_int(client, &region->z, sizeof(uint32_t));
+			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
+			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
 			b = 1;
 			client_send_int(client, &b, sizeof(b));
 
@@ -83,7 +100,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			client_send_header(client, 0x33);
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-			b = 1;
+			b = 0;
 			client_send_int(client, &b, sizeof(b)); // Ground up continuous?
 
 			uint16_t bitmask = 0;
@@ -96,10 +113,11 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 				nbt_copy(sec, &b, sizeof(b), 1, "Y");
 				bitmask |= 1 << b;
+				printf("Column contains chunk %d bitmask is now %d\n", b, bitmask);
 			}
 			client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
 
-			bitmask = 0;
+			bitmask = 0; // ???????
 			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
 			compression_buffer *buf = NULL;
@@ -112,27 +130,44 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
 				compression_compress(&buf, blocks->data, blocks->length);
 				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
+			}
 
-				blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
+			LIST_FOREACH(&sections->payload.tag_compound, node3)
+			{
+				nbt_tag *sec = node3->data;
+
+				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				compression_compress(&buf, blocks->data, blocks->length);
-				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
-
-				blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				compression_compress(&buf, blocks->data, blocks->length);
-				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
-
-				blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				compression_compress(&buf, blocks->data, blocks->length);
-				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
-
-				blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-				bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
 				compression_compress(&buf, blocks->data, blocks->length);
 				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 			}
+
+			LIST_FOREACH(&sections->payload.tag_compound, node3)
+			{
+				nbt_tag *sec = node3->data;
+
+				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
+				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
+				compression_compress(&buf, blocks->data, blocks->length);
+				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
+			}
+
+			LIST_FOREACH(&sections->payload.tag_compound, node3)
+			{
+				nbt_tag *sec = node3->data;
+
+				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
+				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
+				compression_compress(&buf, blocks->data, blocks->length);
+				bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
+			}
+
+			/*
+			struct nbt_tag_byte_array *blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+			bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
+			compression_compress(&buf, blocks->data, blocks->length);
+			bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
+			*/
 
 			uint32_t ii = buf->length;
 			client_send_int(client, &ii, sizeof(ii));
@@ -154,17 +189,20 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	client_send_header(client, 0x0D);
 	double d = 0;
 	client_send_int(client, &d, sizeof(d)); // X
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X?
 	client_send_int(client, &d, sizeof(d)); // Stance
+	d = 50;
 	client_send_int(client, &d, sizeof(d)); // Y
-	d = 100;
+	d = 0;
 	client_send_int(client, &d, sizeof(d)); // Z
-	float f = 0;
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y?
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z?
+	f = 0;
 	client_send_int(client, &f, sizeof(f)); // Yaw
 	client_send_int(client, &f, sizeof(f)); // Pitch
-	b = 0;
+	b = 1;
 	client_send_int(client, &b, sizeof(b)); // On ground
 
-	uint16_t s;
 	// Entity Equipment (0x05) 1
 	client_send_header(client, 0x05);
 	client_send_int(client, &entity_id, sizeof(entity_id));

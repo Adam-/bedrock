@@ -91,7 +91,7 @@ void region_load(bedrock_region *region)
 		convert_endianness(&length, sizeof(length));
 		f_offset += sizeof(length);
 
-		f_offset++;
+		assert(*f_offset++ == 2);
 
 		/* At this point we're at the beginning of the compressed NBT structure */
 		cb = compression_decompress(f_offset, length);
@@ -110,6 +110,7 @@ void region_load(bedrock_region *region)
 		}
 
 		bedrock_list_add(&region->columns, tag);
+		//nbt_ascii_dump(tag);
 		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded region at offset %d in %s", offset, region->path);
 	}
 

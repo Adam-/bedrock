@@ -210,22 +210,42 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 
 	for (i = 0; i < size; ++i)
 	{
-		const char *name = va_arg(list, const char *);
 		bedrock_node *n;
 		bool found = false;
 
 		bedrock_assert_ret(t->type == TAG_LIST || t->type == TAG_COMPOUND, NULL);
 
-		/* List and compound are union'd to be the same */
-		LIST_FOREACH(&t->payload.tag_list, n)
+		if (t->type == TAG_LIST)
 		{
-			nbt_tag *t2 = n->data;
+			int pos = va_arg(list, int);
+			int count = 0;
 
-			if (!strcmp(t2->name, name))
+			LIST_FOREACH(&t->payload.tag_list, n)
 			{
-				t = t2;
-				found = true;
-				break;
+				nbt_tag *t2 = n->data;
+
+				if (count++ == pos)
+				{
+					t = t2;
+					found = true;
+					break;
+				}
+			}
+		}
+		else if (t->type == TAG_COMPOUND)
+		{
+			const char *name = va_arg(list, const char *);
+
+			LIST_FOREACH(&t->payload.tag_compound, n)
+			{
+				nbt_tag *t2 = n->data;
+
+				if (!strcmp(t2->name, name))
+				{
+					t = t2;
+					found = true;
+					break;
+				}
 			}
 		}
 

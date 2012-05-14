@@ -1,7 +1,7 @@
 /* Until I have a real config reader */
 
 #define BEDROCK_WORLD_NAME "world"
-#define BEDROCK_WORLD_BASE "/home/adam/cNBT"
+#define BEDROCK_WORLD_BASE "/home/adam/cNBT/w/world"
 
 #define BEDROCK_LISTEN_IP "0.0.0.0"
 #define BEDROCK_LISTEN_PORT 25565
