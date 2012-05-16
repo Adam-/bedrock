@@ -66,7 +66,7 @@ void region_load(bedrock_region *region)
 		uint32_t offset;
 		uint32_t length;
 		int32_t x, z;
-		bedrock_buffer *cb;
+		compression_buffer *cb;
 		nbt_tag *tag;
 
 		memcpy(&offset, f, sizeof(offset));
@@ -102,8 +102,8 @@ void region_load(bedrock_region *region)
 			continue;
 		}
 
-		tag = nbt_parse(cb->data, cb->length);
-		compression_free_buffer(cb);
+		tag = nbt_parse(cb->buffer->data, cb->buffer->length);
+		compression_decompress_end(cb);
 		if (tag == NULL)
 		{
 			bedrock_log(LEVEL_CRIT, "region: Unable to NBT parse column at offset %d in %s", offset, region->path);

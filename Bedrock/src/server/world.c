@@ -29,7 +29,7 @@ bool world_load(bedrock_world *world)
 	int fd;
 	struct stat file_info;
 	unsigned char *file_base;
-	bedrock_buffer *cb;
+	compression_buffer *cb;
 	nbt_tag *tag;
 
 	snprintf(path, sizeof(path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);
@@ -66,8 +66,8 @@ bool world_load(bedrock_world *world)
 		return false;
 	}
 
-	tag = nbt_parse(cb->data, cb->length);
-	compression_free_buffer(cb);
+	tag = nbt_parse(cb->buffer->data, cb->buffer->length);
+	compression_decompress_end(cb);
 	if (tag == NULL)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to NBT parse world information file %s", path);

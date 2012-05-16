@@ -127,8 +127,8 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			bitmask = 0; // ???????
 			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
-			char lotsofdata[1048560];
-			int lotsofoffset = 0;
+			compression_buffer *buffer = compression_compress_init();
+			bedrock_assert_ret(buffer, -1);
 
 			LIST_FOREACH(&sections->payload.tag_compound, node3)
 			{
@@ -137,8 +137,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
 				bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
 
-				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				lotsofoffset += blocks->length;
+				compression_compress_deflate(buffer, blocks->data, blocks->length);
 			}
 
 			LIST_FOREACH(&sections->payload.tag_compound, node3)
@@ -148,8 +147,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
 
-				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				lotsofoffset += blocks->length;
+				compression_compress_deflate(buffer, blocks->data, blocks->length);
 			}
 
 			LIST_FOREACH(&sections->payload.tag_compound, node3)
@@ -159,8 +157,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
 
-				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				lotsofoffset += blocks->length;
+				compression_compress_deflate(buffer, blocks->data, blocks->length);
 			}
 
 			LIST_FOREACH(&sections->payload.tag_compound, node3)
@@ -170,25 +167,20 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
 
-				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				lotsofoffset += blocks->length;
+				compression_compress_deflate(buffer, blocks->data, blocks->length);
 			}
 
 			struct nbt_tag_byte_array *blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 			bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
-			memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-			lotsofoffset += blocks->length;
 
-			assert(lotsofoffset <= sizeof(lotsofdata));
-			bedrock_buffer *whatthecrap = compression_compress(lotsofdata, lotsofoffset);
-			assert(whatthecrap);
+			compression_compress_deflate(buffer, blocks->data, blocks->length);
 
-			uint32_t ii = whatthecrap->length;
+			uint32_t ii = buffer->buffer->length;
 			client_send_int(client, &ii, sizeof(ii));
 			ii = 0;
 			client_send_int(client, &ii, sizeof(ii));
 
-			client_send(client, whatthecrap->data, whatthecrap->length);
+			client_send(client, buffer->buffer->data, buffer->buffer->length);
 			//compression_free_buffer(whatthecrap);
 
 			/*compression_buffer *buf2 = compression_decompress(whatthecrap->data, whatthecrap->length);
@@ -197,7 +189,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			assert(memcmp(buf2->data, lotsofdata, buf2->length) == 0);
 			compression_free_buffer(buf2);*/
 
-			compression_free_buffer(whatthecrap);
+			compression_compress_end(buffer);
 			//compression_free_buffer(buf);
 		}
 	}
