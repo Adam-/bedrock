@@ -29,7 +29,7 @@ bool world_load(bedrock_world *world)
 	int fd;
 	struct stat file_info;
 	unsigned char *file_base;
-	compression_buffer *cb;
+	bedrock_buffer *cb;
 	nbt_tag *tag;
 
 	snprintf(path, sizeof(path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);

@@ -30,7 +30,7 @@ bool client_load(bedrock_client *client)
 	int fd;
 	struct stat file_info;
 	unsigned char *file_base;
-	compression_buffer *cb;
+	bedrock_buffer *cb;
 	nbt_tag *tag;
 
 	bedrock_assert(client != NULL && client->world != NULL);

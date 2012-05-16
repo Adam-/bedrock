@@ -66,7 +66,7 @@ void region_load(bedrock_region *region)
 		uint32_t offset;
 		uint32_t length;
 		int32_t x, z;
-		compression_buffer *cb;
+		bedrock_buffer *cb;
 		nbt_tag *tag;
 
 		memcpy(&offset, f, sizeof(offset));

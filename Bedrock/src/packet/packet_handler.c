@@ -60,11 +60,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
 
-	// Time
-	client_send_header(client, 0x04);
-	uint64_t l = 6000;
-	client_send_int(client, &l, sizeof(l));
-
 	// Health
 	/*client_send_header(client, 0x08);
 	uint16_t s = 20;
@@ -132,7 +127,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			bitmask = 0; // ???????
 			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
-			//compression_buffer *buf = NULL;
 			char lotsofdata[1048560];
 			int lotsofoffset = 0;
 
@@ -142,8 +136,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
 				bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
-				//compression_compress(&buf, blocks->data, blocks->length);
-				//bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 
 				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
 				lotsofoffset += blocks->length;
@@ -155,8 +147,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				//compression_compress(&buf, blocks->data, blocks->length);
-				//bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 
 				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
 				lotsofoffset += blocks->length;
@@ -168,12 +158,8 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				//compression_compress(&buf, blocks->data, blocks->length);
-				//bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 
-				//memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				//lotsofoffset += blocks->length;
-				memset(lotsofdata + lotsofoffset, 0xff, blocks->length);
+				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
 				lotsofoffset += blocks->length;
 			}
 
@@ -183,29 +169,19 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
 				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-				//compression_compress(&buf, blocks->data, blocks->length);
-				//bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 
-				//memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
-				//lotsofoffset += blocks->length;
-				memset(lotsofdata + lotsofoffset, 0xff, blocks->length);
+				memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
 				lotsofoffset += blocks->length;
 			}
 
 			struct nbt_tag_byte_array *blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 			bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
-			//compression_compress(&buf, blocks->data, blocks->length);
-			//bedrock_assert_ret(buf != NULL, ERROR_UNKNOWN);
 			memcpy(lotsofdata + lotsofoffset, blocks->data, blocks->length);
 			lotsofoffset += blocks->length;
 
-			//printf("compressed lengh %d\n", buf->length);
-			//client_send(client, buf->data, buf->length);
-			compression_buffer *whatthecrap = NULL;
 			assert(lotsofoffset <= sizeof(lotsofdata));
-			compression_compress(&whatthecrap, lotsofdata, lotsofoffset);
+			bedrock_buffer *whatthecrap = compression_compress(lotsofdata, lotsofoffset);
 			assert(whatthecrap);
-			printf("Compressed from %d to %d\n", lotsofoffset, whatthecrap->length);
 
 			uint32_t ii = whatthecrap->length;
 			client_send_int(client, &ii, sizeof(ii));
@@ -215,11 +191,11 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			client_send(client, whatthecrap->data, whatthecrap->length);
 			//compression_free_buffer(whatthecrap);
 
-			compression_buffer *buf2 = compression_decompress(whatthecrap->data, whatthecrap->length);
+			/*compression_buffer *buf2 = compression_decompress(whatthecrap->data, whatthecrap->length);
 			assert(buf2);
 			assert(buf2->length == lotsofoffset);
 			assert(memcmp(buf2->data, lotsofdata, buf2->length) == 0);
-			compression_free_buffer(buf2);
+			compression_free_buffer(buf2);*/
 
 			compression_free_buffer(whatthecrap);
 			//compression_free_buffer(buf);
@@ -228,24 +204,30 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 	// Player Position & Look (0x0D)
 	client_send_header(client, 0x0D);
-	double d = 0;
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X?
-	d = 69;
-	client_send_int(client, &d, sizeof(d)); // Stance
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y?
-	d = 69;
-	client_send_int(client, &d, sizeof(d)); // Y
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z?
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X
+	double d;
+	nbt_copy(client->data, &d, sizeof(d), 2, "Pos", 1);
+	d += 2;
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Stance
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y
+	client_send_int(client, &d, sizeof(d));
+	client_send_int(client, &d, sizeof(d));
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z
 	float f = 0;
 	client_send_int(client, &f, sizeof(f)); // Yaw
 	client_send_int(client, &f, sizeof(f)); // Pitch
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // On ground
 
+	// Time
+	client_send_header(client, 0x04);
+	uint64_t l = 6000;
+	client_send_int(client, &l, sizeof(l));
+
 	// Entity Equipment (0x05) 1
 	/*client_send_header(client, 0x05);
 	client_send_int(client, &entity_id, sizeof(entity_id));
-	s = 0;
+	uint16_t s = 0;
 	client_send_int(client, &s, sizeof(s));
 	s = -1;
 	client_send_int(client, &s, sizeof(s));
@@ -292,10 +274,25 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	s = 0;
 	client_send_int(client, &s, sizeof(s));*/
 
-	// set slot?
-	//client_send_header(client, 0x67);
-	//b = 0;
-	//client_send_int(client, &b, sizeof(b)); // window, 0 = inv
+	/*int inven;
+	for (inven = 0; inven < 45; ++inven)
+	{
+		client_send_header(client, 0x67); // inven
+		b = 0; // inven
+		client_send_int(client, &b, sizeof(b));
+		s = inven;
+		client_send_int(client, &s, sizeof(s));
+		int16_t s2 = -1;
+		client_send_int(client, &s2, sizeof(s2));
+	}*/
+
+	// Health
+	client_send_header(client, 0x08);
+	uint16_t s = 20;
+	client_send_int(client, &s, sizeof(s));
+	client_send_int(client, &s, sizeof(s));
+	f = 5;
+	client_send_int(client, &f, sizeof(f));
 
 	return offset;
 }
@@ -362,117 +359,25 @@ int packet_position(bedrock_client *client, const unsigned char *buffer, size_t 
 	packet_read_int(buffer, len, &offset, &z, sizeof(z));
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
-	static bool why = false;
-	if (why == false)
-	{
-		why = true;
-
-		// Time
-		client_send_header(client, 0x04);
-		uint64_t l = 6000;
-		client_send_int(client, &l, sizeof(l));
-
-		uint8_t b;
-		/*client_send_header(client, 0x46); // ????
-		uint8_t b;
-		b = 3;
-		client_send_int(client, &b, sizeof(b));
-		b = 0;
-		client_send_int(client, &b, sizeof(b));*/
-
-		// Entity Equipment (0x05) 1
-		client_send_header(client, 0x05);
-		client_send_int(client, &entity_id, sizeof(entity_id));
-		uint16_t s = 0;
-		client_send_int(client, &s, sizeof(s));
-		s = -1;
-		client_send_int(client, &s, sizeof(s));
-		s = 0;
-		client_send_int(client, &s, sizeof(s));
-
-		// 2
-		client_send_header(client, 0x05);
-		client_send_int(client, &entity_id, sizeof(entity_id));
-		s = 1;
-		client_send_int(client, &s, sizeof(s));
-		s = -1;
-		client_send_int(client, &s, sizeof(s));
-		s = 0;
-		client_send_int(client, &s, sizeof(s));
-
-		// 3
-		client_send_header(client, 0x05);
-		client_send_int(client, &entity_id, sizeof(entity_id));
-		s = 2;
-		client_send_int(client, &s, sizeof(s));
-		s = -1;
-		client_send_int(client, &s, sizeof(s));
-		s = 0;
-		client_send_int(client, &s, sizeof(s));
-
-		// 4
-		client_send_header(client, 0x05);
-		client_send_int(client, &entity_id, sizeof(entity_id));
-		s = 3;
-		client_send_int(client, &s, sizeof(s));
-		s = -1;
-		client_send_int(client, &s, sizeof(s));
-		s = 0;
-		client_send_int(client, &s, sizeof(s));
-
-		// 5
-		client_send_header(client, 0x05);
-		client_send_int(client, &entity_id, sizeof(entity_id));
-		s = 4;
-		client_send_int(client, &s, sizeof(s));
-		s = -1;
-		client_send_int(client, &s, sizeof(s));
-		s = 0;
-		client_send_int(client, &s, sizeof(s));
-
-		int whynotwork;
-		for (whynotwork = 0; whynotwork < 45; ++whynotwork)
-		{
-			client_send_header(client, 0x67); // inven
-			b = 0; // inven
-			client_send_int(client, &b, sizeof(b));
-			s = whynotwork;
-			client_send_int(client, &s, sizeof(s));
-			int16_t s2 = -1;
-			client_send_int(client, &s2, sizeof(s2));
-		}
-
-		// Health
-		client_send_header(client, 0x08);
-		s = 20;
-		client_send_int(client, &s, sizeof(s));
-		client_send_int(client, &s, sizeof(s));
-		float f = 5;
-		client_send_int(client, &f, sizeof(f));
-	}
-	return 34;//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
-
-	// ????????????????????????????????????????????
 	// Player Position & Look (0x0D)
 	/*client_send_header(client, 0x0D);
-	double d = 0;
-	client_send_int(client, &d, sizeof(d)); // X
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X?
-	client_send_int(client, &d, sizeof(d)); // Stance
-	d = 50;
-	client_send_int(client, &d, sizeof(d)); // Y
-	d = 0;
-	client_send_int(client, &d, sizeof(d)); // Z
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y?
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z?
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X
+	double d;
+	nbt_copy(client->data, &d, sizeof(d), 2, "Pos", 1);
+	d += 2;
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Stance
+	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y
+	client_send_int(client, &d, sizeof(d));
+	client_send_int(client, &d, sizeof(d));
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z
 	float f = 0;
 	client_send_int(client, &f, sizeof(f)); // Yaw
 	client_send_int(client, &f, sizeof(f)); // Pitch
 	uint8_t b = 1;
-	client_send_int(client, &b, sizeof(b)); // On ground
+	client_send_int(client, &b, sizeof(b)); // On ground*/
 
-	bedrock_assert_ret(offset == 34, ERROR_INVALID_FORMAT);
-	return offset;*/
+	bedrock_assert_ret(offset == 34, ERROR_INVALID_FORMAT); /// XXX
+	return offset;
 }
 
 int packet_position_and_look(bedrock_client *client, const unsigned char *buffer, size_t len)

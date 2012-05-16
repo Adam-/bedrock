@@ -3,10 +3,9 @@
 #include "util/util.h"
 #include <zlib.h>
 
-#define CHUNK_SIZE 4096
-
-void compression_compress(compression_buffer **buf, const char *data, size_t len)
+bedrock_buffer *compression_compress(const char *data, size_t len)
 {
+	bedrock_buffer *buf;
 	int i;
 
 	z_stream stream = {
@@ -26,30 +25,20 @@ void compression_compress(compression_buffer **buf, const char *data, size_t len
 
 	bedrock_assert_ret(stream.avail_in == len, false);
 
-	if (*buf == NULL)
-	{
-		*buf = bedrock_malloc(sizeof(compression_buffer));
-		(*buf)->data = bedrock_malloc(CHUNK_SIZE);
-		(*buf)->length = 0;
-		(*buf)->capacity = CHUNK_SIZE;
-	}
+	buf = bedrock_buffer_create(NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
 
 	do
 	{
-		while ((*buf)->capacity - (*buf)->length < CHUNK_SIZE)
-		{
-			(*buf)->capacity *= 2;
-			(*buf)->data = bedrock_realloc((*buf)->data, (*buf)->capacity);
-		}
+		bedrock_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
 
-		bedrock_assert_do((*buf)->capacity - (*buf)->length >= CHUNK_SIZE, break);
+		bedrock_assert_do(buf->capacity - buf->length >= BEDROCK_BUFFER_DEFAULT_SIZE, break);
 
-		stream.next_out = (*buf)->data + (*buf)->length;
-		stream.avail_out = CHUNK_SIZE;
+		stream.next_out = buf->data + buf->length;
+		stream.avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
 
 		i = deflate(&stream, Z_FINISH);
 		if (i == Z_OK || i == Z_STREAM_END)
-			(*buf)->length += CHUNK_SIZE - stream.avail_out;
+			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - stream.avail_out;
 	}
 	while (i == Z_OK);
 
@@ -58,14 +47,16 @@ void compression_compress(compression_buffer **buf, const char *data, size_t len
 	if (i != Z_STREAM_END)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
-		compression_free_buffer(*buf);
-		*buf = NULL;
+		compression_free_buffer(buf);
+		buf = NULL;
 	}
+
+	return buf;
 }
 
-compression_buffer *compression_decompress(const char *data, size_t len)
+bedrock_buffer *compression_decompress(const char *data, size_t len)
 {
-	compression_buffer *buf;
+	bedrock_buffer *buf;
 	int i;
 
 	bedrock_assert_ret(len > 0, NULL);
@@ -87,27 +78,20 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 		return NULL;
 	}
 
-	buf = bedrock_malloc(sizeof(compression_buffer));
-	buf->data = bedrock_malloc(len);
-	buf->length = 0;
-	buf->capacity = len;
+	buf = bedrock_buffer_create(NULL, 0, len);
 
 	do
 	{
-		while (buf->capacity - buf->length < CHUNK_SIZE)
-		{
-			buf->capacity *= 2;
-			buf->data = bedrock_realloc(buf->data, buf->capacity);
-		}
+		bedrock_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
 
-		bedrock_assert_do(buf->capacity - buf->length >= CHUNK_SIZE, break);
+		bedrock_assert_do(buf->capacity - buf->length >= BEDROCK_BUFFER_DEFAULT_SIZE, break);
 
 		stream.next_out = buf->data + buf->length;
-		stream.avail_out = CHUNK_SIZE;
+		stream.avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
 
 		i = inflate(&stream, Z_NO_FLUSH);
 		if (i == Z_OK || i == Z_STREAM_END)
-			buf->length += CHUNK_SIZE - stream.avail_out;
+			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - stream.avail_out;
 	}
 	while (i == Z_OK);
 
@@ -123,7 +107,7 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 	return buf;
 }
 
-void compression_free_buffer(compression_buffer *buf)
+void compression_free_buffer(bedrock_buffer *buf)
 {
 	bedrock_free(buf->data);
 	bedrock_free(buf);
