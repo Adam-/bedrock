@@ -56,15 +56,9 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 	// Spawn Position (0x06)
 	client_send_header(client, 0x06);
-	i = 0;
-	client_send_int(client, &i, sizeof(i)); // X
-	i = 50;
-	client_send_int(client, &i, sizeof(i)); // Y
-	i = 0;
-	client_send_int(client, &i, sizeof(i)); // Z
-	//client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX"), sizeof(uint32_t)); // X
-	//client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
-	//client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
+	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX"), sizeof(uint32_t)); // X
+	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
+	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
 
 	// Time
 	client_send_header(client, 0x04);
@@ -97,7 +91,11 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 		{
 			nbt_tag *tag = node2->data;
 
-			printf("Looping columns? Packing %d %d\n", nbt_get(tag, 2, "Level", "xPos")->payload.tag_int, nbt_get(tag, 2, "Level", "zPos")->payload.tag_int);
+			int x = nbt_get(tag, 2, "Level", "xPos")->payload.tag_int, z = nbt_get(tag, 2, "Level", "zPos")->payload.tag_int;
+			bool good = x < -32 && x > -52 && z < -4 && z > -24;
+			if (!good)
+				continue;
+
 			// DOES THIS GO HERE?
 			// Map Column Allocation (0x32)
 			client_send_header(client, 0x32);
@@ -128,7 +126,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 				assert((last_y + 1) == b);
 				last_y = b;
 				bitmask |= 1 << b;
-				printf("Column contains chunk %d bitmask is now %d\n", b, bitmask);
 			}
 			client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
 
@@ -232,15 +229,13 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	// Player Position & Look (0x0D)
 	client_send_header(client, 0x0D);
 	double d = 0;
-	client_send_int(client, &d, sizeof(d)); // X
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X?
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X?
+	d = 69;
 	client_send_int(client, &d, sizeof(d)); // Stance
-	d = 50;
-	client_send_int(client, &d, sizeof(d)); // Y
-	d = 0;
-	client_send_int(client, &d, sizeof(d)); // Z
 	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y?
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z?
+	d = 69;
+	client_send_int(client, &d, sizeof(d)); // Y
+	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z?
 	float f = 0;
 	client_send_int(client, &f, sizeof(f)); // Yaw
 	client_send_int(client, &f, sizeof(f)); // Pitch

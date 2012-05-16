@@ -65,6 +65,7 @@ void region_load(bedrock_region *region)
 		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
 		uint32_t length;
+		int32_t x, z;
 		compression_buffer *cb;
 		nbt_tag *tag;
 
@@ -97,7 +98,7 @@ void region_load(bedrock_region *region)
 		cb = compression_decompress(f_offset, length);
 		if (cb == NULL)
 		{
-			bedrock_log(LEVEL_CRIT, "region: Unable to inflate region at offset %d in %s", offset, region->path);
+			bedrock_log(LEVEL_CRIT, "region: Unable to inflate column at offset %d in %s", offset, region->path);
 			continue;
 		}
 
@@ -105,12 +106,15 @@ void region_load(bedrock_region *region)
 		compression_free_buffer(cb);
 		if (tag == NULL)
 		{
-			bedrock_log(LEVEL_CRIT, "region: Unable to NBT parse region at offset %d in %s", offset, region->path);
+			bedrock_log(LEVEL_CRIT, "region: Unable to NBT parse column at offset %d in %s", offset, region->path);
 			continue;
 		}
 
 		bedrock_list_add(&region->columns, tag);
-		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded region at offset %d in %s", offset, region->path);
+
+		nbt_copy(tag, &x, sizeof(x), 2, "Level", "xPos");
+		nbt_copy(tag, &z, sizeof(z), 2, "Level", "zPos");
+		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", x, z, region->path);
 	}
 
 	munmap(file_base, file_info.st_size);
