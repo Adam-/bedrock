@@ -4,6 +4,7 @@
 #include "io/io.h"
 #include "packet/packet.h"
 #include "compression/compression.h"
+#include "util/endian.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,6 +20,7 @@ static bedrock_list exiting_client_list;
 bedrock_client *client_create()
 {
 	bedrock_client *client = bedrock_malloc(sizeof(bedrock_client));
+	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_BUFFER_LENGTH);
 	client->authenticated = STATE_UNAUTHENTICATED;
 	bedrock_list_add(&client_list, client);
 	return client;
@@ -92,6 +94,7 @@ static void client_free(bedrock_client *client)
 
 	bedrock_list_del(&client_list, client);
 
+	bedrock_buffer_free(client->out_buffer);
 	bedrock_free(client);
 }
 
@@ -155,7 +158,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 	bedrock_client *client = data;
 	int i;
 
-	if (client->out_buffer_len == 0)
+	if (client->out_buffer->length == 0)
 	{
 		io_set(&client->fd, 0, OP_WRITE);
 		if (client->fd.ops == 0)
@@ -163,7 +166,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 		return;
 	}
 
-	i = send(fd->fd, client->out_buffer, client->out_buffer_len, 0);
+	i = send(fd->fd, client->out_buffer->data, client->out_buffer->length, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -173,10 +176,16 @@ void client_event_write(bedrock_fd *fd, void *data)
 		return;
 	}
 
-	client->out_buffer_len -= i;
-	if (client->out_buffer_len > 0)
+	client->out_buffer->length -= i;
+	if (client->out_buffer->length > 0)
 	{
-		memmove(client->out_buffer, client->out_buffer + i, client->out_buffer_len);
+		memmove(client->out_buffer->data, client->out_buffer->data + i, client->out_buffer->length);
+
+		if (client->out_buffer->capacity > BEDROCK_CLIENT_BUFFER_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_BUFFER_LENGTH)
+		{
+			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_BUFFER_LENGTH);
+			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_BUFFER_LENGTH);
+		}
 	}
 	else
 	{
@@ -216,7 +225,7 @@ void client_send(bedrock_client *client, const void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL);
 
-	if (client->out_buffer_len + size > sizeof(client->out_buffer))
+	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + size > BEDROCK_CLIENT_BUFFER_LENGTH)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
@@ -224,10 +233,7 @@ void client_send(bedrock_client *client, const void *data, size_t size)
 		return;
 	}
 
-	memcpy(client->out_buffer + client->out_buffer_len, data, size);
-	client->out_buffer_len += size;
-
-	bedrock_assert(client->out_buffer_len <= sizeof(client->out_buffer));
+	bedrock_buffer_append(client->out_buffer, data, size);
 
 	io_set(&client->fd, OP_WRITE, 0);
 }
@@ -238,10 +244,10 @@ void client_send_int(bedrock_client *client, const void *data, size_t size)
 
 	bedrock_assert(client != NULL && data != NULL);
 
-	old_len = client->out_buffer_len;
+	old_len = client->out_buffer->length;
 	client_send(client, data, size);
-	if (old_len + size == client->out_buffer_len)
-		convert_endianness(client->out_buffer + old_len, size);
+	if (old_len + size == client->out_buffer->length)
+		convert_endianness(client->out_buffer->data + old_len, size);
 }
 
 void client_send_string(bedrock_client *client, const char *string)
@@ -254,7 +260,7 @@ void client_send_string(bedrock_client *client, const char *string)
 
 	client_send_int(client, &len, sizeof(len));
 
-	if (client->out_buffer_len + (len * 2) > sizeof(client->out_buffer))
+	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + (len * 2) > BEDROCK_CLIENT_BUFFER_LENGTH)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
@@ -262,10 +268,12 @@ void client_send_string(bedrock_client *client, const char *string)
 		return;
 	}
 
+	bedrock_ensure_capacity(client->out_buffer, len * 2);
+
 	for (i = 0; i < len; ++i)
 	{
-		client->out_buffer[client->out_buffer_len++] = 0;
-		client->out_buffer[client->out_buffer_len++] = *string++;
+		client->out_buffer->data[client->out_buffer->length++] = 0;
+		client->out_buffer->data[client->out_buffer->length++] = *string++;
 	}
 }
 

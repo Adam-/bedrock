@@ -5,6 +5,9 @@
 #include "util/list.h"
 #include "server/config.h"
 #include "server/world.h"
+#include "util/buffer.h"
+
+#define BEDROCK_CLIENT_BUFFER_LENGTH 1024
 
 typedef enum
 {
@@ -22,8 +25,7 @@ typedef struct
 	unsigned char in_buffer[1024];
 	size_t in_buffer_len;
 
-	unsigned char out_buffer[1048560]; // ????????????
-	size_t out_buffer_len;
+	bedrock_buffer *out_buffer;
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];

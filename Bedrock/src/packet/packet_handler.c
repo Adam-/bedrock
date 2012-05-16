@@ -376,8 +376,7 @@ int packet_position_and_look(bedrock_client *client, const unsigned char *buffer
 	float yaw, pitch;
 	uint8_t on_ground;
 
-	assert(sizeof(double) == 8);
-	assert(sizeof(float) == 4);
+	client->authenticated = STATE_AUTHENTICATED;
 
 	packet_read_int(buffer, len, &offset, &x, sizeof(x));
 	packet_read_int(buffer, len, &offset, &y, sizeof(y));

@@ -45,4 +45,13 @@ void bedrock_buffer_append(bedrock_buffer *buffer, const void *data, size_t leng
 {
 	bedrock_ensure_capacity(buffer, length);
 	memcpy(buffer->data + buffer->length, data, length);
+	buffer->length += length;
+}
+
+void bedrock_buffer_resize(bedrock_buffer *buffer, size_t size)
+{
+	bedrock_assert(size >= buffer->length);
+
+	buffer->capacity = size;
+	buffer->data = bedrock_realloc(buffer->data, buffer->capacity);
 }
