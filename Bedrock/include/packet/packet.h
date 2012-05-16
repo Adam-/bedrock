@@ -12,6 +12,11 @@ enum
 
 enum
 {
+	HARD_SIZE = 1 << 0
+};
+
+enum
+{
 	ERROR_UNKNOWN        = 0,
 	ERROR_EAGAIN         = -1,
 	ERROR_INVALID_FORMAT = -2,

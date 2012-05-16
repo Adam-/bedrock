@@ -7,15 +7,16 @@ static struct c2s_packet_handler
 {
 	uint8_t id;
 	uint8_t len;
+	uint8_t permission;
 	uint8_t flags;
 	int (*handler)(bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
-	{KEEP_ALIVE,       5,  STATE_BURSTING,        packet_keep_alive},
-	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,     packet_login_request},
-	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED, packet_handshake},
-	{PLAYER,           2,  STATE_BURSTING,        packet_player},
-	{PLAYER_POS,      34,  STATE_BURSTING,        packet_position},
-	{PLAYER_POS_LOOK, 42,  STATE_BURSTING,        packet_position_and_look},
+	{KEEP_ALIVE,       5,  STATE_BURSTING,        HARD_SIZE, packet_keep_alive},
+	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,             0, packet_login_request},
+	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,         0, packet_handshake},
+	{PLAYER,           2,  STATE_BURSTING,        HARD_SIZE, packet_player},
+	{PLAYER_POS,      34,  STATE_BURSTING,        HARD_SIZE, packet_position},
+	{PLAYER_POS_LOOK, 42,  STATE_BURSTING,        HARD_SIZE, packet_position_and_look},
 };
 
 static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *handler)
@@ -46,7 +47,7 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 	if (len < handler->len)
 		return 0;
 
-	if ((handler->flags & client->authenticated) == 0)
+	if ((handler->permission & client->authenticated) == 0)
 	{
 		bedrock_log(LEVEL_WARN, "packet: Unexpected packet 0x%02x from client %s - dropping client", id, client_get_ip(client));
 		client_exit(client);
@@ -81,6 +82,14 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 		client_exit(client);
 		return -1;
 	}
+
+	if (handler->flags & HARD_SIZE)
+		if (i != handler->len)
+		{
+			bedrock_log(LEVEL_WARN, "packet: Packet 0x%02x from client %s was handled improperly, expected %d and got %d - dropping client", id, handler->len, i, client_get_ip(client));
+			client_exit(client);
+			return;
+		}
 
 	return i;
 }

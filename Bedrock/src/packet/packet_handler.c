@@ -11,7 +11,6 @@ int packet_keep_alive(bedrock_client *client, const unsigned char *buffer, size_
 	client_send_header(client, KEEP_ALIVE);
 	client_send_int(client, &id, sizeof(id));
 
-	bedrock_assert_ret(offset == 5, ERROR_UNKNOWN);
 	return offset;
 }
 
@@ -335,7 +334,6 @@ int packet_player(bedrock_client *client, const unsigned char *buffer, size_t le
 
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
-	bedrock_assert_ret(offset == 2, ERROR_INVALID_FORMAT);
 	return offset; // XXX
 }
 
@@ -368,7 +366,6 @@ int packet_position(bedrock_client *client, const unsigned char *buffer, size_t 
 	uint8_t b = 1;
 	client_send_int(client, &b, sizeof(b)); // On ground*/
 
-	bedrock_assert_ret(offset == 34, ERROR_INVALID_FORMAT); /// XXX
 	return offset;
 }
 
@@ -390,6 +387,5 @@ int packet_position_and_look(bedrock_client *client, const unsigned char *buffer
 	packet_read_int(buffer, len, &offset, &pitch, sizeof(pitch));
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
-	bedrock_assert_ret(offset == 42, ERROR_INVALID_FORMAT);
 	return offset;
 }
