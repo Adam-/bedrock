@@ -48,16 +48,8 @@ void compression_compress(compression_buffer **buf, const char *data, size_t len
 		stream.avail_out = CHUNK_SIZE;
 
 		i = deflate(&stream, Z_FINISH);
-		if (i != Z_OK && i != Z_STREAM_END)
-		{
-			bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
-			compression_free_buffer(*buf);
-			*buf = NULL;
-			inflateEnd(&stream);
-			return;
-		}
-
-		(*buf)->length += CHUNK_SIZE - stream.avail_out;
+		if (i == Z_OK || i == Z_STREAM_END)
+			(*buf)->length += CHUNK_SIZE - stream.avail_out;
 	}
 	while (i == Z_OK);
 
@@ -65,7 +57,7 @@ void compression_compress(compression_buffer **buf, const char *data, size_t len
 
 	if (i != Z_STREAM_END)
 	{
-		bedrock_log(LEVEL_CRIT, "zlib: EOF reached but not end of stream?");
+		bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
 		compression_free_buffer(*buf);
 		*buf = NULL;
 	}
@@ -85,6 +77,8 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 			.next_in = data,
 			.avail_in = len
 	};
+
+	bedrock_assert_ret(stream.avail_in == len, false);
 
 	i = inflateInit2(&stream, 15 + 32);
 	if (i != Z_OK)
@@ -112,23 +106,16 @@ compression_buffer *compression_decompress(const char *data, size_t len)
 		stream.avail_out = CHUNK_SIZE;
 
 		i = inflate(&stream, Z_NO_FLUSH);
-		if (i != Z_OK && i != Z_STREAM_END)
-		{
-			bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
-			compression_free_buffer(buf);
-			inflateEnd(&stream);
-			return NULL;
-		}
-
-		buf->length += CHUNK_SIZE - stream.avail_out;
+		if (i == Z_OK || i == Z_STREAM_END)
+			buf->length += CHUNK_SIZE - stream.avail_out;
 	}
 	while (i == Z_OK);
 
 	inflateEnd(&stream);
 
-	if (i != Z_STREAM_END)
+	if (i != Z_OK && i != Z_STREAM_END)
 	{
-		bedrock_log(LEVEL_CRIT, "zlib: EOF reached but not end of stream?");
+		bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
 		compression_free_buffer(buf);
 		return NULL;
 	}

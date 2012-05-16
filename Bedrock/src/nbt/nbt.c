@@ -118,10 +118,15 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 		case TAG_INT_ARRAY:
 		{
 			struct nbt_tag_int_array *tia = &tag->payload.tag_int_array;
+			int32_t i;
 
 			CHECK_RETURN(read_bytes(&tia->length, sizeof(tia->length), data, size, true), error);
 			tia->data = bedrock_malloc(sizeof(int32_t) * tia->length);
 			CHECK_RETURN(read_bytes(tia->data, sizeof(int32_t) * tia->length, data, size, false), error);
+
+			for (i = 0; i < tia->length; ++i)
+				convert_endianness(tia->data + i, sizeof(int32_t));
+
 			break;
 		}
 		default:
@@ -313,9 +318,10 @@ const void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 	va_start(list, size);
 
 	tag = nbt_get_from_valist(tag, size, list);
-	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
 
 	va_end(list);
+
+	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
 
 	return &tag->payload;
 }
@@ -326,9 +332,10 @@ const char *nbt_read_string(nbt_tag *tag, size_t size, ...)
 	va_start(list, size);
 
 	tag = nbt_get_from_valist(tag, size, list);
-	bedrock_assert_ret(tag->type == TAG_STRING, NULL);
 
 	va_end(list);
+
+	bedrock_assert_ret(tag->type == TAG_STRING, NULL);
 
 	return tag->payload.tag_string;
 }
@@ -376,7 +383,7 @@ static void recursive_dump_tag(nbt_tag *t, int level)
 		}
 		case TAG_LIST:
 		{
-			printf("TAG_List(%s): length %d\n", name, t->payload.tag_list.count);
+			printf("TAG_List(%s): length %ld\n", name, t->payload.tag_list.count);
 			for (r = 0; r < level; ++r)
 				printf("	");
 			printf("{\n");

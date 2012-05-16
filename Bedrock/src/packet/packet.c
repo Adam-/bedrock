@@ -13,6 +13,7 @@ static struct c2s_packet_handler
 	{KEEP_ALIVE,       5,  STATE_BURSTING,        packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,     packet_login_request},
 	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED, packet_handshake},
+	{PLAYER,           2,  STATE_BURSTING,        packet_player},
 	{PLAYER_POS,      34,  STATE_BURSTING,        packet_position},
 	{PLAYER_POS_LOOK, 42,  STATE_BURSTING,        packet_position_and_look},
 };
