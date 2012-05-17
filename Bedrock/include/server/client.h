@@ -18,7 +18,7 @@ typedef enum
 	STATE_AUTHENTICATED   = 1 << 4      /* Authenticated and in the game */
 } bedrock_client_authentication_state;
 
-typedef struct
+struct bedrock_client
 {
 	bedrock_fd fd;
 
@@ -33,34 +33,34 @@ typedef struct
 	bedrock_client_authentication_state authenticated;
 
 	nbt_tag *data;			/* player's .dat file */
-	bedrock_world *world;	/* world they are in */
+	struct bedrock_world *world;	/* world they are in */
 
 	bedrock_list columns;   /* columns this player knows about */
-} bedrock_client;
+};
 
 extern bedrock_list client_list;
 
-extern bedrock_client *client_create();
-extern bool client_load(bedrock_client *client);
-extern void client_exit(bedrock_client *client);
+extern struct bedrock_client *client_create();
+extern bool client_load(struct bedrock_client *client);
+extern void client_exit(struct bedrock_client *client);
 extern void client_process_exits();
 
 extern void client_event_read(bedrock_fd *fd, void *data);
 extern void client_event_write(bedrock_fd *fd, void *data);
 
-extern const char *client_get_ip(bedrock_client *client);
+extern const char *client_get_ip(struct bedrock_client *client);
 
-extern void client_send_header(bedrock_client *client, uint8_t header);
-extern void client_send(bedrock_client *client, const void *data, size_t size);
-extern void client_send_int(bedrock_client *client, const void *data, size_t size);
-extern void client_send_string(bedrock_client *client, const char *string);
+extern void client_send_header(struct bedrock_client *client, uint8_t header);
+extern void client_send(struct bedrock_client *client, const void *data, size_t size);
+extern void client_send_int(struct bedrock_client *client, const void *data, size_t size);
+extern void client_send_string(struct bedrock_client *client, const char *string);
 
 extern bool client_valid_username(const char *name);
 
-extern double *client_get_pos_x(bedrock_client *client);
-extern double *client_get_pos_y(bedrock_client *client);
-extern double *client_get_pos_z(bedrock_client *client);
+extern double *client_get_pos_x(struct bedrock_client *client);
+extern double *client_get_pos_y(struct bedrock_client *client);
+extern double *client_get_pos_z(struct bedrock_client *client);
 
-extern void client_update_chunks(bedrock_client *client);
+extern void client_update_chunks(struct bedrock_client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H

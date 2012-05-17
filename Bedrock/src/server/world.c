@@ -2,20 +2,22 @@
 #include "server/region.h"
 #include "util/memory.h"
 #include "compression/compression.h"
+#include "server/world.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <math.h>
 
 #define BEDROCK_WORLD_LEVEL_FILE "level.dat"
 
 bedrock_list world_list;
 
-bedrock_world *world_create(const char *name, const char *path)
+struct bedrock_world *world_create(const char *name, const char *path)
 {
-	bedrock_world *world = bedrock_malloc(sizeof(bedrock_world));
+	struct bedrock_world *world = bedrock_malloc(sizeof(struct bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
 	world->regions.free = region_free;
@@ -23,7 +25,7 @@ bedrock_world *world_create(const char *name, const char *path)
 	return world;
 }
 
-bool world_load(bedrock_world *world)
+bool world_load(struct bedrock_world *world)
 {
 	char path[PATH_MAX];
 	int fd;
@@ -80,7 +82,7 @@ bool world_load(bedrock_world *world)
 	return true;
 }
 
-void world_free(bedrock_world *world)
+void world_free(struct bedrock_world *world)
 {
 	if (world->data != NULL)
 		nbt_free(world->data);
@@ -90,13 +92,13 @@ void world_free(bedrock_world *world)
 	bedrock_free(world);
 }
 
-bedrock_world *world_find(const char *name)
+struct bedrock_world *world_find(const char *name)
 {
 	bedrock_node *n;
 
 	LIST_FOREACH(&world_list, n)
 	{
-		bedrock_world *world = n->data;
+		struct bedrock_world *world = n->data;
 
 		if (!strcmp(world->name, name))
 			return world;
@@ -105,15 +107,18 @@ bedrock_world *world_find(const char *name)
 	return NULL;
 }
 
-bedrock_region *find_region_which_contains(bedrock_world *world, double x, double z)
+struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z)
 {
-	int column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
-	int region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
+	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+	double region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
 	bedrock_node *n;
 
-	LIST_FOREACH(world->regions, n)
+	region_x = region_x >= 0 ? ceil(region_x) : floor(region_x);
+	region_z = region_z >= 0 ? ceil(region_z) : floor(region_z);
+
+	LIST_FOREACH(&world->regions, n)
 	{
-		bedrock_region *region = n->data;
+		struct bedrock_region *region = n->data;
 
 		// XXX are these in some order?
 		if (region->x == region_x && region->z == region_z)
@@ -123,21 +128,27 @@ bedrock_region *find_region_which_contains(bedrock_world *world, double x, doubl
 	return NULL;
 }
 
-nbt_tag *find_column_which_contains(bedrock_world *world, double x, double z)
+nbt_tag *find_column_which_contains(struct bedrock_world *world, double x, double z)
 {
-	int column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
 
-	bedrock_region *region = find_region_which_contains(world, x, z);
+	column_x = column_x >= 0 ? ceil(column_x) : floor(column_x);
+	column_z = column_z >= 0 ? ceil(column_z) : floor(column_z);
+
+	struct bedrock_region *region = find_region_which_contains(world, x, z);
 	if (region != NULL)
 	{
 		bedrock_node *n;
 
-		LIST_FOREACH(region->columns, n)
+		LIST_FOREACH(&region->columns, n)
 		{
 			nbt_tag *tag = n->data;
 
+			int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
+					*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
+
 			// XXX are these in some order?
-			if (*nbt_read(tag, TAG_INT, 2, "Level", "xPos") == column_x && *nbt_read(tag, TAG_INT, 2, "Level", "zPos") == column_z)
+			if (*x == column_x && *z == column_z)
 				return tag;
 		}
 	}

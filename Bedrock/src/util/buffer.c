@@ -27,7 +27,7 @@ void bedrock_ensure_capacity(bedrock_buffer *buffer, size_t size)
 {
 	if (buffer->capacity - buffer->length < size)
 	{
-		size_t i, n = size | buffer->capacity;
+		size_t i, n = size + buffer->length;
 		for (i = 1; i < sizeof(size_t) * 8; i <<= 1)
 			n |= n >> i;
 		n ^= n >> 1;

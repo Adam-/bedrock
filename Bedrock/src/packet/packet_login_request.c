@@ -1,23 +1,12 @@
+#include "server/client.h"
 #include "packet/packet.h"
 #include "nbt/nbt.h"
-
-int packet_keep_alive(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	size_t offset = 1;
-	uint32_t id;
-
-	packet_read_int(buffer, len, &offset, &id, sizeof(id));
-
-	client_send_header(client, KEEP_ALIVE);
-	client_send_int(client, &id, sizeof(id));
-
-	return offset;
-}
 
 #include "server/region.h" // XXX
 #include "compression/compression.h" // XXX
 static uint32_t entity_id = 0;//XXXXXXXXXXXXX
-int packet_login_request(bedrock_client *client, const unsigned char *buffer, size_t len)
+
+int packet_login_request(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	size_t offset = 1;
 	int32_t version, i;
@@ -59,10 +48,10 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
 
-	bedrock_node *node;
+	/*bedrock_node *node;
 	LIST_FOREACH(&client->world->regions, node)
 	{
-		bedrock_region *region = node->data;
+		struct bedrock_region *region = node->data;
 
 		bedrock_node *node2;
 		LIST_FOREACH(&region->columns, node2)
@@ -161,18 +150,11 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			client_send_int(client, &ii, sizeof(ii));
 
 			client_send(client, buffer->buffer->data, buffer->buffer->length);
-			//compression_free_buffer(whatthecrap);
-
-			/*compression_buffer *buf2 = compression_decompress(whatthecrap->data, whatthecrap->length);
-			assert(buf2);
-			assert(buf2->length == lotsofoffset);
-			assert(memcmp(buf2->data, lotsofdata, buf2->length) == 0);
-			compression_free_buffer(buf2);*/
 
 			compression_compress_end(buffer);
-			//compression_free_buffer(buf);
 		}
-	}
+	}*/
+	client_update_chunks(client);
 
 	// Player Position & Look (0x0D)
 	client_send_header(client, 0x0D);
@@ -262,90 +244,6 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	client_send_int(client, &s, sizeof(s));
 	f = 5;
 	client_send_int(client, &f, sizeof(f));
-
-	return offset;
-}
-
-int packet_handshake(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	size_t offset = 1;
-	bedrock_world *world;
-	char username[BEDROCK_USERNAME_MAX + 1 + 64 + 1 + 5];
-	char *p;
-
-	packet_read_string(buffer, len, &offset, username, sizeof(username));
-
-	if (offset == ERROR_EAGAIN)
-		return ERROR_EAGAIN;
-
-	p = strchr(username, ';');
-	if (p == NULL)
-		return ERROR_INVALID_FORMAT;
-
-	*p = 0;
-
-	if (client_valid_username(username) == false)
-		return ERROR_INVALID_FORMAT;
-
-	// Check already exists
-
-	world = world_find(BEDROCK_WORLD_NAME);
-	bedrock_assert_ret(world != NULL, ERROR_UNKNOWN);
-
-	strncpy(client->name, username, sizeof(client->name));
-	client->authenticated = STATE_HANDSHAKING;
-	client->world = world;
-
-	client_load(client); // Can fail if a new client
-	assert(client->data); // XXX
-
-	client_send_header(client, HANDSHAKE);
-	client_send_string(client, "-");
-
-	return offset;
-}
-
-int packet_player(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	size_t offset = 1;
-	uint8_t on_ground;
-
-	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
-
-	return offset; // XXX
-}
-
-int packet_position(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	size_t offset = 1;
-	double x, y, stance, z;
-	uint8_t on_ground;
-
-	packet_read_int(buffer, len, &offset, &x, sizeof(x));
-	packet_read_int(buffer, len, &offset, &y, sizeof(y));
-	packet_read_int(buffer, len, &offset, &stance, sizeof(stance));
-	packet_read_int(buffer, len, &offset, &z, sizeof(z));
-	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
-
-	return offset;
-}
-
-int packet_position_and_look(bedrock_client *client, const unsigned char *buffer, size_t len)
-{
-	size_t offset = 1;
-	double x, y, stance, z;
-	float yaw, pitch;
-	uint8_t on_ground;
-
-	client->authenticated = STATE_AUTHENTICATED;
-
-	packet_read_int(buffer, len, &offset, &x, sizeof(x));
-	packet_read_int(buffer, len, &offset, &y, sizeof(y));
-	packet_read_int(buffer, len, &offset, &stance, sizeof(stance));
-	packet_read_int(buffer, len, &offset, &z, sizeof(z));
-	packet_read_int(buffer, len, &offset, &yaw, sizeof(yaw));
-	packet_read_int(buffer, len, &offset, &pitch, sizeof(pitch));
-	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
 	return offset;
 }

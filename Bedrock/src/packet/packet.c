@@ -1,7 +1,13 @@
 #include "server/bedrock.h"
 #include "packet/packet.h"
-#include "packet/packet_handler.h"
 #include "util/endian.h"
+
+#include "packet/packet_handshake.h"
+#include "packet/packet_keep_alive.h"
+#include "packet/packet_login_request.h"
+#include "packet/packet_player.h"
+#include "packet/packet_position_and_look.h"
+#include "packet/packet_position.h"
 
 static struct c2s_packet_handler
 {
@@ -9,7 +15,7 @@ static struct c2s_packet_handler
 	uint8_t len;
 	uint8_t permission;
 	uint8_t flags;
-	int (*handler)(bedrock_client *, const unsigned char *buffer, size_t len);
+	int (*handler)(struct bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
 	{KEEP_ALIVE,       5,  STATE_BURSTING,        HARD_SIZE, packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,             0, packet_login_request},
@@ -31,7 +37,7 @@ static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *ha
 /** Parse a packet. Returns -1 if the packet is invalid or unexpected, 0 if there is not
  * enough data yet, or the amount of data read from buffer.
  */
-int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_parse(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	uint8_t id = *buffer;
 	int i;
@@ -88,7 +94,7 @@ int packet_parse(bedrock_client *client, const unsigned char *buffer, size_t len
 		{
 			bedrock_log(LEVEL_WARN, "packet: Packet 0x%02x from client %s was handled improperly, expected %d and got %d - dropping client", id, handler->len, i, client_get_ip(client));
 			client_exit(client);
-			return;
+			return -1;
 		}
 
 	return i;

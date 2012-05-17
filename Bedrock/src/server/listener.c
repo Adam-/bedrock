@@ -11,7 +11,7 @@
 
 static void accept_client(bedrock_fd *fd, void *unused)
 {
-	bedrock_client *client;
+	struct bedrock_client *client;
 	int client_fd;
 	struct sockaddr_in6 addr;
 	socklen_t addrlen = sizeof(addr);

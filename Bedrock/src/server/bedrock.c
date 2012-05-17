@@ -2,6 +2,7 @@
 #include "server/config.h"
 #include "server/listener.h"
 #include "server/client.h"
+#include "server/region.h"
 #include "io/io.h"
 
 #include <time.h>
@@ -54,7 +55,7 @@ int main(int argc, char **argv)
 {
 	clock_gettime(CLOCK_MONOTONIC, &last_tick);
 
-	bedrock_world *world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
+	struct bedrock_world *world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
 	if (world_load(world) == false)
 		exit(1);
 	//region_load(region_create(world, -1, -1));
