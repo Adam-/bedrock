@@ -5,6 +5,10 @@
 
 #include "util/util.h"
 
+#define BEDROCK_BLOCKS_PER_CHUNK   16
+#define BEDROCK_CHUNKS_PER_COLUMN  16
+#define BEDROCK_COLUMNS_PER_REGION 32
+
 extern bool bedrock_running;
 extern struct timespec bedrock_time;
 extern uint16_t bedrock_tick;

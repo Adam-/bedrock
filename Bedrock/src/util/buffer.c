@@ -35,7 +35,6 @@ void bedrock_ensure_capacity(bedrock_buffer *buffer, size_t size)
 
 		buffer->capacity = n;
 		buffer->data = bedrock_realloc(buffer->data, buffer->capacity);
-
 	}
 
 	bedrock_assert(buffer->capacity - buffer->length >= size);

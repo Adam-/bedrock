@@ -65,7 +65,7 @@ void region_load(bedrock_region *region)
 		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
 		uint32_t length;
-		int32_t x, z;
+		int32_t *x, *z;
 		compression_buffer *cb;
 		nbt_tag *tag;
 
@@ -112,9 +112,9 @@ void region_load(bedrock_region *region)
 
 		bedrock_list_add(&region->columns, tag);
 
-		nbt_copy(tag, &x, sizeof(x), 2, "Level", "xPos");
-		nbt_copy(tag, &z, sizeof(z), 2, "Level", "zPos");
-		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", x, z, region->path);
+		x = nbt_read(tag, TAG_INT, 2, "Level", "xPos");
+		z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
+		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", *x, *z, region->path);
 	}
 
 	munmap(file_base, file_info.st_size);

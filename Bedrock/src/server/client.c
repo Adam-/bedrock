@@ -294,3 +294,63 @@ bool client_valid_username(const char *name)
 
 	return true;
 }
+
+double *client_get_pos_x(bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0);
+}
+
+double *client_get_pos_y(bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1);
+}
+
+double *client_get_pos_z(bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2);
+}
+
+void client_update_chunks(bedrock_client *client)
+{
+	/* Update the chunks around the player. Used for when the player moves to a new chunk.
+	 * client->columns contains a list of nbt_tag columns.
+	 */
+	int i;
+
+	/* Player coords */
+	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
+	/* Column the player is in */
+	nbt_tag *base_column = find_column_which_contains(client->world, x, z);
+	bedrock_assert(column);
+
+	// Send current column?
+
+	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
+	{
+		int j;
+
+		/* First, go from -i,i to i,i (exclusive) */
+		for (j = -i; j < i; ++j)
+		{
+			nbt_tag *c = find_column_which_contains(client->world, x + j, z + i);
+		}
+
+		/* Next, go from i,i to i,-i (exclusive) */
+		for (j = i; j > -i; --j)
+		{
+			nbt_tag *c = find_column_which_contains(client->world, x + i, z + j);
+		}
+
+		/* Next, go from i,-i to -i,-i (exclusive) */
+		for (j = i; j > -i; --j)
+		{
+			nbt_tag *c = find_column_which_contains(client->world, x + j, z - i);
+		}
+
+		/* Next, go from -i,-i to -i,i (exclusive) */
+		for (j = -i; j < i; ++j)
+		{
+			nbt_tag *c = find_column_which_contains(client->world, x - i, z + j);
+		}
+	}
+}

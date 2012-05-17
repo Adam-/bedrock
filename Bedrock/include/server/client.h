@@ -29,10 +29,13 @@ typedef struct
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
+
 	bedrock_client_authentication_state authenticated;
 
 	nbt_tag *data;			/* player's .dat file */
 	bedrock_world *world;	/* world they are in */
+
+	bedrock_list columns;   /* columns this player knows about */
 } bedrock_client;
 
 extern bedrock_list client_list;
@@ -53,5 +56,11 @@ extern void client_send_int(bedrock_client *client, const void *data, size_t siz
 extern void client_send_string(bedrock_client *client, const char *string);
 
 extern bool client_valid_username(const char *name);
+
+extern double *client_get_pos_x(bedrock_client *client);
+extern double *client_get_pos_y(bedrock_client *client);
+extern double *client_get_pos_z(bedrock_client *client);
+
+extern void client_update_chunks(bedrock_client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H

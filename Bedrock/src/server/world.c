@@ -104,3 +104,44 @@ bedrock_world *world_find(const char *name)
 
 	return NULL;
 }
+
+bedrock_region *find_region_which_contains(bedrock_world *world, double x, double z)
+{
+	int column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+	int region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
+	bedrock_node *n;
+
+	LIST_FOREACH(world->regions, n)
+	{
+		bedrock_region *region = n->data;
+
+		// XXX are these in some order?
+		if (region->x == region_x && region->z == region_z)
+			return region;
+	}
+
+	return NULL;
+}
+
+nbt_tag *find_column_which_contains(bedrock_world *world, double x, double z)
+{
+	int column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+
+	bedrock_region *region = find_region_which_contains(world, x, z);
+	if (region != NULL)
+	{
+		bedrock_node *n;
+
+		LIST_FOREACH(region->columns, n)
+		{
+			nbt_tag *tag = n->data;
+
+			// XXX are these in some order?
+			if (*nbt_read(tag, TAG_INT, 2, "Level", "xPos") == column_x && *nbt_read(tag, TAG_INT, 2, "Level", "zPos") == column_z)
+				return tag;
+		}
+	}
+
+	return NULL;
+}
+

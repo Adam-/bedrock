@@ -59,26 +59,10 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
 
-	// Health
-	/*client_send_header(client, 0x08);
-	uint16_t s = 20;
-	client_send_int(client, &s, sizeof(s));
-	client_send_int(client, &s, sizeof(s));
-	float f = 5;
-	client_send_int(client, &f, sizeof(f));*/
-
 	bedrock_node *node;
 	LIST_FOREACH(&client->world->regions, node)
 	{
 		bedrock_region *region = node->data;
-
-		printf("Loop regions, this one is %d %d\n", region->x, region->z);
-		// Map Column Allocation (0x32)
-		/*client_send_header(client, 0x32);
-		client_send_int(client, &region->x, sizeof(region->x));
-		client_send_int(client, &region->z, sizeof(region->z));
-		b = 1;
-		client_send_int(client, &b, sizeof(b));*/
 
 		bedrock_node *node2;
 		LIST_FOREACH(&region->columns, node2)
@@ -90,11 +74,8 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			if (!good)
 				continue;
 
-			// DOES THIS GO HERE?
 			// Map Column Allocation (0x32)
 			client_send_header(client, 0x32);
-			//client_send_int(client, &region->x, sizeof(uint32_t));
-			//client_send_int(client, &region->z, sizeof(uint32_t));
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
 			b = 1;
@@ -123,7 +104,7 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 			}
 			client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
 
-			bitmask = 0; // ???????
+			bitmask = 0;
 			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
 			compression_buffer *buffer = compression_compress_init();
@@ -195,15 +176,12 @@ int packet_login_request(bedrock_client *client, const unsigned char *buffer, si
 
 	// Player Position & Look (0x0D)
 	client_send_header(client, 0x0D);
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X
-	double d;
-	nbt_copy(client->data, &d, sizeof(d), 2, "Pos", 1);
+	client_send_int(client, client_get_pos_x(client), sizeof(double)); // X
+	double d = *client_get_pos_y(client);
 	d += 2;
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Stance
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y
-	client_send_int(client, &d, sizeof(d));
-	client_send_int(client, &d, sizeof(d));
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z
+	client_send_int(client, &d, sizeof(d)); // Stance
+	client_send_int(client, &d, sizeof(d)); // Y
+	client_send_int(client, client_get_pos_z(client), sizeof(double)); // Z
 	float f = 0;
 	client_send_int(client, &f, sizeof(f)); // Yaw
 	client_send_int(client, &f, sizeof(f)); // Pitch
@@ -348,23 +326,6 @@ int packet_position(bedrock_client *client, const unsigned char *buffer, size_t 
 	packet_read_int(buffer, len, &offset, &stance, sizeof(stance));
 	packet_read_int(buffer, len, &offset, &z, sizeof(z));
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
-
-	// Player Position & Look (0x0D)
-	/*client_send_header(client, 0x0D);
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0), sizeof(double)); // X
-	double d;
-	nbt_copy(client->data, &d, sizeof(d), 2, "Pos", 1);
-	d += 2;
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Stance
-	//client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1), sizeof(double)); // Y
-	client_send_int(client, &d, sizeof(d));
-	client_send_int(client, &d, sizeof(d));
-	client_send_int(client, nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2), sizeof(double)); // Z
-	float f = 0;
-	client_send_int(client, &f, sizeof(f)); // Yaw
-	client_send_int(client, &f, sizeof(f)); // Pitch
-	uint8_t b = 1;
-	client_send_int(client, &b, sizeof(b)); // On ground*/
 
 	return offset;
 }

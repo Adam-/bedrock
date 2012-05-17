@@ -15,3 +15,6 @@
 #define BEDROCK_USERNAME_MIN 2
 /* Max username length (with trailing \0), is there a standard for this? */
 #define BEDROCK_USERNAME_MAX 17
+
+/* The number of chunks around the player to send to them */
+#define BEDROCK_VIEW_LENGTH 10

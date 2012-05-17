@@ -21,4 +21,9 @@ extern bool world_load(bedrock_world *world);
 extern void world_free(bedrock_world *world);
 extern bedrock_world *world_find(const char *name);
 
+/* Finds the region which contains the point x and z */
+extern bedrock_region *find_region_which_contains(double x, double z);
+/* Finds the column which contains the point x and z */
+extern nbt_tag *find_column_which_contains(bedrock_world *world, double x, double z);
+
 #endif // BEDROCK_SERVER_WORLD_H
