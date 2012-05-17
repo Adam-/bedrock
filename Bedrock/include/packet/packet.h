@@ -7,6 +7,7 @@ enum
 	HANDSHAKE             = 0x02,
 	PLAYER                = 0x0A,
 	PLAYER_POS            = 0x0B,
+	PLAYER_LOOK           = 0x0C,
 	PLAYER_POS_LOOK       = 0x0D,
 	MAP_COLUMN_ALLOCATION = 0x32,
 	MAP_COLUMN            = 0x33
