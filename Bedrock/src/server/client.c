@@ -315,16 +315,51 @@ void client_update_chunks(struct bedrock_client *client)
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
 	 * client->columns contains a list of nbt_tag columns.
 	 */
-	int i;
 
+	int i;
+	struct bedrock_region *region;
+	nbt_tag *c;
+	bedrock_node *node, *node2;
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
-	/* Column the player is in */
-	nbt_tag *base_column = find_column_which_contains(client->world, x, z);
-	bedrock_assert(base_column);
 
-	packet_send_column_allocation(client, base_column);
-	packet_send_column(client, base_column);
+	/* Find columns we can delete */
+	LIST_FOREACH_SAFE(&client->columns, node, node2)
+	{
+		nbt_tag *c = node->data;
+
+		double player_x = x / BEDROCK_CHUNKS_PER_COLUMN, player_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+
+		int32_t *column_x = nbt_read(c, TAG_INT, 2, "Level", "xPos"),
+				*column_z = nbt_read(c, TAG_INT, 2, "Level", "zPos");
+
+		player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
+		player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
+
+		if (abs(*column_x - player_x) > BEDROCK_VIEW_LENGTH || abs(*column_z - player_z) > BEDROCK_VIEW_LENGTH)
+		{
+			bedrock_list_del_node(&client->columns, node);
+
+			bedrock_log(LEVEL_DEBUG, "client: Unallocating column %d, %d for %s", *column_x, *column_z, client->name);
+
+			packet_send_column_allocation(client, c, false);
+			packet_send_column_empty(client, c);
+		}
+	}
+
+	/* Column the player is in */
+	region = find_region_which_contains(client->world, x, z);
+	bedrock_assert(region);
+
+	c = find_column_which_contains(region, x, z);
+	bedrock_assert(c);
+
+	if (bedrock_list_has_data(&client->columns, c) == false)
+	{
+		packet_send_column_allocation(client, c, true);
+		packet_send_column(client, c);
+		bedrock_list_add(&client->columns, c);
+	}
 
 	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
 	{
@@ -333,33 +368,58 @@ void client_update_chunks(struct bedrock_client *client)
 		/* First, go from -i,i to i,i (exclusive) */
 		for (j = -i; j < i; ++j)
 		{
-			nbt_tag *c = find_column_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-			packet_send_column_allocation(client, c);
+			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
+			bedrock_assert(region);
+			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (bedrock_list_has_data(&client->columns, c))
+				continue;
+
+			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+			bedrock_list_add(&client->columns, c);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
-			nbt_tag *c = find_column_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-			packet_send_column_allocation(client, c);
+			region = find_region_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (bedrock_list_has_data(&client->columns, c))
+				continue;
+
+			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+			bedrock_list_add(&client->columns, c);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
-			nbt_tag *c = find_column_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
-			packet_send_column_allocation(client, c);
+			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (bedrock_list_has_data(&client->columns, c))
+				continue;
+
+			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+			bedrock_list_add(&client->columns, c);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
 		for (j = -i; j < i; ++j)
 		{
-			nbt_tag *c = find_column_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-			packet_send_column_allocation(client, c);
+			region = find_region_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (bedrock_list_has_data(&client->columns, c))
+				continue;
+
+			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+			bedrock_list_add(&client->columns, c);
 		}
 	}
 }

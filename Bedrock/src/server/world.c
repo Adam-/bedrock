@@ -128,32 +128,3 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 	return NULL;
 }
 
-nbt_tag *find_column_which_contains(struct bedrock_world *world, double x, double z)
-{
-	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
-
-	column_x = (int) (column_x >= 0 ? ceil(column_x) : floor(column_x));
-	column_z = (int) (column_z >= 0 ? ceil(column_z) : floor(column_z));
-
-	struct bedrock_region *region = find_region_which_contains(world, x, z);
-	if (region != NULL)
-	{
-		bedrock_node *n;
-
-		LIST_FOREACH(&region->columns, n)
-		{
-			nbt_tag *tag = n->data;
-
-			int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
-					*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
-
-			if (*x == column_x && *z == column_z)
-				return tag;
-			else if (*z > column_z || (*z == column_z && *x > column_x))
-				break;
-		}
-	}
-
-	return NULL;
-}
-

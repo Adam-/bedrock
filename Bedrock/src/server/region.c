@@ -12,6 +12,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <errno.h>
+#include <math.h>
 
 #define REGION_HEADER_SIZE 1024
 #define REGION_SECTOR_SIZE 4096
@@ -126,4 +127,28 @@ void region_free(struct bedrock_region *region)
 	bedrock_list_del(&region->world->regions, region);
 	bedrock_list_clear(&region->columns);
 	bedrock_free(region);
+}
+
+nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, double z)
+{
+	bedrock_node *n;
+	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+
+	column_x = (int) (column_x >= 0 ? ceil(column_x) : floor(column_x));
+	column_z = (int) (column_z >= 0 ? ceil(column_z) : floor(column_z));
+
+	LIST_FOREACH(&region->columns, n)
+	{
+		nbt_tag *tag = n->data;
+
+		int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
+				*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
+
+		if (*x == column_x && *z == column_z)
+			return tag;
+		else if (*z > column_z || (*z == column_z && *x > column_x))
+			break;
+	}
+
+	return NULL;
 }

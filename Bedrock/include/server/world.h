@@ -23,7 +23,5 @@ extern struct bedrock_world *world_find(const char *name);
 
 /* Finds the region which contains the point x and z */
 extern struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z);
-/* Finds the column which contains the point x and z */
-extern nbt_tag *find_column_which_contains(struct bedrock_world *world, double x, double z);
 
 #endif // BEDROCK_SERVER_WORLD_H
