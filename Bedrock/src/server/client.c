@@ -5,6 +5,7 @@
 #include "packet/packet.h"
 #include "compression/compression.h"
 #include "util/endian.h"
+#include "nbt/nbt.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -326,6 +327,21 @@ double *client_get_pos_y(struct bedrock_client *client)
 double *client_get_pos_z(struct bedrock_client *client)
 {
 	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2);
+}
+
+float *client_get_yaw(struct bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 0);
+}
+
+float *client_get_pitch(struct bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 1);
+}
+
+uint8_t *client_get_on_ground(struct bedrock_client *client)
+{
+	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
 void client_update_chunks(struct bedrock_client *client)

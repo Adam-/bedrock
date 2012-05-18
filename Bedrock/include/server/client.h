@@ -61,6 +61,9 @@ extern bool client_valid_username(const char *name);
 extern double *client_get_pos_x(struct bedrock_client *client);
 extern double *client_get_pos_y(struct bedrock_client *client);
 extern double *client_get_pos_z(struct bedrock_client *client);
+extern float *client_get_yaw(struct bedrock_client *client);
+extern float *client_get_pitch(struct bedrock_client *client);
+extern uint8_t *client_get_on_ground(struct bedrock_client *client);
 
 extern void client_update_chunks(struct bedrock_client *client);
 

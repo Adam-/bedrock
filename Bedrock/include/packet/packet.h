@@ -5,6 +5,7 @@ enum
 	KEEP_ALIVE            = 0x00,
 	LOGIN_REQUEST         = 0x01,
 	HANDSHAKE             = 0x02,
+	SPAWN_POINT           = 0x06,
 	PLAYER                = 0x0A,
 	PLAYER_POS            = 0x0B,
 	PLAYER_LOOK           = 0x0C,
