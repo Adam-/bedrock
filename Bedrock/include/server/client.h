@@ -7,8 +7,6 @@
 #include "server/world.h"
 #include "util/buffer.h"
 
-#define BEDROCK_CLIENT_BUFFER_LENGTH 1024
-
 typedef enum
 {
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
@@ -22,7 +20,7 @@ struct bedrock_client
 {
 	bedrock_fd fd;
 
-	unsigned char in_buffer[1024];
+	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
 	bedrock_buffer *out_buffer;
@@ -39,6 +37,7 @@ struct bedrock_client
 };
 
 extern bedrock_list client_list;
+extern uint32_t entity_id;
 
 extern struct bedrock_client *client_create();
 extern bool client_load(struct bedrock_client *client);

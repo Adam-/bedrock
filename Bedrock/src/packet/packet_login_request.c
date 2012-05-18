@@ -2,10 +2,6 @@
 #include "packet/packet.h"
 #include "nbt/nbt.h"
 
-#include "server/region.h" // XXX
-#include "compression/compression.h" // XXX
-static uint32_t entity_id = 0;//XXXXXXXXXXXXX
-
 int packet_login_request(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	size_t offset = 1;
@@ -26,10 +22,12 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 		return ERROR_EAGAIN;
 
 	// Check version, should be 29
+	if (version != BEDROCK_PROTOCOL_VERSION)
+		;
 
 	client_send_header(client, LOGIN_REQUEST);
-	++entity_id;
 	client_send_int(client, &entity_id, sizeof(entity_id)); /* Entity ID */
+	++entity_id;
 	client_send_string(client, "");
 	client_send_string(client, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Generator name */
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "GameType"), sizeof(uint32_t)); /* Game type */
@@ -48,112 +46,6 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"), sizeof(uint32_t)); // Y
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ"), sizeof(uint32_t)); // Z
 
-	/*bedrock_node *node;
-	LIST_FOREACH(&client->world->regions, node)
-	{
-		struct bedrock_region *region = node->data;
-
-		bedrock_node *node2;
-		LIST_FOREACH(&region->columns, node2)
-		{
-			nbt_tag *tag = node2->data;
-
-			int x = nbt_get(tag, 2, "Level", "xPos")->payload.tag_int, z = nbt_get(tag, 2, "Level", "zPos")->payload.tag_int;
-			bool good = x < -32 && x > -52 && z < -4 && z > -24;
-			if (!good)
-				continue;
-
-			// Map Column Allocation (0x32)
-			client_send_header(client, 0x32);
-			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-			b = 1;
-			client_send_int(client, &b, sizeof(b));
-
-			// Map Chunks (0x33)
-			client_send_header(client, 0x33);
-			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-			client_send_int(client, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-			b = 1;
-			client_send_int(client, &b, sizeof(b)); // Ground up continuous?
-
-			uint16_t bitmask = 0;
-			nbt_tag *sections = nbt_get(tag, 2, "Level", "Sections");
-			bedrock_assert_ret(sections != NULL && sections->type == TAG_LIST, ERROR_UNKNOWN);
-			bedrock_node *node3;
-			int8_t last_y = -1;
-			LIST_FOREACH(&sections->payload.tag_compound, node3)
-			{
-				nbt_tag *sec = node3->data;
-
-				nbt_copy(sec, &b, sizeof(b), 1, "Y");
-				assert((last_y + 1) == b);
-				last_y = b;
-				bitmask |= 1 << b;
-			}
-			client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
-
-			bitmask = 0;
-			client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
-
-			compression_buffer *buffer = compression_compress_init();
-			bedrock_assert_ret(buffer, -1);
-
-			LIST_FOREACH(&sections->payload.tag_compound, node3)
-			{
-				nbt_tag *sec = node3->data;
-
-				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
-				bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
-
-				compression_compress_deflate(buffer, blocks->data, blocks->length);
-			}
-
-			LIST_FOREACH(&sections->payload.tag_compound, node3)
-			{
-				nbt_tag *sec = node3->data;
-
-				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
-				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-				compression_compress_deflate(buffer, blocks->data, blocks->length);
-			}
-
-			LIST_FOREACH(&sections->payload.tag_compound, node3)
-			{
-				nbt_tag *sec = node3->data;
-
-				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-				compression_compress_deflate(buffer, blocks->data, blocks->length);
-			}
-
-			LIST_FOREACH(&sections->payload.tag_compound, node3)
-			{
-				nbt_tag *sec = node3->data;
-
-				struct nbt_tag_byte_array *blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-				bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-				compression_compress_deflate(buffer, blocks->data, blocks->length);
-			}
-
-			struct nbt_tag_byte_array *blocks = nbt_read(tag, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-			bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
-
-			compression_compress_deflate(buffer, blocks->data, blocks->length);
-
-			uint32_t ii = buffer->buffer->length;
-			client_send_int(client, &ii, sizeof(ii));
-			ii = 0;
-			client_send_int(client, &ii, sizeof(ii));
-
-			client_send(client, buffer->buffer->data, buffer->buffer->length);
-
-			compression_compress_end(buffer);
-		}
-	}*/
 	client_update_chunks(client);
 
 	// Player Position & Look (0x0D)
@@ -169,81 +61,6 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	client_send_int(client, &f, sizeof(f)); // Pitch
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // On ground
-
-	// Time
-	client_send_header(client, 0x04);
-	uint64_t l = 6000;
-	client_send_int(client, &l, sizeof(l));
-
-	// Entity Equipment (0x05) 1
-	/*client_send_header(client, 0x05);
-	client_send_int(client, &entity_id, sizeof(entity_id));
-	uint16_t s = 0;
-	client_send_int(client, &s, sizeof(s));
-	s = -1;
-	client_send_int(client, &s, sizeof(s));
-	s = 0;
-	client_send_int(client, &s, sizeof(s));
-
-	// 2
-	client_send_header(client, 0x05);
-	client_send_int(client, &entity_id, sizeof(entity_id));
-	s = 1;
-	client_send_int(client, &s, sizeof(s));
-	s = -1;
-	client_send_int(client, &s, sizeof(s));
-	s = 0;
-	client_send_int(client, &s, sizeof(s));
-
-	// 3
-	client_send_header(client, 0x05);
-	client_send_int(client, &entity_id, sizeof(entity_id));
-	s = 2;
-	client_send_int(client, &s, sizeof(s));
-	s = -1;
-	client_send_int(client, &s, sizeof(s));
-	s = 0;
-	client_send_int(client, &s, sizeof(s));
-
-	// 4
-	client_send_header(client, 0x05);
-	client_send_int(client, &entity_id, sizeof(entity_id));
-	s = 3;
-	client_send_int(client, &s, sizeof(s));
-	s = -1;
-	client_send_int(client, &s, sizeof(s));
-	s = 0;
-	client_send_int(client, &s, sizeof(s));
-
-	// 5
-	client_send_header(client, 0x05);
-	client_send_int(client, &entity_id, sizeof(entity_id));
-	s = 4;
-	client_send_int(client, &s, sizeof(s));
-	s = -1;
-	client_send_int(client, &s, sizeof(s));
-	s = 0;
-	client_send_int(client, &s, sizeof(s));*/
-
-	/*int inven;
-	for (inven = 0; inven < 45; ++inven)
-	{
-		client_send_header(client, 0x67); // inven
-		b = 0; // inven
-		client_send_int(client, &b, sizeof(b));
-		s = inven;
-		client_send_int(client, &s, sizeof(s));
-		int16_t s2 = -1;
-		client_send_int(client, &s2, sizeof(s2));
-	}*/
-
-	// Health
-	client_send_header(client, 0x08);
-	uint16_t s = 20;
-	client_send_int(client, &s, sizeof(s));
-	client_send_int(client, &s, sizeof(s));
-	f = 5;
-	client_send_int(client, &f, sizeof(f));
 
 	return offset;
 }

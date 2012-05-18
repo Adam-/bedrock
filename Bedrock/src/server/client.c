@@ -15,12 +15,13 @@
 #include <ctype.h>
 
 bedrock_list client_list;
+uint32_t entity_id = 0;
 static bedrock_list exiting_client_list;
 
 struct bedrock_client *client_create()
 {
 	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
-	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_BUFFER_LENGTH);
+	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SENDQ_LENGTH);
 	client->authenticated = STATE_UNAUTHENTICATED;
 	bedrock_list_add(&client_list, client);
 	return client;
@@ -180,18 +181,17 @@ void client_event_write(bedrock_fd *fd, void *data)
 	if (client->out_buffer->length > 0)
 	{
 		memmove(client->out_buffer->data, client->out_buffer->data + i, client->out_buffer->length);
-
-		if (client->out_buffer->capacity > BEDROCK_CLIENT_BUFFER_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_BUFFER_LENGTH)
-		{
-			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_BUFFER_LENGTH);
-			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_BUFFER_LENGTH);
-		}
 	}
 	else
 	{
 		io_set(&client->fd, 0, OP_WRITE);
 		if (client->fd.ops == 0)
 			client_exit(client);
+		else if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_SENDQ_LENGTH)
+		{
+			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
+			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
+		}
 	}
 }
 
@@ -225,7 +225,7 @@ void client_send(struct bedrock_client *client, const void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL);
 
-	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + size > BEDROCK_CLIENT_BUFFER_LENGTH)
+	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + size > BEDROCK_CLIENT_SENDQ_LENGTH)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
@@ -260,7 +260,7 @@ void client_send_string(struct bedrock_client *client, const char *string)
 
 	client_send_int(client, &len, sizeof(len));
 
-	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + (len * 2) > BEDROCK_CLIENT_BUFFER_LENGTH)
+	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + (len * 2) > BEDROCK_CLIENT_SENDQ_LENGTH)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
@@ -310,103 +310,6 @@ double *client_get_pos_z(struct bedrock_client *client)
 	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2);
 }
 
-static void client_send_chunks(struct bedrock_client *client, nbt_tag *column)
-{
-	uint8_t b;
-	int8_t last_y = -1;
-	uint16_t s, bitmask;
-	nbt_tag *tag;
-	bedrock_node *node;
-	compression_buffer *buffer;
-	struct nbt_tag_byte_array *blocks;
-
-	client_send_header(client, MAP_COLUMN_ALLOCATION);
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-	b = 1;
-	client_send_int(client, &b, sizeof(b));
-
-	client_send_header(client, MAP_COLUMN);
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-	b = 1;
-	client_send_int(client, &b, sizeof(b)); // Ground up continuous
-
-	tag = nbt_get(column, 2, "Level", "Sections");
-	bedrock_assert_ret(tag != NULL && tag->type == TAG_LIST, ERROR_UNKNOWN);
-	bitmask = 0;
-	LIST_FOREACH(&tag->payload.tag_compound, node)
-	{
-		nbt_tag *sec = node->data;
-
-		nbt_copy(sec, &b, sizeof(b), 1, "Y");
-		bedrock_assert_ret((last_y + 1) == b, ERROR_UNKNOWN);
-		last_y = b;
-		bitmask |= 1 << b;
-	}
-	client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
-
-	bitmask = 0;
-	client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
-
-	buffer = compression_compress_init();
-	bedrock_assert_ret(buffer, ERROR_UNKNOWN);
-
-	LIST_FOREACH(&tag->payload.tag_compound, node)
-	{
-		nbt_tag *sec = node->data;
-
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
-		bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
-
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
-	}
-
-	LIST_FOREACH(&tag->payload.tag_compound, node)
-	{
-		nbt_tag *sec = node->data;
-
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
-	}
-
-	LIST_FOREACH(&tag->payload.tag_compound, node)
-	{
-		nbt_tag *sec = node->data;
-
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
-	}
-
-	LIST_FOREACH(&tag->payload.tag_compound, node)
-	{
-		nbt_tag *sec = node->data;
-
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
-
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
-	}
-
-	blocks = nbt_read(column, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-	bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
-
-	compression_compress_deflate(buffer, blocks->data, blocks->length);
-
-	uint32_t ii = buffer->buffer->length;
-	client_send_int(client, &ii, sizeof(ii)); // length
-	ii = 0;
-	client_send_int(client, &ii, sizeof(ii)); // not used
-
-	client_send(client, buffer->buffer->data, buffer->buffer->length);
-
-	compression_compress_end(buffer);
-}
-
 void client_update_chunks(struct bedrock_client *client)
 {
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
@@ -417,12 +320,11 @@ void client_update_chunks(struct bedrock_client *client)
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
 	/* Column the player is in */
-	printf("Finding what contains %d %d\n", (int)x, (int)z);
 	nbt_tag *base_column = find_column_which_contains(client->world, x, z);
 	bedrock_assert(base_column);
 
-	// Send current column?
-	client_send_chunks(client, base_column);
+	packet_send_column_allocation(client, base_column);
+	packet_send_column(client, base_column);
 
 	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
 	{
@@ -432,25 +334,32 @@ void client_update_chunks(struct bedrock_client *client)
 		for (j = -i; j < i; ++j)
 		{
 			nbt_tag *c = find_column_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-			//client_send_chunks(client, c);
+			packet_send_column_allocation(client, c);
+			packet_send_column(client, c);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
 			nbt_tag *c = find_column_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			packet_send_column_allocation(client, c);
+			packet_send_column(client, c);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
 			nbt_tag *c = find_column_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+			packet_send_column_allocation(client, c);
+			packet_send_column(client, c);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
 		for (j = -i; j < i; ++j)
 		{
 			nbt_tag *c = find_column_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			packet_send_column_allocation(client, c);
+			packet_send_column(client, c);
 		}
 	}
 }

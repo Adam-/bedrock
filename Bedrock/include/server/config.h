@@ -18,3 +18,12 @@
 
 /* The number of chunks around the player to send to them */
 #define BEDROCK_VIEW_LENGTH 10
+
+/* Protocol version we support */
+#define BEDROCK_PROTOCOL_VERSION 29
+
+/* Max amount of data allowed to be queued to a client before they are dropped */
+#define BEDROCK_CLIENT_SENDQ_LENGTH 1024
+
+/* Max amount of data allowed to be recieved from a client before they are dropped */
+#define BEDROCK_CLIENT_RECVQ_LENGTH 1024
