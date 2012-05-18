@@ -10,12 +10,14 @@ enum
 	PLAYER_LOOK           = 0x0C,
 	PLAYER_POS_LOOK       = 0x0D,
 	MAP_COLUMN_ALLOCATION = 0x32,
-	MAP_COLUMN            = 0x33
+	MAP_COLUMN            = 0x33,
+	DISCONNECT            = 0xFF
 };
 
 enum
 {
-	HARD_SIZE = 1 << 0
+	SOFT_SIZE = 1 << 0,
+	HARD_SIZE = 1 << 1
 };
 
 enum

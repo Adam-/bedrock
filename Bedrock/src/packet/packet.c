@@ -2,6 +2,7 @@
 #include "packet/packet.h"
 #include "util/endian.h"
 
+#include "packet/packet_disconnect.h"
 #include "packet/packet_handshake.h"
 #include "packet/packet_keep_alive.h"
 #include "packet/packet_login_request.h"
@@ -19,12 +20,13 @@ static struct c2s_packet_handler
 	int (*handler)(struct bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
 	{KEEP_ALIVE,       5,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_keep_alive},
-	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,                            0, packet_login_request},
-	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,                        0, packet_handshake},
+	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,                    SOFT_SIZE, packet_login_request},
+	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,                SOFT_SIZE, packet_handshake},
 	{PLAYER,           2,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_player},
 	{PLAYER_POS,      34,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_position},
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,                  HARD_SIZE, packet_player_look},
 	{PLAYER_POS_LOOK, 42,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_position_and_look},
+	{DISCONNECT,       3,  STATE_ANY,                            SOFT_SIZE, packet_disconnect},
 };
 
 static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *handler)

@@ -13,7 +13,8 @@ typedef enum
 	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
 	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
 	STATE_BURSTING        = 1 << 3,     /* After logging in, doing initial burst */
-	STATE_AUTHENTICATED   = 1 << 4      /* Authenticated and in the game */
+	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
+	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
 struct bedrock_client
@@ -40,6 +41,7 @@ extern bedrock_list client_list;
 extern uint32_t entity_id;
 
 extern struct bedrock_client *client_create();
+extern struct bedrock_client *client_find(const char *name);
 extern bool client_load(struct bedrock_client *client);
 extern void client_exit(struct bedrock_client *client);
 extern void client_process_exits();

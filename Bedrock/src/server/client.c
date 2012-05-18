@@ -27,6 +27,21 @@ struct bedrock_client *client_create()
 	return client;
 }
 
+struct bedrock_client *client_find(const char *name)
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *client = node->data;
+
+		if (!strcmp(client->name, name))
+			return client;
+	}
+
+	return NULL;
+}
+
 bool client_load(struct bedrock_client *client)
 {
 	char path[PATH_MAX];

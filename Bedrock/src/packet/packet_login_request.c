@@ -6,12 +6,12 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 {
 	size_t offset = 1;
 	int32_t version, i;
-	char string[BEDROCK_USERNAME_MAX];
+	char username[BEDROCK_USERNAME_MAX], unused[1];
 	int8_t b;
 
 	packet_read_int(buffer, len, &offset, &version, sizeof(version));
-	packet_read_string(buffer, len, &offset, string, sizeof(string)); /* Username is sent here too, why? */
-	packet_read_string(buffer, len, &offset, string, sizeof(string));
+	packet_read_string(buffer, len, &offset, username, sizeof(username)); /* Username is sent here too, why? */
+	packet_read_string(buffer, len, &offset, unused, sizeof(unused));
 	packet_read_int(buffer, len, &offset, &i, sizeof(i));
 	packet_read_int(buffer, len, &offset, &i, sizeof(i));
 	packet_read_int(buffer, len, &offset, &b, sizeof(b));
@@ -23,7 +23,15 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 
 	// Check version, should be 29
 	if (version != BEDROCK_PROTOCOL_VERSION)
-		;
+	{
+		packet_send_disconnect(client, "Incorrect version");
+		return offset;
+	}
+	else if (strcmp(client->name, username))
+	{
+		packet_send_disconnect(client, "Username mismatch");
+		return offset;
+	}
 
 	client_send_header(client, LOGIN_REQUEST);
 	client_send_int(client, &entity_id, sizeof(entity_id)); /* Entity ID */

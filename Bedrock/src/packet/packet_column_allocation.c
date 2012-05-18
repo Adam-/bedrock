@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "packet/packet.h"
+#include "nbt/nbt.h"
 
 void packet_send_column_allocation(struct bedrock_client *client, nbt_tag *column, bool allocate)
 {
