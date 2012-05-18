@@ -8,8 +8,6 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 	float yaw, pitch;
 	uint8_t on_ground;
 
-	client->authenticated = STATE_AUTHENTICATED;
-
 	packet_read_int(buffer, len, &offset, &x, sizeof(x));
 	packet_read_int(buffer, len, &offset, &y, sizeof(y));
 	packet_read_int(buffer, len, &offset, &stance, sizeof(stance));

@@ -58,7 +58,7 @@ void bedrock_list_add_node(bedrock_list *list, bedrock_node *node, void *data)
  * @param list The list
  * @param node The node to add
  * @param after The node to add node after
- * @param data The data for the ndoe
+ * @param data The data for the node
  */
 void bedrock_list_add_node_after(bedrock_list *list, bedrock_node *node, bedrock_node *after, void *data)
 {
@@ -83,7 +83,7 @@ void bedrock_list_add_node_after(bedrock_list *list, bedrock_node *node, bedrock
  * @param list The list
  * @param node The node to add
  * @param after The node to add node before
- * @param data The data for the ndoe
+ * @param data The data for the node
  */
 void bedrock_list_add_node_before(bedrock_list *list, bedrock_node *node, bedrock_node *before, void *data)
 {

@@ -18,7 +18,7 @@ static struct c2s_packet_handler
 	uint8_t flags;
 	int (*handler)(struct bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
-	{KEEP_ALIVE,       5,  STATE_BURSTING,                       HARD_SIZE, packet_keep_alive},
+	{KEEP_ALIVE,       5,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,                            0, packet_login_request},
 	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,                        0, packet_handshake},
 	{PLAYER,           2,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_player},

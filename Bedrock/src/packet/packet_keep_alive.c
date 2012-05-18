@@ -8,8 +8,17 @@ int packet_keep_alive(struct bedrock_client *client, const unsigned char *buffer
 
 	packet_read_int(buffer, len, &offset, &id, sizeof(id));
 
-	client_send_header(client, KEEP_ALIVE);
-	client_send_int(client, &id, sizeof(id));
+	if (id == 0)
+	{
+		client_send_header(client, KEEP_ALIVE);
+		client_send_int(client, &id, sizeof(id));
+	}
 
 	return offset;
+}
+
+void packet_send_keep_alive(struct bedrock_client *client, uint32_t id)
+{
+	client_send_header(client, KEEP_ALIVE);
+	client_send_int(client, &id, sizeof(id));
 }

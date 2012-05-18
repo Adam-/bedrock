@@ -4,6 +4,8 @@
 #include "server/client.h"
 #include "server/region.h"
 #include "io/io.h"
+#include "util/timer.h"
+#include "packet/packet_keep_alive.h"
 
 #include <time.h>
 #include <errno.h>
@@ -35,6 +37,8 @@ void bedrock_update_time()
 		last_tick = bedrock_time;
 		bedrock_tick += tick_diff;
 		bedrock_tick %= BEDROCK_DAY_LENGTH;
+
+		bedrock_timer_process();
 	}
 }
 
@@ -51,9 +55,27 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 		fprintf(stdout, "%s\n", buffer);
 }
 
+static void send_keepalive(void *notused)
+{
+	bedrock_node *n;
+	static uint32_t id = 1;
+
+	LIST_FOREACH(&client_list, n)
+	{
+		struct bedrock_client *client = n->data;
+
+		packet_send_keep_alive(client, id);
+	}
+
+	while (++id == 0);
+
+	bedrock_timer_schedule(400, send_keepalive, NULL);
+}
+
 int main(int argc, char **argv)
 {
-	clock_gettime(CLOCK_MONOTONIC, &last_tick);
+	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
+	last_tick = bedrock_time;
 
 	struct bedrock_world *world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
 	if (world_load(world) == false)
@@ -65,6 +87,8 @@ int main(int argc, char **argv)
 	region_load(region_create(world, 0, -1));
 	region_load(region_create(world, 0, 0));
 	exit(0);*/
+
+	bedrock_timer_schedule(400, send_keepalive, NULL);
 
 	io_init();
 	listener_init();

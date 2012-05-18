@@ -187,11 +187,14 @@ void client_event_write(bedrock_fd *fd, void *data)
 		io_set(&client->fd, 0, OP_WRITE);
 		if (client->fd.ops == 0)
 			client_exit(client);
-		else if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_SENDQ_LENGTH)
-		{
-			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
-			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
-		}
+	}
+
+	if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_SENDQ_LENGTH)
+	{
+		bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
+		bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
+
+		client->authenticated = STATE_AUTHENTICATED;
 	}
 }
 
