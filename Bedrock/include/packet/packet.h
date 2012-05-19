@@ -5,6 +5,7 @@ enum
 	KEEP_ALIVE            = 0x00,
 	LOGIN_REQUEST         = 0x01,
 	HANDSHAKE             = 0x02,
+	CHAT_MESSAGE          = 0x03,
 	SPAWN_POINT           = 0x06,
 	PLAYER                = 0x0A,
 	PLAYER_POS            = 0x0B,
@@ -12,6 +13,7 @@ enum
 	PLAYER_POS_LOOK       = 0x0D,
 	MAP_COLUMN_ALLOCATION = 0x32,
 	MAP_COLUMN            = 0x33,
+	PLAYER_LIST           = 0xC9,
 	DISCONNECT            = 0xFF
 };
 

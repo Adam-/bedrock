@@ -27,3 +27,6 @@
 
 /* Max amount of data allowed to be recieved from a client before they are dropped */
 #define BEDROCK_CLIENT_RECVQ_LENGTH 1024
+
+/* The maximum string length allowed, including the trailing \0 */
+#define BEDROCK_MAX_STRING_LENGTH 120

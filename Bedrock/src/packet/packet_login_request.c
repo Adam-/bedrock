@@ -1,7 +1,6 @@
 #include "server/client.h"
 #include "packet/packet.h"
 #include "nbt/nbt.h"
-#include "packet/packet_spawn_point.h"
 #include "packet/packet_disconnect.h"
 
 int packet_login_request(struct bedrock_client *client, const unsigned char *buffer, size_t len)
@@ -10,7 +9,6 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	int32_t version, i;
 	char username[BEDROCK_USERNAME_MAX], unused[1];
 	int8_t b;
-	int32_t *spawn_x, *spawn_y, *spawn_z;
 
 	packet_read_int(buffer, len, &offset, &version, sizeof(version));
 	packet_read_string(buffer, len, &offset, username, sizeof(username)); /* Username is sent here too, why? */
@@ -50,15 +48,7 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	client_send_int(client, &b, sizeof(b)); /* Max players */
 
 	client->authenticated = STATE_BURSTING;
-
-	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
-	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
-	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
-	packet_send_spawn_point(client, *spawn_x, *spawn_y, *spawn_z);
-
-	client_update_chunks(client);
-
-	packet_send_player_and_look(client);
+	client_send_login_sequence(client);
 
 	return offset;
 }

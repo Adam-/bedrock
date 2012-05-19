@@ -6,7 +6,7 @@
 int packet_disconnect(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	size_t offset = 1;
-	char reason[64];
+	char reason[BEDROCK_MAX_STRING_LENGTH];
 
 	packet_read_string(buffer, len, &offset, reason, sizeof(reason));
 

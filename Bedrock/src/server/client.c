@@ -6,6 +6,9 @@
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
+#include "packet/packet_spawn_point.h"
+#include "packet/packet_position_and_look.h"
+#include "packet/packet_player_list_item.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -209,8 +212,6 @@ void client_event_write(bedrock_fd *fd, void *data)
 	{
 		bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
 		bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
-
-		client->authenticated = STATE_AUTHENTICATED;
 	}
 }
 
@@ -456,4 +457,45 @@ void client_update_chunks(struct bedrock_client *client)
 			bedrock_list_add(&client->columns, c);
 		}
 	}
+}
+
+/* Right after a successful login, start the login sequence */
+void client_send_login_sequence(struct bedrock_client *client)
+{
+	int32_t *spawn_x, *spawn_y, *spawn_z;
+	bedrock_node *node;
+
+	bedrock_assert(client->authenticated == STATE_BURSTING);
+
+	/* Send world spawn point */
+	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
+	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
+	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
+	packet_send_spawn_point(client, *spawn_x, *spawn_y, *spawn_z);
+
+	/* Send chunks */
+	client_update_chunks(client);
+
+	/* Send player position */
+	packet_send_position_and_look(client);
+
+	/* Send the client itself */
+	packet_send_player_list_item(client, client->name, true, 0);
+	/* Send the player lists */
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		if (c->authenticated == STATE_AUTHENTICATED)
+		{
+			/* Send this new client to every client that is authenticated */
+			packet_send_player_list_item(c, client->name, true, 0);
+			/* Send this client to the new client */
+			packet_send_player_list_item(client, c->name, true, 0);
+
+			packet_send_chat_message(c, "%s joined the game", client->name);
+		}
+	}
+
+	client->authenticated = STATE_AUTHENTICATED;
 }

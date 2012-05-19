@@ -2,6 +2,7 @@
 #include "packet/packet.h"
 #include "util/endian.h"
 
+#include "packet/packet_chat_message.h"
 #include "packet/packet_disconnect.h"
 #include "packet/packet_handshake.h"
 #include "packet/packet_keep_alive.h"
@@ -22,6 +23,7 @@ static struct c2s_packet_handler
 	{KEEP_ALIVE,       5,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,                    SOFT_SIZE, packet_login_request},
 	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,                SOFT_SIZE, packet_handshake},
+	{CHAT_MESSAGE,     3,  STATE_AUTHENTICATED,                  SOFT_SIZE, packet_chat_message},
 	{PLAYER,           2,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_player},
 	{PLAYER_POS,      34,  STATE_BURSTING | STATE_AUTHENTICATED, HARD_SIZE, packet_position},
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,                  HARD_SIZE, packet_player_look},
@@ -106,7 +108,9 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 
 void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size)
 {
-	if (*offset == ERROR_EAGAIN || *offset + dest_size > buffer_size)
+	if (*offset <= ERROR_UNKNOWN)
+		return;
+	else if (*offset + dest_size > buffer_size)
 	{
 		*offset = ERROR_EAGAIN;
 		return;
@@ -126,8 +130,11 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 	packet_read_int(buffer, buffer_size, offset, &length, sizeof(length));
 
 	*dest = 0;
+
+	if (*offset <= ERROR_UNKNOWN)
+		return;
 	/* Remember, this length is length in CHARACTERS */
-	if (*offset == ERROR_EAGAIN || *offset + (length * 2) > buffer_size)
+	else if (*offset + (length * 2) > buffer_size)
 	{
 		*offset = ERROR_EAGAIN;
 		return;
@@ -136,6 +143,11 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 	if (length >= dest_size)
 	{
 		*offset = ERROR_EAGAIN;
+		return;
+	}
+	else if (length > BEDROCK_MAX_STRING_LENGTH - 1)
+	{
+		*offset = ERROR_INVALID_FORMAT;
 		return;
 	}
 

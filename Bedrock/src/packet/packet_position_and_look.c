@@ -19,7 +19,7 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 	return offset;
 }
 
-void packet_send_player_and_look(struct bedrock_client *client)
+void packet_send_position_and_look(struct bedrock_client *client)
 {
 	double d;
 

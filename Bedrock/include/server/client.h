@@ -65,6 +65,7 @@ extern float *client_get_yaw(struct bedrock_client *client);
 extern float *client_get_pitch(struct bedrock_client *client);
 extern uint8_t *client_get_on_ground(struct bedrock_client *client);
 
+extern void client_send_login_sequence(struct bedrock_client *client);
 extern void client_update_chunks(struct bedrock_client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H
