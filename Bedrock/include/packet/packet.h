@@ -2,21 +2,22 @@
 
 enum
 {
-	KEEP_ALIVE            = 0x00,
-	LOGIN_REQUEST         = 0x01,
-	HANDSHAKE             = 0x02,
-	CHAT_MESSAGE          = 0x03,
-	SPAWN_POINT           = 0x06,
-	PLAYER                = 0x0A,
-	PLAYER_POS            = 0x0B,
-	PLAYER_LOOK           = 0x0C,
-	PLAYER_POS_LOOK       = 0x0D,
-	SPAWN_NAMED_ENTITY    = 0x14,
-	DESTROY_ENTITY        = 0x1D,
-	MAP_COLUMN_ALLOCATION = 0x32,
-	MAP_COLUMN            = 0x33,
-	PLAYER_LIST           = 0xC9,
-	DISCONNECT            = 0xFF
+	KEEP_ALIVE                    = 0x00,
+	LOGIN_REQUEST                 = 0x01,
+	HANDSHAKE                     = 0x02,
+	CHAT_MESSAGE                  = 0x03,
+	SPAWN_POINT                   = 0x06,
+	PLAYER                        = 0x0A,
+	PLAYER_POS                    = 0x0B,
+	PLAYER_LOOK                   = 0x0C,
+	PLAYER_POS_LOOK               = 0x0D,
+	SPAWN_NAMED_ENTITY            = 0x14,
+	DESTROY_ENTITY                = 0x1D,
+	ENTITY_LOOK_AND_RELATIVE_MOVE = 0x21,
+	MAP_COLUMN_ALLOCATION         = 0x32,
+	MAP_COLUMN                    = 0x33,
+	PLAYER_LIST                   = 0xC9,
+	DISCONNECT                    = 0xFF
 };
 
 enum

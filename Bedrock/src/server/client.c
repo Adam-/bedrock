@@ -553,9 +553,10 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
 	uint8_t old_on_ground = *client_get_on_ground(client);
 
+	int32_t a_x, a_y, a_z;
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
-	bool update_loc, update_rot;
+	bool update_loc, update_rot, teleport;
 
 	bedrock_node *node;
 
@@ -573,6 +574,10 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
 
+	a_x = ((int) x) * 32;
+	a_y = ((int) y) * 32;
+	a_z = ((int) z) * 32;
+
 	c_x = ((int) x - (int) old_x) * 32;
 	c_y = ((int) y - (int) old_y) * 32;
 	c_z = ((int) z - (int) old_z) * 32;
@@ -584,26 +589,16 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	update_rot = ((old_yaw / 360.0) * 256) != new_y || ((old_pitch / 360.0) * 256) != new_p;
 
 	if (!update_loc && !update_rot)
-	{
-		/*LIST_FOREACH(&client->players, node)
-		{
-			struct bedrock_client *c = node->data;
-
-			client_send_header(c, 0x1E);
-			client_send_int(c, &client->id, sizeof(client->id));
-		}*/
 		return;
-	}
 
-	printf("Client %s moving %d %d %d\n", client->name, c_x, c_y, c_z);
+	teleport = abs(x - old_x) > 4 || abs(y - old_y) > 4 || abs(z - old_z) > 4;
 
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (abs(x - old_x) > 4 || abs(y - old_y) > 4 || abs(z - old_z) > 4)
+		if (teleport)
 		{
-			int32_t a_x = ((int) *client_get_pos_x(client)) * 32, a_y = ((int) *client_get_pos_y(client)) * 32, a_z = ((int) *client_get_pos_z(client)) * 32;
 			client_send_header(c, 0x22);
 			client_send_int(c, &client->id, sizeof(client->id));
 			client_send_int(c, &a_x, sizeof(a_x));
@@ -614,14 +609,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		}
 		else
 		{
-			client_send_header(c, 0x21);
-			client_send_int(c, &client->id, sizeof(client->id));
-			client_send_int(c, &c_x, sizeof(c_x));
-			client_send_int(c, &c_y, sizeof(c_y));
-			client_send_int(c, &c_z, sizeof(c_z));
-			client_send_int(c, &new_y, sizeof(new_y));
-			client_send_int(c, &new_p, sizeof(new_p));
-
+			packet_send_entity_look_and_relative_move(c, client, c_x, c_y, c_z, new_y, new_p);
 
 			if (update_rot)
 			{
