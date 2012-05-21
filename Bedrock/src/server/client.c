@@ -235,14 +235,18 @@ void client_event_write(bedrock_fd *fd, void *data)
 	else
 	{
 		io_set(&client->fd, 0, OP_WRITE);
-		if (client->fd.ops == 0)
-			client_exit(client);
-	}
 
-	if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH && client->out_buffer->length <= BEDROCK_CLIENT_SENDQ_LENGTH)
-	{
-		bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
-		bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
+		if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH)
+		{
+			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
+			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
+
+			client->authenticated = STATE_AUTHENTICATED;
+			/* Start reading again */
+			io_set(&client->fd, OP_READ, 0);
+		}
+		else if (client->fd.ops == 0)
+			client_exit(client);
 	}
 }
 
@@ -551,6 +555,8 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
+	bool update_loc = false, update_rot = false;
+
 	bedrock_node *node;
 
 	if (old_x == x && old_y == y && old_z == z && old_pitch == pitch && old_yaw == yaw && old_on_ground == on_ground)
@@ -570,10 +576,14 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	c_x = ((int) x - (int) old_x) * 32;
 	c_y = ((int) y - (int) old_y) * 32;
 	c_z = ((int) z - (int) old_z) * 32;
-	new_y = yaw;
-	new_p = pitch;
 
-	if (c_x == 0 && c_y == 0 && c_z == 0 && old_pitch == pitch && old_yaw == yaw)
+	new_y = (yaw / 360.0) * 256;
+	new_p = (pitch / 360.0) * 256;
+
+	update_loc = c_x || c_y || c_z;
+	update_rot = ((old_yaw / 360.0) * 256) != new_y || ((old_pitch / 360.0) * 256) != new_p;
+
+	if (!update_loc && !update_rot)
 		return;
 
 	LIST_FOREACH(&client->players, node)
@@ -587,6 +597,13 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		client_send_int(c, &c_z, sizeof(c_z));
 		client_send_int(c, &new_y, sizeof(new_y));
 		client_send_int(c, &new_p, sizeof(new_p));
+
+		if (update_rot)
+		{
+			client_send_header(c, 0x23);
+			client_send_int(c, &client->id, sizeof(client->id));
+			client_send_int(c, &new_y, sizeof(new_y));
+		}
 	}
 }
 
@@ -631,8 +648,10 @@ void client_send_login_sequence(struct bedrock_client *client)
 	/* Send nearby players */
 	client_update_players(client);
 
-	client->authenticated = STATE_AUTHENTICATED;
+	/* Block reads until the burst is done */
+	io_set(&client->fd, 0, OP_READ);
 
+	/* Tell clients about this new player */
 	LIST_FOREACH(&client_list, node)
 	{
 		struct bedrock_client *c = node->data;
