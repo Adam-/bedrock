@@ -4,7 +4,7 @@
 #define BEDROCK_WORLD_BASE "/home/adam/world"
 
 #define BEDROCK_LISTEN_IP "0.0.0.0"
-#define BEDROCK_LISTEN_PORT 25566
+#define BEDROCK_LISTEN_PORT 25567
 
 /* Tick length in milliseconds */
 #define BEDROCK_TICK_LENGTH 50

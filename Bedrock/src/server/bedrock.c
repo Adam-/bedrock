@@ -51,7 +51,7 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 	va_end(args);
 
-	if (level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && level != LEVEL_PACKET_DEBUG)
+	if (level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG)// && level != LEVEL_PACKET_DEBUG)
 		fprintf(stdout, "%s\n", buffer);
 }
 

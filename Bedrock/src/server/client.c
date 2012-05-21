@@ -555,7 +555,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
-	bool update_loc = false, update_rot = false;
+	bool update_loc, update_rot;
 
 	bedrock_node *node;
 
@@ -642,6 +642,8 @@ void client_send_login_sequence(struct bedrock_client *client)
 			packet_send_player_list_item(client, c->name, true, 0);
 
 			packet_send_chat_message(c, "%s joined the game", client->name);
+
+			client_update_players(c);
 		}
 	}
 
@@ -650,15 +652,4 @@ void client_send_login_sequence(struct bedrock_client *client)
 
 	/* Block reads until the burst is done */
 	io_set(&client->fd, 0, OP_READ);
-
-	/* Tell clients about this new player */
-	LIST_FOREACH(&client_list, node)
-	{
-		struct bedrock_client *c = node->data;
-
-		if (c->authenticated != STATE_AUTHENTICATED || c == client)
-			continue;
-
-		client_update_players(c);
-	}
 }
