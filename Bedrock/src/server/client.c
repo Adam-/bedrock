@@ -129,6 +129,7 @@ static void client_free(struct bedrock_client *client)
 		struct bedrock_client *c = node->data;
 
 		bedrock_assert(bedrock_list_del(&c->players, client));
+		packet_sent_destroy_entity_player(c, client);
 	}
 	bedrock_list_clear(&client->players);
 
@@ -547,6 +548,9 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
 	uint8_t old_on_ground = *client_get_on_ground(client);
+
+	int8_t c_x, c_y, c_z, new_y, new_p;
+
 	bedrock_node *node;
 
 	if (old_x == x && old_y == y && old_z == z && old_pitch == pitch && old_yaw == yaw && old_on_ground == on_ground)
@@ -563,23 +567,26 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
 
+	c_x = ((int) x - (int) old_x) * 32;
+	c_y = ((int) y - (int) old_y) * 32;
+	c_z = ((int) z - (int) old_z) * 32;
+	new_y = yaw;
+	new_p = pitch;
+
+	if (c_x == 0 && c_y == 0 && c_z == 0 && old_pitch == pitch && old_yaw == yaw)
+		return;
+
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
 		client_send_header(c, 0x21);
 		client_send_int(c, &client->id, sizeof(client->id));
-		int8_t c_x = x - old_x, c_y = y - old_y, c_z = z - old_z;
-		c_x *= 32;
-		c_y *= 32;
-		c_z *= 32;
-		printf("Sending %f %f - %d %d %d\n", old_x, x, c_x, c_y, c_z);
 		client_send_int(c, &c_x, sizeof(c_x));
 		client_send_int(c, &c_y, sizeof(c_y));
 		client_send_int(c, &c_z, sizeof(c_z));
-		int8_t y = (int) yaw % 360, p = (int) pitch % 360;
-		client_send_int(c, &y, sizeof(y));
-		client_send_int(c, &p, sizeof(p));
+		client_send_int(c, &new_y, sizeof(new_y));
+		client_send_int(c, &new_p, sizeof(new_p));
 	}
 }
 
@@ -630,7 +637,7 @@ void client_send_login_sequence(struct bedrock_client *client)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated != STATE_AUTHENTICATED|| c == client)
+		if (c->authenticated != STATE_AUTHENTICATED || c == client)
 			continue;
 
 		client_update_players(c);
