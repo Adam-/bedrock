@@ -108,10 +108,10 @@ bool client_load(struct bedrock_client *client)
 
 static void client_free(struct bedrock_client *client)
 {
+	bedrock_node *node;
+
 	if (client->authenticated == STATE_AUTHENTICATED)
 	{
-		bedrock_node *node;
-
 		LIST_FOREACH(&client_list, node)
 		{
 			struct bedrock_client *c = node->data;
@@ -124,7 +124,17 @@ static void client_free(struct bedrock_client *client)
 		}
 	}
 
-	bedrock_log(LEVEL_DEBUG, "client: Exiting client from %s", client_get_ip(client));
+	LIST_FOREACH(&client->players, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		bedrock_assert(bedrock_list_del(&c->players, client));
+	}
+	bedrock_list_clear(&client->players);
+
+	bedrock_list_clear(&client->columns);
+
+	bedrock_log(LEVEL_DEBUG, "client: Exiting client %s from %s", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
 	io_set(&client->fd.fd, 0, ~0);
 	bedrock_fd_close(&client->fd);
@@ -365,36 +375,6 @@ uint8_t *client_get_on_ground(struct bedrock_client *client)
 	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
-void client_set_pos_x(struct bedrock_client *client, double x)
-{
-	nbt_set(client->data, TAG_DOUBLE, &x, sizeof(x), 2, "Pos", 0);
-}
-
-void client_set_pos_y(struct bedrock_client *client, double y)
-{
-	nbt_set(client->data, TAG_DOUBLE, &y, sizeof(y), 2, "Pos", 1);
-}
-
-void client_set_pos_z(struct bedrock_client *client, double z)
-{
-	nbt_set(client->data, TAG_DOUBLE, &z, sizeof(z), 2, "Pos", 2);
-}
-
-void client_set_yaw(struct bedrock_client *client, float yaw)
-{
-	nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
-}
-
-void client_set_pitch(struct bedrock_client *client, float pitch)
-{
-	nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
-}
-
-void client_set_on_ground(struct bedrock_client *client, uint8_t on_ground)
-{
-	nbt_set(client->data, TAG_BYTE, &on_ground, sizeof(on_ground), 1, "OnGround");
-}
-
 void client_update_chunks(struct bedrock_client *client)
 {
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
@@ -540,6 +520,10 @@ void client_update_players(struct bedrock_client *client)
 				/* Not already being tracked */
 				bedrock_list_add(&client->players, c);
 				packet_send_spawn_named_entity(client, c);
+
+				bedrock_assert(bedrock_list_has_data(&c->players, client) == false);
+				bedrock_list_add(&c->players, client);
+				packet_send_spawn_named_entity(c, client);
 			}
 		}
 		else
@@ -548,6 +532,9 @@ void client_update_players(struct bedrock_client *client)
 			if (bedrock_list_del(&client->players, c) != NULL)
 			{
 				/* And being tracked */
+				packet_sent_destroy_entity_player(client, c);
+
+				bedrock_assert(bedrock_list_del(&c->players, client) != NULL);
 				packet_sent_destroy_entity_player(client, c);
 			}
 		}
@@ -565,10 +552,34 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (old_x == x && old_y == y && old_z == z && old_pitch == pitch && old_yaw == yaw && old_on_ground == on_ground)
 		return;
 
+	if (old_x != x)
+		nbt_set(client->data, TAG_DOUBLE, &x, sizeof(x), 2, "Pos", 0);
+	if (old_y != y)
+		nbt_set(client->data, TAG_DOUBLE, &y, sizeof(y), 2, "Pos", 1);
+	if (old_z != z)
+		nbt_set(client->data, TAG_DOUBLE, &z, sizeof(z), 2, "Pos", 2);
+	if (old_yaw != yaw)
+		nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
+	if (old_pitch != pitch)
+		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
+
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
+		client_send_header(c, 0x21);
+		client_send_int(c, &client->id, sizeof(client->id));
+		int8_t c_x = x - old_x, c_y = y - old_y, c_z = z - old_z;
+		c_x *= 32;
+		c_y *= 32;
+		c_z *= 32;
+		printf("Sending %f %f - %d %d %d\n", old_x, x, c_x, c_y, c_z);
+		client_send_int(c, &c_x, sizeof(c_x));
+		client_send_int(c, &c_y, sizeof(c_y));
+		client_send_int(c, &c_z, sizeof(c_z));
+		int8_t y = (int) yaw % 360, p = (int) pitch % 360;
+		client_send_int(c, &y, sizeof(y));
+		client_send_int(c, &p, sizeof(p));
 	}
 }
 
@@ -614,4 +625,14 @@ void client_send_login_sequence(struct bedrock_client *client)
 	client_update_players(client);
 
 	client->authenticated = STATE_AUTHENTICATED;
+
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		if (c->authenticated != STATE_AUTHENTICATED|| c == client)
+			continue;
+
+		client_update_players(c);
+	}
 }

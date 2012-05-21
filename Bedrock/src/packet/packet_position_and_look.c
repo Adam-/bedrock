@@ -16,14 +16,7 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 	packet_read_int(buffer, len, &offset, &pitch, sizeof(pitch));
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
-	client_set_pos_x(client, x);
-	client_set_pos_y(client, y);
-	client_set_pos_z(client, z);
-	client_set_yaw(client, yaw);
-	client_set_pitch(client, pitch);
-	client_set_on_ground(client, on_ground);
-
-	client_update_position(client);
+	client_update_position(client, x, y, z, yaw, pitch, on_ground);
 
 	return offset;
 }

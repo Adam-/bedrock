@@ -8,7 +8,7 @@ int packet_player(struct bedrock_client *client, const unsigned char *buffer, si
 
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
-	client_set_on_ground(client, on_ground);
+	client_update_position(client, *client_get_pos_x(client), *client_get_pos_y(client), *client_get_pos_z(client), *client_get_yaw(client), *client_get_pitch(client), on_ground);
 
 	return offset;
 }
