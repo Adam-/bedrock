@@ -11,6 +11,8 @@ enum
 	PLAYER_POS            = 0x0B,
 	PLAYER_LOOK           = 0x0C,
 	PLAYER_POS_LOOK       = 0x0D,
+	SPAWN_NAMED_ENTITY    = 0x14,
+	DESTROY_ENTITY        = 0x1D,
 	MAP_COLUMN_ALLOCATION = 0x32,
 	MAP_COLUMN            = 0x33,
 	PLAYER_LIST           = 0xC9,

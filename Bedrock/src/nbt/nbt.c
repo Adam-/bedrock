@@ -340,6 +340,20 @@ const char *nbt_read_string(nbt_tag *tag, size_t size, ...)
 	return tag->payload.tag_string;
 }
 
+void nbt_set(nbt_tag *tag, nbt_tag_type type, const void *src, size_t src_size, size_t size, ...)
+{
+	va_list list;
+	va_start(list, size);
+
+	tag = nbt_get_from_valist(tag, size, list);
+
+	va_end(list);
+
+	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
+
+	memcpy(&tag->payload, src, src_size);
+}
+
 static void recursive_dump_tag(nbt_tag *t, int level)
 {
 	int r;

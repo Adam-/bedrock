@@ -25,8 +25,9 @@ static bedrock_list exiting_client_list;
 struct bedrock_client *client_create()
 {
 	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
-	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SENDQ_LENGTH);
+	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
+	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SENDQ_LENGTH);
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -107,6 +108,22 @@ bool client_load(struct bedrock_client *client)
 
 static void client_free(struct bedrock_client *client)
 {
+	if (client->authenticated == STATE_AUTHENTICATED)
+	{
+		bedrock_node *node;
+
+		LIST_FOREACH(&client_list, node)
+		{
+			struct bedrock_client *c = node->data;
+
+			if (c->authenticated == STATE_AUTHENTICATED && c != client)
+			{
+				packet_send_player_list_item(c, client->name, false, 0);
+				packet_send_chat_message(c, "%s left the game", client->name);
+			}
+		}
+	}
+
 	bedrock_log(LEVEL_DEBUG, "client: Exiting client from %s", client_get_ip(client));
 
 	io_set(&client->fd.fd, 0, ~0);
@@ -121,7 +138,10 @@ static void client_free(struct bedrock_client *client)
 void client_exit(struct bedrock_client *client)
 {
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
+	{
 		bedrock_list_add(&exiting_client_list, client);
+		io_set(&client->fd.fd, 0, OP_READ);
+	}
 }
 
 void client_process_exits()
@@ -345,6 +365,36 @@ uint8_t *client_get_on_ground(struct bedrock_client *client)
 	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
+void client_set_pos_x(struct bedrock_client *client, double x)
+{
+	nbt_set(client->data, TAG_DOUBLE, &x, sizeof(x), 2, "Pos", 0);
+}
+
+void client_set_pos_y(struct bedrock_client *client, double y)
+{
+	nbt_set(client->data, TAG_DOUBLE, &y, sizeof(y), 2, "Pos", 1);
+}
+
+void client_set_pos_z(struct bedrock_client *client, double z)
+{
+	nbt_set(client->data, TAG_DOUBLE, &z, sizeof(z), 2, "Pos", 2);
+}
+
+void client_set_yaw(struct bedrock_client *client, float yaw)
+{
+	nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
+}
+
+void client_set_pitch(struct bedrock_client *client, float pitch)
+{
+	nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
+}
+
+void client_set_on_ground(struct bedrock_client *client, uint8_t on_ground)
+{
+	nbt_set(client->data, TAG_BYTE, &on_ground, sizeof(on_ground), 1, "OnGround");
+}
+
 void client_update_chunks(struct bedrock_client *client)
 {
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
@@ -357,19 +407,18 @@ void client_update_chunks(struct bedrock_client *client)
 	bedrock_node *node, *node2;
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
+	double player_x = x / BEDROCK_BLOCKS_PER_CHUNK, player_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+
+	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
+	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
 
 	/* Find columns we can delete */
 	LIST_FOREACH_SAFE(&client->columns, node, node2)
 	{
 		nbt_tag *c = node->data;
 
-		double player_x = x / BEDROCK_CHUNKS_PER_COLUMN, player_z = z / BEDROCK_CHUNKS_PER_COLUMN;
-
 		int32_t *column_x = nbt_read(c, TAG_INT, 2, "Level", "xPos"),
 				*column_z = nbt_read(c, TAG_INT, 2, "Level", "zPos");
-
-		player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
-		player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
 
 		if (abs(*column_x - player_x) > BEDROCK_VIEW_LENGTH || abs(*column_z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
@@ -459,6 +508,70 @@ void client_update_chunks(struct bedrock_client *client)
 	}
 }
 
+void client_update_players(struct bedrock_client *client)
+{
+	/* Update the players this player knows about. Used for when a player
+	 * moves to a new chunk.
+	 */
+	bedrock_node *node;
+
+	/* Chunk coords player is in */
+	double player_x = *client_get_pos_x(client) / BEDROCK_BLOCKS_PER_CHUNK, player_z = *client_get_pos_z(client) / BEDROCK_BLOCKS_PER_CHUNK;
+	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
+	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
+
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *c = node->data;
+		double c_x, c_z;
+
+		if (c->authenticated != STATE_AUTHENTICATED || c == client)
+			continue;
+
+		c_x = *client_get_pos_x(c) / BEDROCK_BLOCKS_PER_CHUNK, c_z = *client_get_pos_z(c) / BEDROCK_BLOCKS_PER_CHUNK;
+		c_x = (int) (c_x >= 0 ? ceil(c_x) : floor(c_x));
+		c_z = (int) (c_z >= 0 ? ceil(c_z) : floor(c_z));
+
+		if (abs(player_x - c_x) <= BEDROCK_VIEW_LENGTH || abs(player_z - c_z) <= BEDROCK_VIEW_LENGTH)
+		{
+			/* Player c is in range of player client */
+			if (bedrock_list_has_data(&client->players, c) == false)
+			{
+				/* Not already being tracked */
+				bedrock_list_add(&client->players, c);
+				packet_send_spawn_named_entity(client, c);
+			}
+		}
+		else
+		{
+			/* Player c is not in range of player client */
+			if (bedrock_list_del(&client->players, c) != NULL)
+			{
+				/* And being tracked */
+				packet_sent_destroy_entity_player(client, c);
+			}
+		}
+	}
+}
+
+/* Called after a player moves, to inform other players about it */
+void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, uint8_t on_ground)
+{
+	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
+	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
+	uint8_t old_on_ground = *client_get_on_ground(client);
+	bedrock_node *node;
+
+	if (old_x == x && old_y == y && old_z == z && old_pitch == pitch && old_yaw == yaw && old_on_ground == on_ground)
+		return;
+
+	LIST_FOREACH(&client->players, node)
+	{
+		struct bedrock_client *c = node->data;
+
+	}
+}
+
 /* Right after a successful login, start the login sequence */
 void client_send_login_sequence(struct bedrock_client *client)
 {
@@ -477,7 +590,7 @@ void client_send_login_sequence(struct bedrock_client *client)
 	client_update_chunks(client);
 
 	/* Send player position */
-	packet_send_position_and_look(client);
+	packet_send_position_and_look(client, client);
 
 	/* Send the client itself */
 	packet_send_player_list_item(client, client->name, true, 0);
@@ -496,6 +609,9 @@ void client_send_login_sequence(struct bedrock_client *client)
 			packet_send_chat_message(c, "%s joined the game", client->name);
 		}
 	}
+
+	/* Send nearby players */
+	client_update_players(client);
 
 	client->authenticated = STATE_AUTHENTICATED;
 }

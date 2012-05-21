@@ -35,8 +35,7 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	}
 
 	client_send_header(client, LOGIN_REQUEST);
-	client_send_int(client, &entity_id, sizeof(entity_id)); /* Entity ID */
-	++entity_id;
+	client_send_int(client, &client->id, sizeof(client->id)); /* Entity ID */
 	client_send_string(client, "");
 	client_send_string(client, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Generator name */
 	client_send_int(client, nbt_read(client->world->data, TAG_INT, 2, "Data", "GameType"), sizeof(uint32_t)); /* Game type */

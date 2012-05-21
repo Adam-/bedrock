@@ -12,6 +12,8 @@ int packet_disconnect(struct bedrock_client *client, const unsigned char *buffer
 
 	bedrock_log(LEVEL_INFO, "client: Received disconnect from %s (%s) - %s", *client->name ? client->name : "(unknown)", client_get_ip(client), reason);
 
+	client_exit(client);
+
 	return offset;
 }
 

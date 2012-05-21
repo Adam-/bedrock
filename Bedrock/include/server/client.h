@@ -21,6 +21,9 @@ struct bedrock_client
 {
 	bedrock_fd fd;
 
+	uint32_t id;
+	bedrock_client_authentication_state authenticated;
+
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
@@ -29,12 +32,11 @@ struct bedrock_client
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
 
-	bedrock_client_authentication_state authenticated;
+	nbt_tag *data;                  /* player's .dat file */
+	struct bedrock_world *world;    /* world this player is in */
 
-	nbt_tag *data;			/* player's .dat file */
-	struct bedrock_world *world;	/* world they are in */
-
-	bedrock_list columns;   /* columns this player knows about */
+	bedrock_list columns;           /* columns this player knows about */
+	bedrock_list players;           /* players this player knows about */
 };
 
 extern bedrock_list client_list;
@@ -65,7 +67,10 @@ extern float *client_get_yaw(struct bedrock_client *client);
 extern float *client_get_pitch(struct bedrock_client *client);
 extern uint8_t *client_get_on_ground(struct bedrock_client *client);
 
-extern void client_send_login_sequence(struct bedrock_client *client);
 extern void client_update_chunks(struct bedrock_client *client);
+extern void client_update_players(struct bedrock_client *client);
+extern void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, uint8_t on_ground);
+
+extern void client_send_login_sequence(struct bedrock_client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H
