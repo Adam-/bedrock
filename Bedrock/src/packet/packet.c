@@ -98,7 +98,7 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 	if (handler->flags & HARD_SIZE)
 		if (i != handler->len)
 		{
-			bedrock_log(LEVEL_WARN, "packet: Packet 0x%02x from client %s was handled improperly, expected %d and got %d - dropping client", id, handler->len, i, client_get_ip(client));
+			bedrock_log(LEVEL_WARN, "packet: Packet 0x%02x from client %s was handled improperly, expected %d and got %d - dropping client", id, client_get_ip(client), handler->len, i);
 			client_exit(client);
 			return -1;
 		}

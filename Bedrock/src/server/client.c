@@ -129,7 +129,7 @@ static void client_free(struct bedrock_client *client)
 		struct bedrock_client *c = node->data;
 
 		bedrock_assert(bedrock_list_del(&c->players, client));
-		packet_sent_destroy_entity_player(c, client);
+		packet_send_destroy_entity_player(c, client);
 	}
 	bedrock_list_clear(&client->players);
 
@@ -243,7 +243,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 
 			client->authenticated = STATE_AUTHENTICATED;
 			/* Start reading again */
-			io_set(&client->fd, OP_READ, 0);
+			//io_set(&client->fd, OP_READ, 0);
 		}
 		else if (client->fd.ops == 0)
 			client_exit(client);
@@ -537,10 +537,10 @@ void client_update_players(struct bedrock_client *client)
 			if (bedrock_list_del(&client->players, c) != NULL)
 			{
 				/* And being tracked */
-				packet_sent_destroy_entity_player(client, c);
+				packet_send_destroy_entity_player(client, c);
 
 				bedrock_assert(bedrock_list_del(&c->players, client) != NULL);
-				packet_sent_destroy_entity_player(client, c);
+				packet_send_destroy_entity_player(client, c);
 			}
 		}
 	}
@@ -584,25 +584,51 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	update_rot = ((old_yaw / 360.0) * 256) != new_y || ((old_pitch / 360.0) * 256) != new_p;
 
 	if (!update_loc && !update_rot)
+	{
+		/*LIST_FOREACH(&client->players, node)
+		{
+			struct bedrock_client *c = node->data;
+
+			client_send_header(c, 0x1E);
+			client_send_int(c, &client->id, sizeof(client->id));
+		}*/
 		return;
+	}
+
+	printf("Client %s moving %d %d %d\n", client->name, c_x, c_y, c_z);
 
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		client_send_header(c, 0x21);
-		client_send_int(c, &client->id, sizeof(client->id));
-		client_send_int(c, &c_x, sizeof(c_x));
-		client_send_int(c, &c_y, sizeof(c_y));
-		client_send_int(c, &c_z, sizeof(c_z));
-		client_send_int(c, &new_y, sizeof(new_y));
-		client_send_int(c, &new_p, sizeof(new_p));
-
-		if (update_rot)
+		if (abs(x - old_x) > 4 || abs(y - old_y) > 4 || abs(z - old_z) > 4)
 		{
-			client_send_header(c, 0x23);
+			int32_t a_x = ((int) *client_get_pos_x(client)) * 32, a_y = ((int) *client_get_pos_y(client)) * 32, a_z = ((int) *client_get_pos_z(client)) * 32;
+			client_send_header(c, 0x22);
 			client_send_int(c, &client->id, sizeof(client->id));
+			client_send_int(c, &a_x, sizeof(a_x));
+			client_send_int(c, &a_y, sizeof(a_y));
+			client_send_int(c, &a_z, sizeof(a_z));
 			client_send_int(c, &new_y, sizeof(new_y));
+			client_send_int(c, &new_p, sizeof(new_p));
+		}
+		else
+		{
+			client_send_header(c, 0x21);
+			client_send_int(c, &client->id, sizeof(client->id));
+			client_send_int(c, &c_x, sizeof(c_x));
+			client_send_int(c, &c_y, sizeof(c_y));
+			client_send_int(c, &c_z, sizeof(c_z));
+			client_send_int(c, &new_y, sizeof(new_y));
+			client_send_int(c, &new_p, sizeof(new_p));
+
+
+			if (update_rot)
+			{
+				client_send_header(c, 0x23);
+				client_send_int(c, &client->id, sizeof(client->id));
+				client_send_int(c, &new_y, sizeof(new_y));
+			}
 		}
 	}
 }
@@ -642,8 +668,6 @@ void client_send_login_sequence(struct bedrock_client *client)
 			packet_send_player_list_item(client, c->name, true, 0);
 
 			packet_send_chat_message(c, "%s joined the game", client->name);
-
-			client_update_players(c);
 		}
 	}
 
@@ -651,5 +675,5 @@ void client_send_login_sequence(struct bedrock_client *client)
 	client_update_players(client);
 
 	/* Block reads until the burst is done */
-	io_set(&client->fd, 0, OP_READ);
+	//io_set(&client->fd, 0, OP_READ);
 }
