@@ -243,7 +243,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 
 			client->authenticated = STATE_AUTHENTICATED;
 			/* Start reading again */
-			//io_set(&client->fd, OP_READ, 0);
+			io_set(&client->fd, OP_READ, 0);
 		}
 		else if (client->fd.ops == 0)
 			client_exit(client);
@@ -573,9 +573,9 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
 
-	c_x = ((int) x - (int) old_x) * 32;
-	c_y = ((int) y - (int) old_y) * 32;
-	c_z = ((int) z - (int) old_z) * 32;
+	c_x = (x - old_x) * 32;
+	c_y = (y - old_y) * 32;
+	c_z = (z - old_z) * 32;
 
 	new_y = (yaw / 360.0) * 256;
 	new_p = (pitch / 360.0) * 256;
@@ -592,19 +592,14 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	{
 		struct bedrock_client *c = node->data;
 
-		if (teleport)
-		{
+		if (update_loc && teleport)
 			packet_send_entity_teleport(c, client);
-		}
-		else
-		{
+		else if (update_loc && update_rot)
 			packet_send_entity_look_and_relative_move(c, client, c_x, c_y, c_z, new_y, new_p);
-
-			if (update_rot)
-			{
-				packet_send_entity_head_look(c, client);
-			}
-		}
+		else if (update_loc)
+			packet_send_entity_relative_move(c, client, c_x, c_y, c_z);
+		else if (update_rot)
+			packet_send_entity_head_look(c, client);
 	}
 }
 
@@ -626,7 +621,7 @@ void client_send_login_sequence(struct bedrock_client *client)
 	client_update_chunks(client);
 
 	/* Send player position */
-	packet_send_position_and_look(client, client);
+	packet_send_position_and_look(client);
 
 	/* Send the client itself */
 	packet_send_player_list_item(client, client->name, true, 0);
@@ -650,5 +645,5 @@ void client_send_login_sequence(struct bedrock_client *client)
 	client_update_players(client);
 
 	/* Block reads until the burst is done */
-	//io_set(&client->fd, 0, OP_READ);
+	io_set(&client->fd, 0, OP_READ);
 }

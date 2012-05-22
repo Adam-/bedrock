@@ -8,9 +8,9 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	int8_t y, p;
 	uint16_t item = 0; // XXX
 
-	abs_x = ((int) *client_get_pos_x(c)) * 32;
-	abs_y = ((int) *client_get_pos_y(c)) * 32;
-	abs_z = ((int) *client_get_pos_z(c)) * 32;
+	abs_x = *client_get_pos_x(c) * 32;
+	abs_y = *client_get_pos_y(c) * 32;
+	abs_z = *client_get_pos_z(c) * 32;
 
 	yaw = *client_get_yaw(c);
 	pitch = *client_get_pitch(c);

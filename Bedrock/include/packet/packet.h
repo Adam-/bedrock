@@ -13,6 +13,7 @@ enum
 	PLAYER_POS_LOOK               = 0x0D,
 	SPAWN_NAMED_ENTITY            = 0x14,
 	DESTROY_ENTITY                = 0x1D,
+	ENTITY_RELATIVE_MOVE          = 0x1F,
 	ENTITY_LOOK_AND_RELATIVE_MOVE = 0x21,
 	ENTITY_TELEPORT               = 0x22,
 	ENTITY_HEAD_LOOK              = 0x23,

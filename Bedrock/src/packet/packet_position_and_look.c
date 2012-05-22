@@ -21,19 +21,19 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 	return offset;
 }
 
-void packet_send_position_and_look(struct bedrock_client *client, struct bedrock_client *c)
+void packet_send_position_and_look(struct bedrock_client *client)
 {
 	double d;
 
 	client_send_header(client, PLAYER_POS_LOOK);
-	client_send_int(client, client_get_pos_x(c), sizeof(double)); // X
-	d = *client_get_pos_y(c);
+	client_send_int(client, client_get_pos_x(client), sizeof(double)); // X
+	d = *client_get_pos_y(client);
 	d += 2;
 	client_send_int(client, &d, sizeof(d)); // Stance
 	client_send_int(client, &d, sizeof(d)); // Y
-	client_send_int(client, client_get_pos_z(c), sizeof(double)); // Z
-	client_send_int(client, client_get_yaw(c), sizeof(float)); // Yaw
-	client_send_int(client, client_get_pitch(c), sizeof(float)); // Pitch
-	client_send_int(client, client_get_on_ground(c), sizeof(uint8_t)); // On ground
+	client_send_int(client, client_get_pos_z(client), sizeof(double)); // Z
+	client_send_int(client, client_get_yaw(client), sizeof(float)); // Yaw
+	client_send_int(client, client_get_pitch(client), sizeof(float)); // Pitch
+	client_send_int(client, client_get_on_ground(client), sizeof(uint8_t)); // On ground
 }
 
