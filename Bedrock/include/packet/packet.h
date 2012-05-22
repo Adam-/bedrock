@@ -14,6 +14,8 @@ enum
 	SPAWN_NAMED_ENTITY            = 0x14,
 	DESTROY_ENTITY                = 0x1D,
 	ENTITY_LOOK_AND_RELATIVE_MOVE = 0x21,
+	ENTITY_TELEPORT               = 0x22,
+	ENTITY_HEAD_LOOK              = 0x23,
 	MAP_COLUMN_ALLOCATION         = 0x32,
 	MAP_COLUMN                    = 0x33,
 	PLAYER_LIST                   = 0xC9,

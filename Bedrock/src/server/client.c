@@ -553,7 +553,6 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
 	uint8_t old_on_ground = *client_get_on_ground(client);
 
-	int32_t a_x, a_y, a_z;
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
 	bool update_loc, update_rot, teleport;
@@ -573,10 +572,6 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
-
-	a_x = ((int) x) * 32;
-	a_y = ((int) y) * 32;
-	a_z = ((int) z) * 32;
 
 	c_x = ((int) x - (int) old_x) * 32;
 	c_y = ((int) y - (int) old_y) * 32;
@@ -599,13 +594,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 		if (teleport)
 		{
-			client_send_header(c, 0x22);
-			client_send_int(c, &client->id, sizeof(client->id));
-			client_send_int(c, &a_x, sizeof(a_x));
-			client_send_int(c, &a_y, sizeof(a_y));
-			client_send_int(c, &a_z, sizeof(a_z));
-			client_send_int(c, &new_y, sizeof(new_y));
-			client_send_int(c, &new_p, sizeof(new_p));
+			packet_send_entity_teleport(c, client);
 		}
 		else
 		{
@@ -613,9 +602,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 			if (update_rot)
 			{
-				client_send_header(c, 0x23);
-				client_send_int(c, &client->id, sizeof(client->id));
-				client_send_int(c, &new_y, sizeof(new_y));
+				packet_send_entity_head_look(c, client);
 			}
 		}
 	}
