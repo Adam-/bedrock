@@ -22,7 +22,7 @@ int packet_chat_message(struct bedrock_client *client, const unsigned char *buff
 
 		if (c->authenticated == STATE_AUTHENTICATED)
 		{
-			packet_send_chat_message(c, final_message);
+			packet_send_chat_message(c, "%s", final_message);
 		}
 	}
 

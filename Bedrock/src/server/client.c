@@ -510,7 +510,7 @@ void client_update_players(struct bedrock_client *client)
 		struct bedrock_client *c = node->data;
 		double c_x, c_z;
 
-		if (c->authenticated != STATE_AUTHENTICATED || c == client)
+		if (c->authenticated < STATE_BURSTING || c == client)
 			continue;
 
 		c_x = *client_get_pos_x(c) / BEDROCK_BLOCKS_PER_CHUNK, c_z = *client_get_pos_z(c) / BEDROCK_BLOCKS_PER_CHUNK;
@@ -623,14 +623,12 @@ void client_send_login_sequence(struct bedrock_client *client)
 	/* Send player position */
 	packet_send_position_and_look(client);
 
-	/* Send the client itself */
-	packet_send_player_list_item(client, client->name, true, 0);
 	/* Send the player lists */
 	LIST_FOREACH(&client_list, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated == STATE_AUTHENTICATED)
+		if (c->authenticated >= STATE_BURSTING)
 		{
 			/* Send this new client to every client that is authenticated */
 			packet_send_player_list_item(c, client->name, true, 0);
