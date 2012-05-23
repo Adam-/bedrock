@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
+#include "server/region.h"
 #include "util/memory.h"
 #include "io/io.h"
 #include "packet/packet.h"
@@ -9,6 +10,15 @@
 #include "packet/packet_spawn_point.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
+#include "packet/packet_chat_message.h"
+#include "packet/packet_destroy_entity.h"
+#include "packet/packet_entity_head_look.h"
+#include "packet/packet_entity_relative_move.h"
+#include "packet/packet_entity_look_and_relative_move.h"
+#include "packet/packet_entity_teleport.h"
+#include "packet/packet_spawn_named_entity.h"
+#include "packet/packet_column.h"
+#include "packet/packet_column_allocation.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,6 +27,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <math.h>
 
 bedrock_list client_list;
 uint32_t entity_id = 0;
@@ -52,7 +63,7 @@ bool client_load(struct bedrock_client *client)
 	char path[PATH_MAX];
 	int fd;
 	struct stat file_info;
-	unsigned char *file_base;
+	char *file_base;
 	compression_buffer *cb;
 	nbt_tag *tag;
 
@@ -137,7 +148,7 @@ static void client_free(struct bedrock_client *client)
 
 	bedrock_log(LEVEL_DEBUG, "client: Exiting client %s from %s", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
-	io_set(&client->fd.fd, 0, ~0);
+	io_set(&client->fd, 0, ~0);
 	bedrock_fd_close(&client->fd);
 
 	bedrock_list_del(&client_list, client);
@@ -151,7 +162,7 @@ void client_exit(struct bedrock_client *client)
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 	{
 		bedrock_list_add(&exiting_client_list, client);
-		io_set(&client->fd.fd, 0, OP_READ);
+		io_set(&client->fd, 0, OP_READ);
 	}
 }
 

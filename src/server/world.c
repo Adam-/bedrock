@@ -3,6 +3,7 @@
 #include "util/memory.h"
 #include "compression/compression.h"
 #include "server/world.h"
+#include "nbt/nbt.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,7 +21,7 @@ struct bedrock_world *world_create(const char *name, const char *path)
 	struct bedrock_world *world = bedrock_malloc(sizeof(struct bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
-	world->regions.free = region_free;
+	world->regions.free = (bedrock_free_func) region_free;
 	bedrock_list_add(&world_list, world);
 	return world;
 }
@@ -30,7 +31,7 @@ bool world_load(struct bedrock_world *world)
 	char path[PATH_MAX];
 	int fd;
 	struct stat file_info;
-	unsigned char *file_base;
+	char *file_base;
 	compression_buffer *cb;
 	nbt_tag *tag;
 

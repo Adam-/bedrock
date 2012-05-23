@@ -1,4 +1,5 @@
 #include "util/list.h"
+#include "util/memory.h"
 
 /** The default way to compare items in list
  * @param data1 The first item

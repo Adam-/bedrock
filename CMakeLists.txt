@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 include_directories(include)
 
 set(BEDROCK_SOURCES
-./src/packet/packet_send_entity_relative_move.c
 ./src/packet/packet_keep_alive.c
 ./src/packet/packet_player_look.c
 ./src/packet/packet_column_allocation.c
 ./src/packet/packet_entity_head_look.c
 ./src/packet/packet_login_request.c
+./src/packet/packet_entity_relative_move.c
 ./src/packet/packet.c
 ./src/packet/packet_chat_message.c
 ./src/packet/packet_entity_look_and_relative_move.c
@@ -39,6 +39,8 @@ set(BEDROCK_SOURCES
 ./src/io/epoll.c
 ./src/comrpession/compression.c
 )
+
+set(CMAKE_C_FLAGS "-g -pipe -Wall -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES})
 target_link_libraries(bedrock z m rt)

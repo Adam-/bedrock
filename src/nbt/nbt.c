@@ -3,7 +3,7 @@
 #include "util/memory.h"
 #include "util/endian.h"
 
-static bool read_bytes(unsigned char *dest, size_t dst_size, const unsigned char **src, size_t *src_size, bool swap)
+static bool read_bytes(void *dest, size_t dst_size, const unsigned char **src, size_t *src_size, bool swap)
 {
 	if (dst_size > *src_size)
 	{
@@ -125,7 +125,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			CHECK_RETURN(read_bytes(tia->data, sizeof(int32_t) * tia->length, data, size, false), error);
 
 			for (i = 0; i < tia->length; ++i)
-				convert_endianness(tia->data + i, sizeof(int32_t));
+				convert_endianness((unsigned char *) tia->data + i, sizeof(int32_t));
 
 			break;
 		}
@@ -189,11 +189,11 @@ void nbt_free(nbt_tag *tag)
 			bedrock_free(tag->payload.tag_string);
 			break;
 		case TAG_LIST:
-			tag->payload.tag_list.free = nbt_free;
+			tag->payload.tag_list.free = (bedrock_free_func) nbt_free;
 			bedrock_list_clear(&tag->payload.tag_list);
 			break;
 		case TAG_COMPOUND:
-			tag->payload.tag_compound.free = nbt_free;
+			tag->payload.tag_compound.free = (bedrock_free_func) nbt_free;
 			bedrock_list_clear(&tag->payload.tag_compound);
 			break;
 		case TAG_INT_ARRAY:
@@ -312,7 +312,7 @@ void nbt_copy(nbt_tag *tag, void *dest, size_t dest_size, size_t size, ...)
 	va_end(list);
 }
 
-const void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
+void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 {
 	va_list list;
 	va_start(list, size);
@@ -326,7 +326,7 @@ const void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 	return &tag->payload;
 }
 
-const char *nbt_read_string(nbt_tag *tag, size_t size, ...)
+char *nbt_read_string(nbt_tag *tag, size_t size, ...)
 {
 	va_list list;
 	va_start(list, size);
@@ -349,7 +349,7 @@ void nbt_set(nbt_tag *tag, nbt_tag_type type, const void *src, size_t src_size, 
 
 	va_end(list);
 
-	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
+	bedrock_assert(tag != NULL && tag->type == type);
 
 	memcpy(&tag->payload, src, src_size);
 }

@@ -1,4 +1,5 @@
 #include "util/string.h"
+#include "util/memory.h"
 
 /** Copy a string
  * @param string String to copy

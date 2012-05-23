@@ -11,8 +11,8 @@ int packet_chat_message(struct bedrock_client *client, const unsigned char *buff
 
 	packet_read_string(buffer, len, &offset, message, sizeof(message));
 
-	if (!*message)
-		return ERROR_INVALID_FORMAT;
+	if (offset <= ERROR_UNKNOWN)
+		return offset;
 
 	snprintf(final_message, sizeof(final_message), "<%s> %s", client->name, message);
 

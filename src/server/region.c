@@ -24,7 +24,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->x = x;
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
-	region->columns.free = nbt_free;
+	region->columns.free = (bedrock_free_func) nbt_free;
 	bedrock_list_add(&world->regions, region);
 	return region;
 }
@@ -33,7 +33,7 @@ void region_load(struct bedrock_region *region)
 {
 	int i;
 	struct stat file_info;
-	unsigned char *file_base;
+	char *file_base;
 
 	bedrock_assert(region->columns.count == 0);
 
@@ -64,7 +64,7 @@ void region_load(struct bedrock_region *region)
 	/* Header appears to consist of REGION_HEADER_SIZE unsigned big endian integers */
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
 	{
-		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
+		char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
 		uint32_t length;
 		int32_t *x, *z;
@@ -72,7 +72,7 @@ void region_load(struct bedrock_region *region)
 		nbt_tag *tag;
 
 		memcpy(&offset, f, sizeof(offset));
-		convert_endianness(&offset, sizeof(offset));
+		convert_endianness((unsigned char *) &offset, sizeof(offset));
 
 		if (offset == 0)
 			continue;
@@ -91,7 +91,7 @@ void region_load(struct bedrock_region *region)
 		f_offset = file_base + (offset * REGION_SECTOR_SIZE);
 
 		memcpy(&length, f_offset, sizeof(length));
-		convert_endianness(&length, sizeof(length));
+		convert_endianness((unsigned char *) &length, sizeof(length));
 		f_offset += sizeof(length);
 
 		bedrock_assert_do(*f_offset++ == 2, continue);

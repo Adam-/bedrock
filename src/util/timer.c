@@ -1,5 +1,6 @@
 #include "util/timer.h"
 #include "util/list.h"
+#include "util/memory.h"
 #include "server/config.h"
 #include "server/bedrock.h"
 

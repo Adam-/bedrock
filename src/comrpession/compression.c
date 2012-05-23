@@ -43,7 +43,7 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 
 	stream = &buffer->stream;
 
-	stream->next_in = data;
+	stream->next_in = (void *) data;
 	stream->avail_in = len;
 
 	bedrock_assert(stream->avail_in == len);
@@ -107,7 +107,7 @@ void compression_decompress_inflate(compression_buffer *buffer, const char *data
 
 	stream = &buffer->stream;
 
-	stream->next_in = data;
+	stream->next_in = (void *) data;
 	stream->avail_in = len;
 
 	bedrock_assert(stream->avail_in == len);

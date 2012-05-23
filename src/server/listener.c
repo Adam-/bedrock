@@ -13,11 +13,16 @@ static void accept_client(bedrock_fd *fd, void *unused)
 {
 	struct bedrock_client *client;
 	int client_fd;
-	struct sockaddr_in6 addr;
+	union
+	{
+		struct sockaddr addr;
+		struct sockaddr_in addr4;
+		struct sockaddr_in6 addr6;
+	} addr;
 	socklen_t addrlen = sizeof(addr);
 	socklen_t opt = 1;
 
-	client_fd = accept(fd->fd, &addr, &addrlen);
+	client_fd = accept(fd->fd, &addr.addr, &addrlen);
 	if (client_fd < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Error accepting client - %s", strerror(errno));

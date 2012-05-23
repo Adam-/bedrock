@@ -9,12 +9,14 @@ typedef struct _bedrock_node
 	void *data;
 } bedrock_node;
 
+typedef void (*bedrock_free_func)(void *);
+
 typedef struct
 {
 	bedrock_node *head, *tail;
 	size_t count;
 	bool (*compare)(const void *data1, const void *data2);
-	void (*free)(void *data);
+	bedrock_free_func free;
 } bedrock_list;
 
 #define LIST_INIT { NULL, NULL, 0, NULL, NULL }

@@ -4,7 +4,7 @@
 #include "util/list.h"
 #include "nbt/tag.h"
 
-#include <limits.h>
+#include <linux/limits.h>
 
 struct bedrock_world
 {

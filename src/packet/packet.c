@@ -40,6 +40,8 @@ static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *ha
 	return 0;
 }
 
+typedef int (*compare_func)(const void *, const void *);
+
 /** Parse a packet. Returns -1 if the packet is invalid or unexpected, 0 if there is not
  * enough data yet, or the amount of data read from buffer.
  */
@@ -48,7 +50,7 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 	uint8_t id = *buffer;
 	int i;
 
-	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), packet_compare);
+	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), (compare_func) packet_compare);
 	if (handler == NULL)
 	{
 		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s, dropping client", id, client_get_ip(client));

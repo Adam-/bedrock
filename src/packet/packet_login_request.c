@@ -19,10 +19,9 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	packet_read_int(buffer, len, &offset, &b, sizeof(b));
 	packet_read_int(buffer, len, &offset, &b, sizeof(b));
 
-	if (offset == ERROR_EAGAIN)
-		return ERROR_EAGAIN;
+	if (offset <= ERROR_UNKNOWN)
+		return offset;
 
-	// Check version, should be 29
 	if (version != BEDROCK_PROTOCOL_VERSION)
 	{
 		packet_send_disconnect(client, "Incorrect version");

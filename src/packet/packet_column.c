@@ -1,6 +1,7 @@
 #include "server/client.h"
 #include "packet/packet.h"
 #include "compression/compression.h"
+#include "nbt/nbt.h"
 
 void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 {
@@ -10,7 +11,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	nbt_tag *tag;
 	bedrock_node *node;
 	compression_buffer *buffer;
-	struct nbt_tag_byte_array *blocks;
+	const struct nbt_tag_byte_array *blocks;
 
 	client_send_header(client, MAP_COLUMN);
 	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
@@ -19,14 +20,14 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 
 	tag = nbt_get(column, 2, "Level", "Sections");
-	bedrock_assert_ret(tag != NULL && tag->type == TAG_LIST, ERROR_UNKNOWN);
+	bedrock_assert(tag != NULL && tag->type == TAG_LIST);
 	bitmask = 0;
 	LIST_FOREACH(&tag->payload.tag_compound, node)
 	{
 		nbt_tag *sec = node->data;
 
 		nbt_copy(sec, &b, sizeof(b), 1, "Y");
-		bedrock_assert_ret((last_y + 1) == b, ERROR_UNKNOWN);
+		bedrock_assert((last_y + 1) == b);
 		last_y = b;
 		bitmask |= 1 << b;
 	}
@@ -36,14 +37,14 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
 	buffer = compression_compress_init();
-	bedrock_assert_ret(buffer, ERROR_UNKNOWN);
+	bedrock_assert(buffer);
 
 	LIST_FOREACH(&tag->payload.tag_compound, node)
 	{
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
-		bedrock_assert_ret(blocks->length == 4096, ERROR_UNKNOWN);
+		bedrock_assert_do(blocks->length == 4096, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -53,7 +54,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
+		bedrock_assert_do(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -63,7 +64,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
+		bedrock_assert_do(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -73,13 +74,13 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-		bedrock_assert_ret(blocks->length == 2048, ERROR_UNKNOWN);
+		bedrock_assert_do(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
 
 	blocks = nbt_read(column, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-	bedrock_assert_ret(blocks->length == 256, ERROR_UNKNOWN);
+	bedrock_assert_do(blocks->length == 256, goto error);
 
 	compression_compress_deflate(buffer, blocks->data, blocks->length);
 
@@ -90,6 +91,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 
 	client_send(client, buffer->buffer->data, buffer->buffer->length);
 
+ error:
 	compression_compress_end(buffer);
 }
 

@@ -11,8 +11,8 @@ int packet_handshake(struct bedrock_client *client, const unsigned char *buffer,
 
 	packet_read_string(buffer, len, &offset, username, sizeof(username));
 
-	if (offset == ERROR_EAGAIN)
-		return ERROR_EAGAIN;
+	if (offset <= ERROR_UNKNOWN)
+		return offset;
 
 	p = strchr(username, ';');
 	if (p == NULL)
