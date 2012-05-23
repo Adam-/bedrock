@@ -396,6 +396,7 @@ void client_update_chunks(struct bedrock_client *client)
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
 	 * client->columns contains a list of nbt_tag columns.
 	 */
+	printf("UPDATING CHUNK\n");
 
 	int i;
 	struct bedrock_region *region;
@@ -452,8 +453,13 @@ void client_update_chunks(struct bedrock_client *client)
 			bedrock_assert(region);
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
 
+			if (c == NULL)
+				continue;
+
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
+
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -465,6 +471,9 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			region = find_region_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (c == NULL)
+				continue;
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -480,6 +489,9 @@ void client_update_chunks(struct bedrock_client *client)
 			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 
+			if (c == NULL)
+				continue;
+
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
@@ -493,6 +505,9 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			region = find_region_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+
+			if (c == NULL)
+				continue;
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -564,9 +579,17 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
 	uint8_t old_on_ground = *client_get_on_ground(client);
 
+	double old_column_x = old_x / BEDROCK_BLOCKS_PER_CHUNK, old_column_z = old_z / BEDROCK_BLOCKS_PER_CHUNK,
+			new_column_x = x / BEDROCK_BLOCKS_PER_CHUNK, new_column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+
+	old_column_x = (int) (old_column_x >= 0 ? ceil(old_column_x) : floor(old_column_x));
+	old_column_z = (int) (old_column_z >= 0 ? ceil(old_column_z) : floor(old_column_z));
+	new_column_x = (int) (new_column_x >= 0 ? ceil(new_column_x) : floor(new_column_x));
+	new_column_z = (int) (new_column_z >= 0 ? ceil(new_column_z) : floor(new_column_z));
+
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
-	bool update_loc, update_rot, teleport;
+	bool update_loc, update_rot, teleport, update_chunk;
 
 	bedrock_node *node;
 
@@ -593,6 +616,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	update_loc = c_x || c_y || c_z;
 	update_rot = ((old_yaw / 360.0) * 256) != new_y || ((old_pitch / 360.0) * 256) != new_p;
+	update_chunk = old_column_x != new_column_x || old_column_z != new_column_z;
 
 	if (!update_loc && !update_rot)
 		return;
@@ -612,6 +636,9 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		else if (update_rot)
 			packet_send_entity_head_look(c, client);
 	}
+
+	if (update_chunk)
+		client_update_chunks(client);
 }
 
 /* Right after a successful login, start the login sequence */

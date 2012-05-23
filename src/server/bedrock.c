@@ -74,19 +74,14 @@ static void send_keepalive(void *notused)
 
 int main(int argc, char **argv)
 {
+	struct bedrock_world *world;
+
 	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
 	last_tick = bedrock_time;
 
-	struct bedrock_world *world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
+	world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
 	if (world_load(world) == false)
 		exit(1);
-	//region_load(region_create(world, -1, -1));
-	//region_load(region_create(world, -1, 0));
-	region_load(region_create(world, -2, -1));
-	/*region_load(region_create(world, -2, 0));
-	region_load(region_create(world, 0, -1));
-	region_load(region_create(world, 0, 0));
-	exit(0);*/
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 

@@ -113,19 +113,23 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
 	double region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
 	bedrock_node *n;
+	struct bedrock_region *region;
 
 	region_x = region_x >= 0 ? ceil(region_x) : floor(region_x);
 	region_z = region_z >= 0 ? ceil(region_z) : floor(region_z);
 
 	LIST_FOREACH(&world->regions, n)
 	{
-		struct bedrock_region *region = n->data;
+		region = n->data;
 
 		// XXX are these in some order?
 		if (region->x == region_x && region->z == region_z)
 			return region;
 	}
 
-	return NULL;
+	region = region_create(world, region_x, region_z);
+	region_load(region);
+
+	return region;
 }
 
