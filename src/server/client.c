@@ -396,7 +396,6 @@ void client_update_chunks(struct bedrock_client *client)
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
 	 * client->columns contains a list of nbt_tag columns.
 	 */
-	printf("UPDATING CHUNK\n");
 
 	int i;
 	struct bedrock_region *region;
