@@ -40,7 +40,7 @@ set(BEDROCK_SOURCES
 ./src/comrpession/compression.c
 )
 
-set(CMAKE_C_FLAGS "-g -pipe -Wall -std=gnu99 -pedantic")
+set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES})
 target_link_libraries(bedrock z m rt)
