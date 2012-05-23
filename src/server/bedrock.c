@@ -55,7 +55,7 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 		fprintf(stdout, "%s\n", buffer);
 }
 
-static void send_keepalive(void *notused)
+static void send_keepalive(void __attribute__((__unused__)) *notused)
 {
 	bedrock_node *n;
 	static uint32_t id = 1;
