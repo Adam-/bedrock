@@ -35,7 +35,7 @@ void region_load(struct bedrock_region *region)
 	struct stat file_info;
 	char *file_base;
 
-	bedrock_assert(region->columns.count == 0);
+	bedrock_assert(region->columns.count == 0, return);
 
 	i = open(region->path, O_RDONLY);
 	if (i == -1)
@@ -94,7 +94,7 @@ void region_load(struct bedrock_region *region)
 		convert_endianness((unsigned char *) &length, sizeof(length));
 		f_offset += sizeof(length);
 
-		bedrock_assert_do(*f_offset++ == 2, continue);
+		bedrock_assert(*f_offset++ == 2, continue);
 
 		/* At this point we're at the beginning of the compressed NBT structure */
 		cb = compression_decompress(f_offset, length);
@@ -144,7 +144,7 @@ nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, dou
 		int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
 				*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
 
-		if (*x == (int) column_x && *z == (int) column_z)
+		if (*x == column_x && *z == column_z)
 			return tag;
 		else if (*z > column_z || (*z == column_z && *x > column_x))
 			break;

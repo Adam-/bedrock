@@ -5,7 +5,7 @@ bedrock_buffer *bedrock_buffer_create(const void *data, size_t length, size_t ca
 {
 	bedrock_buffer *buffer;
 
-	bedrock_assert_ret(length <= capacity, NULL);
+	bedrock_assert(length <= capacity, return NULL);
 
 	buffer = bedrock_malloc(sizeof(bedrock_buffer));
 	buffer->data = bedrock_malloc(capacity);
@@ -37,7 +37,7 @@ void bedrock_ensure_capacity(bedrock_buffer *buffer, size_t size)
 		buffer->data = bedrock_realloc(buffer->data, buffer->capacity);
 	}
 
-	bedrock_assert(buffer->capacity - buffer->length >= size);
+	bedrock_assert(buffer->capacity - buffer->length >= size, return);
 }
 
 void bedrock_buffer_append(bedrock_buffer *buffer, const void *data, size_t length)
@@ -49,7 +49,7 @@ void bedrock_buffer_append(bedrock_buffer *buffer, const void *data, size_t leng
 
 void bedrock_buffer_resize(bedrock_buffer *buffer, size_t size)
 {
-	bedrock_assert(size >= buffer->length);
+	bedrock_assert(size >= buffer->length, return);
 
 	buffer->capacity = size;
 	buffer->data = bedrock_realloc(buffer->data, buffer->capacity);

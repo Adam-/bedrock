@@ -29,7 +29,7 @@ int packet_handshake(struct bedrock_client *client, const unsigned char *buffer,
 	}
 
 	world = world_find(BEDROCK_WORLD_NAME);
-	bedrock_assert_ret(world != NULL, ERROR_UNKNOWN);
+	bedrock_assert(world != NULL, return ERROR_UNKNOWN);
 
 	strncpy(client->name, username, sizeof(client->name));
 	client->authenticated = STATE_HANDSHAKING;

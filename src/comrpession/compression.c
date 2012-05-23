@@ -28,7 +28,7 @@ compression_buffer *compression_compress_init()
 
 void compression_compress_end(compression_buffer *buffer)
 {
-	bedrock_assert(buffer->type == ZLIB_COMPRESS);
+	bedrock_assert(buffer->type == ZLIB_COMPRESS, return);
 	deflateEnd(&buffer->stream);
 	bedrock_buffer_free(buffer->buffer);
 	bedrock_free(buffer);
@@ -39,14 +39,14 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 	int i;
 	z_stream *stream;
 
-	bedrock_assert(buffer != NULL && buffer->type == ZLIB_COMPRESS && data != NULL && len > 0);
+	bedrock_assert(buffer != NULL && buffer->type == ZLIB_COMPRESS && data != NULL && len > 0, return);
 
 	stream = &buffer->stream;
 
 	stream->next_in = (void *) data;
 	stream->avail_in = len;
 
-	bedrock_assert(stream->avail_in == len);
+	bedrock_assert(stream->avail_in == len, return);
 
 	do
 	{
@@ -92,7 +92,7 @@ compression_buffer *compression_decompress_init()
 
 void compression_decompress_end(compression_buffer *buffer)
 {
-	bedrock_assert(buffer->type == ZLIB_DECOMPRESS);
+	bedrock_assert(buffer->type == ZLIB_DECOMPRESS, return);
 	inflateEnd(&buffer->stream);
 	bedrock_buffer_free(buffer->buffer);
 	bedrock_free(buffer);
@@ -103,14 +103,14 @@ void compression_decompress_inflate(compression_buffer *buffer, const char *data
 	int i;
 	z_stream *stream;
 
-	bedrock_assert(buffer != NULL && buffer->type == ZLIB_DECOMPRESS && data != NULL && len > 0);
+	bedrock_assert(buffer != NULL && buffer->type == ZLIB_DECOMPRESS && data != NULL && len > 0, return);
 
 	stream = &buffer->stream;
 
 	stream->next_in = (void *) data;
 	stream->avail_in = len;
 
-	bedrock_assert(stream->avail_in == len);
+	bedrock_assert(stream->avail_in == len, return);
 
 	do
 	{

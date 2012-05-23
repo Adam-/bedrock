@@ -91,7 +91,7 @@ void io_process()
 	{
 		struct epoll_event *ev = &events[i];
 		bedrock_fd *fd = bedrock_fd_find(ev->data.fd);
-		bedrock_assert(fd != NULL);
+		bedrock_assert(fd != NULL, continue);
 
 		if (ev->events & (EPOLLIN | EPOLLHUP | EPOLLERR))
 		{

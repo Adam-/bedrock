@@ -211,14 +211,14 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 	size_t i;
 	nbt_tag *t = tag;
 
-	bedrock_assert_ret(tag != NULL, NULL);
+	bedrock_assert(tag != NULL, return NULL);
 
 	for (i = 0; i < size; ++i)
 	{
 		bedrock_node *n;
 		bool found = false;
 
-		bedrock_assert_ret(t->type == TAG_LIST || t->type == TAG_COMPOUND, NULL);
+		bedrock_assert(t->type == TAG_LIST || t->type == TAG_COMPOUND, return NULL);
 
 		if (t->type == TAG_LIST)
 		{
@@ -279,30 +279,30 @@ void nbt_copy(nbt_tag *tag, void *dest, size_t dest_size, size_t size, ...)
 	va_start(list, size);
 
 	tag = nbt_get_from_valist(tag, size, list);
-	bedrock_assert_do(tag != NULL, goto error);
+	bedrock_assert(tag != NULL, goto error);
 
 	switch (tag->type)
 	{
 		case TAG_BYTE:
-			bedrock_assert_do(dest_size == sizeof(uint8_t), goto error);
+			bedrock_assert(dest_size == sizeof(uint8_t), goto error);
 			break;
 		case TAG_SHORT:
-			bedrock_assert_do(dest_size == sizeof(uint16_t), goto error);
+			bedrock_assert(dest_size == sizeof(uint16_t), goto error);
 			break;
 		case TAG_INT:
-			bedrock_assert_do(dest_size == sizeof(uint32_t), goto error);
+			bedrock_assert(dest_size == sizeof(uint32_t), goto error);
 			break;
 		case TAG_LONG:
-			bedrock_assert_do(dest_size == sizeof(uint64_t), goto error);
+			bedrock_assert(dest_size == sizeof(uint64_t), goto error);
 			break;
 		case TAG_FLOAT:
-			bedrock_assert_do(dest_size == sizeof(float), goto error);
+			bedrock_assert(dest_size == sizeof(float), goto error);
 			break;
 		case TAG_DOUBLE:
-			bedrock_assert_do(dest_size == sizeof(double), goto error);
+			bedrock_assert(dest_size == sizeof(double), goto error);
 			break;
 		default:
-			bedrock_assert_do(0, goto error);
+			bedrock_assert(0, goto error);
 			break;
 	}
 
@@ -321,7 +321,7 @@ void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 
 	va_end(list);
 
-	bedrock_assert_ret(tag != NULL && tag->type == type, NULL);
+	bedrock_assert(tag != NULL && tag->type == type, return NULL);
 
 	return &tag->payload;
 }
@@ -335,7 +335,7 @@ char *nbt_read_string(nbt_tag *tag, size_t size, ...)
 
 	va_end(list);
 
-	bedrock_assert_ret(tag->type == TAG_STRING, NULL);
+	bedrock_assert(tag->type == TAG_STRING, return NULL);
 
 	return tag->payload.tag_string;
 }
@@ -349,7 +349,7 @@ void nbt_set(nbt_tag *tag, nbt_tag_type type, const void *src, size_t src_size, 
 
 	va_end(list);
 
-	bedrock_assert(tag != NULL && tag->type == type);
+	bedrock_assert(tag != NULL && tag->type == type, return);
 
 	memcpy(&tag->payload, src, src_size);
 }

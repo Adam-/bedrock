@@ -127,7 +127,7 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 {
 	uint16_t length, i, j;
 
-	bedrock_assert(dest != NULL && dest_size > 0);
+	bedrock_assert(dest != NULL && dest_size > 0, goto error);
 
 	packet_read_int(buffer, buffer_size, offset, &length, sizeof(length));
 
@@ -153,11 +153,15 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 		return;
 	}
 
-	bedrock_assert(length < dest_size);
+	bedrock_assert(length < dest_size, goto error);
 
 	for (i = 0, j = 1; i < length; ++i, j += 2)
 		dest[i] = *(buffer + *offset + j);
 	dest[length] = 0;
 
 	*offset += length * 2;
+	return;
+
+ error:
+	*offset = ERROR_UNKNOWN;
 }

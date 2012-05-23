@@ -9,7 +9,7 @@ char *bedrock_strdup(const char *string)
 {
 	char *memory;
 
-	bedrock_assert_ret(string != NULL, NULL);
+	bedrock_assert(string != NULL, return NULL);
 
 	memory = bedrock_malloc(strlen(string) + 1);
 	strcpy(memory, string);

@@ -19,7 +19,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 
 	tag = nbt_get(column, 2, "Level", "Sections");
-	bedrock_assert(tag != NULL && tag->type == TAG_LIST);
+	bedrock_assert(tag != NULL && tag->type == TAG_LIST, return);
 	bitmask = 0;
 	LIST_FOREACH(&tag->payload.tag_compound, node)
 	{
@@ -34,14 +34,14 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
 	buffer = compression_compress_init();
-	bedrock_assert(buffer);
+	bedrock_assert(buffer, return);
 
 	LIST_FOREACH(&tag->payload.tag_compound, node)
 	{
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
-		bedrock_assert_do(blocks->length == 4096, goto error);
+		bedrock_assert(blocks->length == 4096, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -51,7 +51,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
-		bedrock_assert_do(blocks->length == 2048, goto error);
+		bedrock_assert(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -61,7 +61,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-		bedrock_assert_do(blocks->length == 2048, goto error);
+		bedrock_assert(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
@@ -71,13 +71,13 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-		bedrock_assert_do(blocks->length == 2048, goto error);
+		bedrock_assert(blocks->length == 2048, goto error);
 
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
 
 	blocks = nbt_read(column, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-	bedrock_assert_do(blocks->length == 256, goto error);
+	bedrock_assert(blocks->length == 256, goto error);
 
 	compression_compress_deflate(buffer, blocks->data, blocks->length);
 

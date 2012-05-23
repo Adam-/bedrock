@@ -67,7 +67,7 @@ bool client_load(struct bedrock_client *client)
 	compression_buffer *cb;
 	nbt_tag *tag;
 
-	bedrock_assert_ret(client != NULL && client->world != NULL, false);
+	bedrock_assert(client != NULL && client->world != NULL, return false);
 
 	snprintf(path, sizeof(path), "%s/players/%s.dat", client->world->path, client->name);
 
@@ -139,7 +139,7 @@ static void client_free(struct bedrock_client *client)
 	{
 		struct bedrock_client *c = node->data;
 
-		bedrock_assert(bedrock_list_del(&c->players, client));
+		bedrock_assert(bedrock_list_del(&c->players, client), ;);
 		packet_send_destroy_entity_player(c, client);
 	}
 	bedrock_list_clear(&client->players);
@@ -206,7 +206,7 @@ void client_event_read(bedrock_fd *fd, void *data)
 
 	while ((i = packet_parse(client, client->in_buffer, client->in_buffer_len)) > 0)
 	{
-		bedrock_assert((size_t) i <= client->in_buffer_len);
+		bedrock_assert((size_t) i <= client->in_buffer_len, break);
 
 		client->in_buffer_len -= i;
 
@@ -263,7 +263,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 
 const char *client_get_ip(struct bedrock_client *client)
 {
-	bedrock_assert_ret(client != NULL, NULL);
+	bedrock_assert(client != NULL, return NULL);
 
 	if (*client->ip)
 		return client->ip;
@@ -289,7 +289,7 @@ void client_send_header(struct bedrock_client *client, uint8_t header)
 
 void client_send(struct bedrock_client *client, const void *data, size_t size)
 {
-	bedrock_assert(client != NULL && data != NULL);
+	bedrock_assert(client != NULL && data != NULL, return);
 
 	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + size > BEDROCK_CLIENT_SENDQ_LENGTH)
 	{
@@ -308,7 +308,7 @@ void client_send_int(struct bedrock_client *client, const void *data, size_t siz
 {
 	size_t old_len;
 
-	bedrock_assert(client != NULL && data != NULL);
+	bedrock_assert(client != NULL && data != NULL, return);
 
 	old_len = client->out_buffer->length;
 	client_send(client, data, size);
@@ -320,7 +320,7 @@ void client_send_string(struct bedrock_client *client, const char *string)
 {
 	uint16_t len, i;
 
-	bedrock_assert(client != NULL && string != NULL);
+	bedrock_assert(client != NULL && string != NULL, return);
 
 	len = strlen(string);
 
@@ -347,7 +347,7 @@ bool client_valid_username(const char *name)
 {
 	int i, len;
 
-	bedrock_assert_ret(name != NULL, false);
+	bedrock_assert(name != NULL, return false);
 
 	len = strlen(name);
 
@@ -429,10 +429,10 @@ void client_update_chunks(struct bedrock_client *client)
 
 	/* Column the player is in */
 	region = find_region_which_contains(client->world, x, z);
-	bedrock_assert(region);
+	bedrock_assert(region != NULL, return);
 
 	c = find_column_which_contains(region, x, z);
-	bedrock_assert(c);
+	bedrock_assert(c != NULL, return);
 
 	if (bedrock_list_has_data(&client->columns, c) == false)
 	{
@@ -449,9 +449,9 @@ void client_update_chunks(struct bedrock_client *client)
 		for (j = -i; j < i; ++j)
 		{
 			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-			bedrock_assert(region);
+			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-			bedrock_assert_do(c != NULL, continue);
+			bedrock_assert(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -467,8 +467,9 @@ void client_update_chunks(struct bedrock_client *client)
 		for (j = i; j > -i; --j)
 		{
 			region = find_region_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-			bedrock_assert_do(c != NULL, continue);
+			bedrock_assert(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -484,8 +485,9 @@ void client_update_chunks(struct bedrock_client *client)
 		for (j = i; j > -i; --j)
 		{
 			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
-			bedrock_assert_do(c != NULL, continue);
+			bedrock_assert(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -501,8 +503,9 @@ void client_update_chunks(struct bedrock_client *client)
 		for (j = -i; j < i; ++j)
 		{
 			region = find_region_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-			bedrock_assert_do(c != NULL, continue);
+			bedrock_assert(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -549,7 +552,7 @@ void client_update_players(struct bedrock_client *client)
 				bedrock_list_add(&client->players, c);
 				packet_send_spawn_named_entity(client, c);
 
-				bedrock_assert(bedrock_list_has_data(&c->players, client) == false);
+				bedrock_assert(bedrock_list_has_data(&c->players, client) == false, ;);
 				bedrock_list_add(&c->players, client);
 				packet_send_spawn_named_entity(c, client);
 			}
@@ -562,7 +565,7 @@ void client_update_players(struct bedrock_client *client)
 				/* And being tracked */
 				packet_send_destroy_entity_player(client, c);
 
-				bedrock_assert(bedrock_list_del(&c->players, client) != NULL);
+				bedrock_assert(bedrock_list_del(&c->players, client) != NULL, ;);
 				packet_send_destroy_entity_player(client, c);
 			}
 		}
@@ -644,7 +647,7 @@ void client_send_login_sequence(struct bedrock_client *client)
 	int32_t *spawn_x, *spawn_y, *spawn_z;
 	bedrock_node *node;
 
-	bedrock_assert(client->authenticated == STATE_BURSTING);
+	bedrock_assert(client->authenticated == STATE_BURSTING, return);
 
 	/* Send world spawn point */
 	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
