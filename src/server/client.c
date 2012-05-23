@@ -451,9 +451,7 @@ void client_update_chunks(struct bedrock_client *client)
 			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region);
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL)
-				continue;
+			bedrock_assert_do(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -470,12 +468,12 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			region = find_region_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL)
-				continue;
+			bedrock_assert_do(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
+
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -487,12 +485,12 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL)
-				continue;
+			bedrock_assert_do(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
+
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -504,12 +502,12 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			region = find_region_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			c = find_column_which_contains(region, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL)
-				continue;
+			bedrock_assert_do(c != NULL, continue);
 
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
+
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);

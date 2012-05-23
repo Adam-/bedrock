@@ -132,10 +132,10 @@ void region_free(struct bedrock_region *region)
 nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, double z)
 {
 	bedrock_node *n;
-	double column_x = x / BEDROCK_CHUNKS_PER_COLUMN, column_z = z / BEDROCK_CHUNKS_PER_COLUMN;
+	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 
-	column_x = (int) (column_x >= 0 ? ceil(column_x) : floor(column_x));
-	column_z = (int) (column_z >= 0 ? ceil(column_z) : floor(column_z));
+	column_x = floor(column_x);
+	column_z = floor(column_z);
 
 	LIST_FOREACH(&region->columns, n)
 	{
@@ -144,7 +144,7 @@ nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, dou
 		int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
 				*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
 
-		if (*x == column_x && *z == column_z)
+		if (*x == (int) column_x && *z == (int) column_z)
 			return tag;
 		else if (*z > column_z || (*z == column_z && *x > column_x))
 			break;

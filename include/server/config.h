@@ -23,7 +23,7 @@
 #define BEDROCK_PROTOCOL_VERSION 29
 
 /* Max amount of data allowed to be queued to a client before they are dropped */
-#define BEDROCK_CLIENT_SENDQ_LENGTH 65535
+#define BEDROCK_CLIENT_SENDQ_LENGTH 65535 * 2
 
 /* Max amount of data allowed to be recieved from a client before they are dropped */
 #define BEDROCK_CLIENT_RECVQ_LENGTH 1024

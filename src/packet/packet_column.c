@@ -6,7 +6,6 @@
 void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 {
 	uint8_t b;
-	int8_t last_y = -1;
 	uint16_t bitmask;
 	nbt_tag *tag;
 	bedrock_node *node;
@@ -27,8 +26,6 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		nbt_tag *sec = node->data;
 
 		nbt_copy(sec, &b, sizeof(b), 1, "Y");
-		bedrock_assert((last_y + 1) == b);
-		last_y = b;
 		bitmask |= 1 << b;
 	}
 	client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
