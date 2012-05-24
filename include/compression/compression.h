@@ -14,14 +14,14 @@ typedef struct
 	z_stream stream;
 } compression_buffer;
 
-extern compression_buffer *compression_compress_init();
+extern compression_buffer *compression_compress_init(size_t buffer_size);
 extern void compression_compress_end(compression_buffer *buffer);
 extern void compression_compress_deflate(compression_buffer *buffer, const char *data, size_t len);
 
-extern compression_buffer *compression_decompress_init();
+extern compression_buffer *compression_decompress_init(size_t buffer_size);
 extern void compression_decompress_end(compression_buffer *buffer);
 extern void compression_decompress_inflate(compression_buffer *buffer, const char *data, size_t len);
 
-extern compression_buffer *compression_compress(const char *data, size_t len);
-extern compression_buffer *compression_decompress(const char *data, size_t len);
+extern compression_buffer *compression_compress(size_t buffer_size, const char *data, size_t len);
+extern compression_buffer *compression_decompress(size_t buffer_size, const char *data, size_t len);
 

@@ -3,7 +3,7 @@
 #include "util/util.h"
 #include "util/memory.h"
 
-compression_buffer *compression_compress_init()
+compression_buffer *compression_compress_init(size_t buffer_size)
 {
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
@@ -21,7 +21,7 @@ compression_buffer *compression_compress_init()
 		return NULL;
 	}
 
-	buffer->buffer = bedrock_buffer_create(NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	buffer->buffer = bedrock_buffer_create(NULL, 0, buffer_size);
 
 	return buffer;
 }
@@ -67,7 +67,7 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 		bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
 }
 
-compression_buffer *compression_decompress_init()
+compression_buffer *compression_decompress_init(size_t buffer_size)
 {
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
@@ -85,7 +85,7 @@ compression_buffer *compression_decompress_init()
 		return NULL;
 	}
 
-	buffer->buffer = bedrock_buffer_create(NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	buffer->buffer = bedrock_buffer_create(NULL, 0, buffer_size);
 
 	return buffer;
 }
@@ -131,16 +131,16 @@ void compression_decompress_inflate(compression_buffer *buffer, const char *data
 		bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
 }
 
-compression_buffer *compression_compress(const char *data, size_t len)
+compression_buffer *compression_compress(size_t buffer_size, const char *data, size_t len)
 {
-	compression_buffer *buffer = compression_compress_init();
+	compression_buffer *buffer = compression_compress_init(buffer_size);
 	compression_compress_deflate(buffer, data, len);
 	return buffer;
 }
 
-compression_buffer *compression_decompress(const char *data, size_t len)
+compression_buffer *compression_decompress(size_t buffer_size, const char *data, size_t len)
 {
-	compression_buffer *buffer = compression_decompress_init();
+	compression_buffer *buffer = compression_decompress_init(buffer_size);
 	compression_decompress_inflate(buffer, data, len);
 	return buffer;
 }

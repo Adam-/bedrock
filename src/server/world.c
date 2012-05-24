@@ -12,7 +12,8 @@
 #include <errno.h>
 #include <math.h>
 
-#define BEDROCK_WORLD_LEVEL_FILE "level.dat"
+#define WORLD_BUFFER_SIZE 4096
+#define WORLD_LEVEL_FILE "level.dat"
 
 bedrock_list world_list;
 
@@ -35,7 +36,7 @@ bool world_load(struct bedrock_world *world)
 	compression_buffer *cb;
 	nbt_tag *tag;
 
-	snprintf(path, sizeof(path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);
+	snprintf(path, sizeof(path), "%s/%s", world->path, WORLD_LEVEL_FILE);
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
@@ -61,7 +62,7 @@ bool world_load(struct bedrock_world *world)
 
 	close(fd);
 
-	cb = compression_decompress(file_base, file_info.st_size);
+	cb = compression_decompress(WORLD_BUFFER_SIZE, file_base, file_info.st_size);
 	munmap(file_base, file_info.st_size);
 	if (cb == NULL)
 	{

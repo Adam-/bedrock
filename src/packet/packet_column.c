@@ -3,6 +3,8 @@
 #include "compression/compression.h"
 #include "nbt/nbt.h"
 
+#define COLUMN_BUFFER_SIZE 8192
+
 void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 {
 	uint8_t b;
@@ -33,7 +35,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	bitmask = 0;
 	client_send_int(client, &bitmask, sizeof(bitmask)); // add bit map
 
-	buffer = compression_compress_init();
+	buffer = compression_compress_init(COLUMN_BUFFER_SIZE);
 	bedrock_assert(buffer, return);
 
 	LIST_FOREACH(&tag->payload.tag_compound, node)

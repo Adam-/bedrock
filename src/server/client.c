@@ -29,6 +29,8 @@
 #include <ctype.h>
 #include <math.h>
 
+#define PLAYER_BUFFER_SIZE 4096
+
 bedrock_list client_list;
 uint32_t entity_id = 0;
 static bedrock_list exiting_client_list;
@@ -95,7 +97,7 @@ bool client_load(struct bedrock_client *client)
 
 	close(fd);
 
-	cb = compression_decompress(file_base, file_info.st_size);
+	cb = compression_decompress(PLAYER_BUFFER_SIZE, file_base, file_info.st_size);
 	munmap(file_base, file_info.st_size);
 	if (cb == NULL)
 	{

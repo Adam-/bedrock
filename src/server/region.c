@@ -17,6 +17,8 @@
 #define REGION_HEADER_SIZE 1024
 #define REGION_SECTOR_SIZE 4096
 
+#define REGION_BUFFER_SIZE 65536
+
 struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 {
 	struct bedrock_region *region = bedrock_malloc(sizeof(struct bedrock_region));
@@ -97,7 +99,7 @@ void region_load(struct bedrock_region *region)
 		bedrock_assert(*f_offset++ == 2, continue);
 
 		/* At this point we're at the beginning of the compressed NBT structure */
-		cb = compression_decompress(f_offset, length);
+		cb = compression_decompress(REGION_BUFFER_SIZE, f_offset, length);
 		if (cb == NULL)
 		{
 			bedrock_log(LEVEL_CRIT, "region: Unable to inflate column at offset %d in %s", offset, region->path);
