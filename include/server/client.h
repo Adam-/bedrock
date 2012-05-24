@@ -12,8 +12,7 @@ typedef enum
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
 	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
 	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
-	STATE_BURSTING        = 1 << 3,     /* After logging in, doing initial burst */
-	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
+	STATE_AUTHENTICATED   = 1 << 3,     /* Authenticated and in the game */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 

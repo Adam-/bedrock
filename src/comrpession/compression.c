@@ -52,7 +52,7 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 	{
 		bedrock_buffer *buf = buffer->buffer;
 
-		bedrock_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
+		bedrock_buffer_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
 
 		stream->next_out = buf->data + buf->length;
 		stream->avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
@@ -116,7 +116,7 @@ void compression_decompress_inflate(compression_buffer *buffer, const char *data
 	{
 		bedrock_buffer *buf = buffer->buffer;
 
-		bedrock_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
+		bedrock_buffer_ensure_capacity(buf, BEDROCK_BUFFER_DEFAULT_SIZE);
 
 		stream->next_out = buf->data + buf->length;
 		stream->avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;

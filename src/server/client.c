@@ -38,7 +38,7 @@ struct bedrock_client *client_create()
 	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
-	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SENDQ_LENGTH);
+	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -247,18 +247,14 @@ void client_event_write(bedrock_fd *fd, void *data)
 	{
 		io_set(&client->fd, 0, OP_WRITE);
 
-		if (client->out_buffer->capacity > BEDROCK_CLIENT_SENDQ_LENGTH)
+		if (client->fd.ops == 0)
 		{
-			bedrock_log(LEVEL_DEBUG, "io: Resizing buffer for %s (%s) down to %d", *client->name ? client->name : "(unknown)", client_get_ip(client), BEDROCK_CLIENT_SENDQ_LENGTH);
-			bedrock_buffer_resize(client->out_buffer, BEDROCK_CLIENT_SENDQ_LENGTH);
-
-			client->authenticated = STATE_AUTHENTICATED;
-			/* Start reading again */
-			io_set(&client->fd, OP_READ, 0);
-		}
-		else if (client->fd.ops == 0)
 			client_exit(client);
+			return;
+		}
 	}
+
+	bedrock_buffer_check_capacity(client->out_buffer, BEDROCK_CLIENT_SEND_SIZE);
 }
 
 const char *client_get_ip(struct bedrock_client *client)
@@ -291,14 +287,6 @@ void client_send(struct bedrock_client *client, const void *data, size_t size)
 {
 	bedrock_assert(client != NULL && data != NULL, return);
 
-	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + size > BEDROCK_CLIENT_SENDQ_LENGTH)
-	{
-		if (bedrock_list_has_data(&exiting_client_list, client) == false)
-			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
-		client_exit(client);
-		return;
-	}
-
 	bedrock_buffer_append(client->out_buffer, data, size);
 
 	io_set(&client->fd, OP_WRITE, 0);
@@ -326,15 +314,7 @@ void client_send_string(struct bedrock_client *client, const char *string)
 
 	client_send_int(client, &len, sizeof(len));
 
-	if (client->authenticated != STATE_BURSTING && client->out_buffer->length + (len * 2) > BEDROCK_CLIENT_SENDQ_LENGTH)
-	{
-		if (bedrock_list_has_data(&exiting_client_list, client) == false)
-			bedrock_log(LEVEL_INFO, "Send queue exceeded for %s (%s) - dropping client", *client->name ? client->name : "(unknown)", client_get_ip(client));
-		client_exit(client);
-		return;
-	}
-
-	bedrock_ensure_capacity(client->out_buffer, len * 2);
+	bedrock_buffer_ensure_capacity(client->out_buffer, len * 2);
 
 	for (i = 0; i < len; ++i)
 	{
@@ -536,7 +516,7 @@ void client_update_players(struct bedrock_client *client)
 		struct bedrock_client *c = node->data;
 		double c_x, c_z;
 
-		if (c->authenticated < STATE_BURSTING || c == client)
+		if (c->authenticated != STATE_AUTHENTICATED || c == client)
 			continue;
 
 		c_x = *client_get_pos_x(c) / BEDROCK_BLOCKS_PER_CHUNK, c_z = *client_get_pos_z(c) / BEDROCK_BLOCKS_PER_CHUNK;
@@ -647,8 +627,6 @@ void client_send_login_sequence(struct bedrock_client *client)
 	int32_t *spawn_x, *spawn_y, *spawn_z;
 	bedrock_node *node;
 
-	bedrock_assert(client->authenticated == STATE_BURSTING, return);
-
 	/* Send world spawn point */
 	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
 	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
@@ -666,7 +644,7 @@ void client_send_login_sequence(struct bedrock_client *client)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated >= STATE_BURSTING)
+		if (c->authenticated == STATE_AUTHENTICATED)
 		{
 			/* Send this new client to every client that is authenticated */
 			packet_send_player_list_item(c, client->name, true, 0);
@@ -679,7 +657,4 @@ void client_send_login_sequence(struct bedrock_client *client)
 
 	/* Send nearby players */
 	client_update_players(client);
-
-	/* Block reads until the burst is done */
-	io_set(&client->fd, 0, OP_READ);
 }
