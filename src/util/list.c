@@ -99,7 +99,7 @@ void bedrock_list_add_node_before(bedrock_list *list, bedrock_node *node, bedroc
 		before->prev->next = node;
 	before->prev = node;
 
-	if (node->prev == list->head)
+	if (before == list->head)
 		list->head = node;
 	
 	list->count++;
