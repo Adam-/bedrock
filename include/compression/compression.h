@@ -20,6 +20,7 @@ extern void compression_compress_deflate(compression_buffer *buffer, const char 
 
 extern compression_buffer *compression_decompress_init(size_t buffer_size);
 extern void compression_decompress_end(compression_buffer *buffer);
+extern void compression_decompress_reset(compression_buffer *buffer);
 extern void compression_decompress_inflate(compression_buffer *buffer, const char *data, size_t len);
 
 extern compression_buffer *compression_compress(size_t buffer_size, const char *data, size_t len);

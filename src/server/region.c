@@ -36,6 +36,7 @@ void region_load(struct bedrock_region *region)
 	int i;
 	struct stat file_info;
 	char *file_base;
+	compression_buffer *cb;
 
 	bedrock_assert(region->columns.count == 0, return);
 
@@ -63,6 +64,8 @@ void region_load(struct bedrock_region *region)
 
 	close(i);
 
+	cb = compression_decompress_init(REGION_BUFFER_SIZE);
+
 	/* Header appears to consist of REGION_HEADER_SIZE unsigned big endian integers */
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
 	{
@@ -70,7 +73,6 @@ void region_load(struct bedrock_region *region)
 		uint32_t offset;
 		uint32_t length;
 		int32_t *x, *z;
-		compression_buffer *cb;
 		nbt_tag *tag;
 
 		memcpy(&offset, f, sizeof(offset));
@@ -99,7 +101,7 @@ void region_load(struct bedrock_region *region)
 		bedrock_assert(*f_offset++ == 2, continue);
 
 		/* At this point we're at the beginning of the compressed NBT structure */
-		cb = compression_decompress(REGION_BUFFER_SIZE, f_offset, length);
+		compression_decompress_inflate(cb, f_offset, length);
 		if (cb == NULL)
 		{
 			bedrock_log(LEVEL_CRIT, "region: Unable to inflate column at offset %d in %s", offset, region->path);
@@ -107,7 +109,7 @@ void region_load(struct bedrock_region *region)
 		}
 
 		tag = nbt_parse(cb->buffer->data, cb->buffer->length);
-		compression_decompress_end(cb);
+		compression_decompress_reset(cb);
 		if (tag == NULL)
 		{
 			bedrock_log(LEVEL_CRIT, "region: Unable to NBT parse column at offset %d in %s", offset, region->path);
@@ -120,6 +122,8 @@ void region_load(struct bedrock_region *region)
 		z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
 		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", *x, *z, region->path);
 	}
+
+	compression_decompress_end(cb);
 
 	munmap(file_base, file_info.st_size);
 }

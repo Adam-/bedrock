@@ -98,6 +98,19 @@ void compression_decompress_end(compression_buffer *buffer)
 	bedrock_free(buffer);
 }
 
+void compression_decompress_reset(compression_buffer *buffer)
+{
+	int i;
+
+	inflateEnd(&buffer->stream);
+
+	i = inflateInit2(&buffer->stream, 15 + 32);
+	if (i != Z_OK)
+		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing deflate stream - error code %d", i);
+
+	buffer->buffer->length = 0;
+}
+
 void compression_decompress_inflate(compression_buffer *buffer, const char *data, size_t len)
 {
 	int i;
