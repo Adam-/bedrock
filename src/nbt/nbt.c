@@ -178,6 +178,8 @@ nbt_tag *nbt_parse(const unsigned char *data, size_t size)
 
 void nbt_free(nbt_tag *tag)
 {
+	bedrock_assert(tag != NULL, return);
+
 	bedrock_free(tag->name);
 
 	switch (tag->type)

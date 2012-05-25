@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
-#include "server/region.h"
+#include "server/column.h"
 #include "util/memory.h"
 #include "io/io.h"
 #include "packet/packet.h"
@@ -146,6 +146,14 @@ static void client_free(struct bedrock_client *client)
 	}
 	bedrock_list_clear(&client->players);
 
+	LIST_FOREACH(&client->columns, node)
+	{
+		struct bedrock_column *c = node->data;
+
+		--c->region->player_column_count;
+		if (c->region->player_column_count == 0)
+			region_queue_free(c->region);
+	}
 	bedrock_list_clear(&client->columns);
 
 	bedrock_log(LEVEL_DEBUG, "client: Exiting client %s from %s", *client->name ? client->name : "(unknown)", client_get_ip(client));
@@ -155,6 +163,7 @@ static void client_free(struct bedrock_client *client)
 
 	bedrock_list_del(&client_list, client);
 
+	nbt_free(client->data);
 	bedrock_buffer_free(client->out_buffer);
 	bedrock_free(client);
 }
@@ -381,7 +390,7 @@ void client_update_chunks(struct bedrock_client *client)
 
 	int i;
 	struct bedrock_region *region;
-	nbt_tag *c;
+	struct bedrock_column *c;
 	bedrock_node *node, *node2;
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
@@ -393,19 +402,21 @@ void client_update_chunks(struct bedrock_client *client)
 	/* Find columns we can delete */
 	LIST_FOREACH_SAFE(&client->columns, node, node2)
 	{
-		nbt_tag *c = node->data;
+		c = node->data;
 
-		int32_t *column_x = nbt_read(c, TAG_INT, 2, "Level", "xPos"),
-				*column_z = nbt_read(c, TAG_INT, 2, "Level", "zPos");
-
-		if (abs(*column_x - player_x) > BEDROCK_VIEW_LENGTH || abs(*column_z - player_z) > BEDROCK_VIEW_LENGTH)
+		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
 			bedrock_list_del_node(&client->columns, node);
 
-			bedrock_log(LEVEL_DEBUG, "client: Unallocating column %d, %d for %s", *column_x, *column_z, client->name);
+			bedrock_log(LEVEL_DEBUG, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
+
+			--c->region->player_column_count;
 
 			packet_send_column_allocation(client, c, false);
 			packet_send_column_empty(client, c);
+
+			if (c->region->player_column_count == 0)
+				region_queue_free(c->region);
 		}
 	}
 
@@ -418,6 +429,10 @@ void client_update_chunks(struct bedrock_client *client)
 
 	if (bedrock_list_has_data(&client->columns, c) == false)
 	{
+		bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+
+		++region->player_column_count;
+
 		packet_send_column_allocation(client, c, true);
 		packet_send_column(client, c);
 		bedrock_list_add(&client->columns, c);
@@ -438,7 +453,9 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+
+			++region->player_column_count;
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -456,7 +473,9 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+
+			++region->player_column_count;
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -474,7 +493,9 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+
+			++region->player_column_count;
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
@@ -492,7 +513,9 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", * (int *) nbt_read(c, TAG_INT, 2, "Level", "xPos"), * (int *) nbt_read(c, TAG_INT, 2, "Level", "zPos"), client->name);
+			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+
+			++region->player_column_count;
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);

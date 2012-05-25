@@ -22,7 +22,6 @@ struct bedrock_world *world_create(const char *name, const char *path)
 	struct bedrock_world *world = bedrock_malloc(sizeof(struct bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
-	world->regions.free = (bedrock_free_func) region_free;
 	bedrock_list_add(&world_list, world);
 	return world;
 }
@@ -86,8 +85,9 @@ bool world_load(struct bedrock_world *world)
 
 void world_free(struct bedrock_world *world)
 {
-	if (world->data != NULL)
-		nbt_free(world->data);
+	nbt_free(world->data);
+
+	world->regions.free = (bedrock_free_func) region_free;
 	bedrock_list_clear(&world->regions);
 
 	bedrock_list_del(&world_list, world);

@@ -84,6 +84,7 @@ int main(int argc, char **argv)
 		exit(1);
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
+	bedrock_timer_schedule(6000, region_free_queue, NULL);
 
 	io_init();
 	listener_init();

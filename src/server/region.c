@@ -1,10 +1,10 @@
 #include "server/bedrock.h"
-#include "server/region.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
 #include "compression/compression.h"
 #include "util/memory.h"
 #include "server/world.h"
+#include "server/column.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,6 +19,8 @@
 
 #define REGION_BUFFER_SIZE 65536
 
+static bedrock_list empty_regions;
+
 struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 {
 	struct bedrock_region *region = bedrock_malloc(sizeof(struct bedrock_region));
@@ -26,7 +28,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->x = x;
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
-	region->columns.free = (bedrock_free_func) nbt_free;
+	region->columns.free = (bedrock_free_func) column_free;
 	bedrock_list_add(&world->regions, region);
 	return region;
 }
@@ -72,8 +74,8 @@ void region_load(struct bedrock_region *region)
 		char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
 		uint32_t length;
-		int32_t *x, *z;
 		nbt_tag *tag;
+		struct bedrock_column *column;
 
 		memcpy(&offset, f, sizeof(offset));
 		convert_endianness((unsigned char *) &offset, sizeof(offset));
@@ -116,11 +118,15 @@ void region_load(struct bedrock_region *region)
 			continue;
 		}
 
-		bedrock_list_add(&region->columns, tag);
+		column = bedrock_malloc(sizeof(struct bedrock_column));
+		column->region = region;
+		memcpy(&column->x, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(column->x));
+		memcpy(&column->z, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(column->z));
+		column->data = tag;
 
-		x = nbt_read(tag, TAG_INT, 2, "Level", "xPos");
-		z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
-		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", *x, *z, region->path);
+		bedrock_list_add(&region->columns, column);
+
+		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", column->x, column->z, region->path);
 	}
 
 	compression_decompress_end(cb);
@@ -130,12 +136,42 @@ void region_load(struct bedrock_region *region)
 
 void region_free(struct bedrock_region *region)
 {
+	bedrock_list_del(&empty_regions, region);
+
 	bedrock_list_del(&region->world->regions, region);
 	bedrock_list_clear(&region->columns);
 	bedrock_free(region);
 }
 
-nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, double z)
+void region_queue_free(struct bedrock_region *region)
+{
+	if (bedrock_list_has_data(&empty_regions, region) == false)
+	{
+		bedrock_log(LEVEL_DEBUG, "region: Queueing region %d, %d for free", region->x, region->z);
+		bedrock_list_add(&empty_regions, region);
+	}
+}
+
+void region_free_queue()
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&empty_regions, node)
+	{
+		struct bedrock_region *region = node->data;
+
+		if (region->player_column_count == 0)
+		{
+			bedrock_log(LEVEL_DEBUG, "region: Freeing region %d, %d", region->x, region->z);
+			region_free(region);
+		}
+	}
+	bedrock_list_clear(&empty_regions);
+
+	bedrock_timer_schedule(6000, region_free_queue, NULL);
+}
+
+struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z)
 {
 	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
@@ -145,14 +181,11 @@ nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, dou
 
 	LIST_FOREACH(&region->columns, n)
 	{
-		nbt_tag *tag = n->data;
+		struct bedrock_column *column = n->data;
 
-		int32_t *x = nbt_read(tag, TAG_INT, 2, "Level", "xPos"),
-				*z = nbt_read(tag, TAG_INT, 2, "Level", "zPos");
-
-		if (*x == column_x && *z == column_z)
-			return tag;
-		else if (*z > column_z || (*z == column_z && *x > column_x))
+		if (column->x == column_x && column->z == column_z)
+			return column;
+		else if (column->z > column_z || (column->z == column_z && column->x > column_x))
 			break;
 	}
 

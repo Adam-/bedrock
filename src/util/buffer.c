@@ -47,7 +47,7 @@ void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 
 void bedrock_buffer_check_capacity(bedrock_buffer *buffer, size_t min)
 {
-	if (buffer->length <= buffer->capacity / 2)
+	if (buffer->length <= buffer->capacity / 2 && buffer->capacity / 2 >= min)
 	{
 		size_t old = buffer->capacity;
 		buffer->capacity /= 2;

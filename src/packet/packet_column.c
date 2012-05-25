@@ -1,11 +1,12 @@
 #include "server/client.h"
 #include "packet/packet.h"
+#include "server/column.h"
 #include "compression/compression.h"
 #include "nbt/nbt.h"
 
 #define COLUMN_BUFFER_SIZE 8192
 
-void packet_send_column(struct bedrock_client *client, nbt_tag *column)
+void packet_send_column(struct bedrock_client *client, struct bedrock_column *column)
 {
 	uint8_t b;
 	uint16_t bitmask;
@@ -15,12 +16,12 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	const struct nbt_tag_byte_array *blocks;
 
 	client_send_header(client, MAP_COLUMN);
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
+	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
+	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 
-	tag = nbt_get(column, 2, "Level", "Sections");
+	tag = nbt_get(column->data, 2, "Level", "Sections");
 	bedrock_assert(tag != NULL && tag->type == TAG_LIST, return);
 	bitmask = 0;
 	LIST_FOREACH(&tag->payload.tag_compound, node)
@@ -78,7 +79,7 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 		compression_compress_deflate(buffer, blocks->data, blocks->length);
 	}
 
-	blocks = nbt_read(column, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+	blocks = nbt_read(column->data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 	bedrock_assert(blocks->length == 256, goto error);
 
 	compression_compress_deflate(buffer, blocks->data, blocks->length);
@@ -94,15 +95,15 @@ void packet_send_column(struct bedrock_client *client, nbt_tag *column)
 	compression_compress_end(buffer);
 }
 
-void packet_send_column_empty(struct bedrock_client *client, nbt_tag *column)
+void packet_send_column_empty(struct bedrock_client *client, struct bedrock_column *column)
 {
 	uint8_t b;
 	uint16_t s;
 	uint32_t i;
 
 	client_send_header(client, MAP_COLUMN);
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	client_send_int(client, nbt_read(column, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
+	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
+	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 

@@ -9,10 +9,18 @@ struct bedrock_region
 	int z;
 	char path[PATH_MAX];
 	bedrock_list columns;
+
+	/* The number of columns in this region in use by players. +1 per player per column.
+	 * When this reaches 0 no players are in nor in render distance of this region, and
+	 * the region can be unloaded from memory.
+	 */
+	unsigned int player_column_count;
 };
 
 extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);
 extern void region_load(struct bedrock_region *region);
 extern void region_free(struct bedrock_region *region);
+extern void region_queue_free(struct bedrock_region *region);
+extern void region_free_queue();
 /* Finds the column which contains the point x and z */
-extern nbt_tag *find_column_which_contains(struct bedrock_region *region, double x, double z);
+extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
