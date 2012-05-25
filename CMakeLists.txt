@@ -32,6 +32,7 @@ set(BEDROCK_SOURCES
 ./src/util/buffer.c
 ./src/util/fd.c
 ./src/server/region.c
+./src/server/column.c
 ./src/server/listener.c
 ./src/server/world.c
 ./src/server/bedrock.c
