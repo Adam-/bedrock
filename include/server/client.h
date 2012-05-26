@@ -16,6 +16,16 @@ typedef enum
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
+typedef enum
+{
+	ACTION_NONE,
+	ACTION_CROUCH,
+	ACTION_UNCROUCH,
+	ACTION_LEAVE_BED,
+	ACTION_START_SPRINTING,
+	ACTION_STOP_SPRINTING
+} bedrock_client_entity_action;
+
 struct bedrock_client
 {
 	bedrock_fd fd;
@@ -31,13 +41,14 @@ struct bedrock_client
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
 
-	nbt_tag *data;                  /* player's .dat file */
-	struct bedrock_world *world;    /* world this player is in */
+	nbt_tag *data;                        /* player's .dat file */
+	struct bedrock_world *world;          /* world this player is in */
 
-	bedrock_list columns;           /* columns this player knows about */
-	bedrock_list players;           /* players this player knows about */
+	bedrock_list columns;                 /* columns this player knows about */
+	bedrock_list players;                 /* players this player knows about */
 
-	int16_t selected_slot;          /* slot the player has selected, 0-8 */
+	int16_t selected_slot;                /* slot the player has selected, 0-8 */
+	bedrock_client_entity_action action;  /* action the player is doing */
 };
 
 extern bedrock_list client_list;

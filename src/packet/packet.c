@@ -11,6 +11,7 @@
 #include "packet/packet_player_look.h"
 #include "packet/packet_held_item_change.h"
 #include "packet/packet_position_and_look.h"
+#include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_disconnect.h"
 
@@ -22,7 +23,7 @@ static struct c2s_packet_handler
 	uint8_t flags;
 	int (*handler)(struct bedrock_client *, const unsigned char *buffer, size_t len);
 } packet_handlers[] = {
-	{KEEP_ALIVE,       5,  STATE_AUTHENTICATED,   HARD_SIZE,       packet_keep_alive},
+	{KEEP_ALIVE,       5,  STATE_AUTHENTICATED,   HARD_SIZE, packet_keep_alive},
 	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,     SOFT_SIZE, packet_login_request},
 	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED, SOFT_SIZE, packet_handshake},
 	{CHAT_MESSAGE,     3,  STATE_AUTHENTICATED,   SOFT_SIZE, packet_chat_message},
@@ -31,6 +32,7 @@ static struct c2s_packet_handler
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,   HARD_SIZE, packet_player_look},
 	{PLAYER_POS_LOOK, 42,  STATE_AUTHENTICATED,   HARD_SIZE, packet_position_and_look},
 	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,   HARD_SIZE, packet_held_item_change},
+	{ENTITY_ACTION,    6,  STATE_AUTHENTICATED,   HARD_SIZE, packet_entity_action},
 	{CLOSE_WINDOW,     2,  STATE_AUTHENTICATED,   HARD_SIZE, packet_close_window},
 	{DISCONNECT,       3,  STATE_ANY,             SOFT_SIZE, packet_disconnect},
 };
