@@ -9,6 +9,7 @@
 #include "packet/packet_player.h"
 #include "packet/packet_position.h"
 #include "packet/packet_player_look.h"
+#include "packet/packet_held_item_change.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_disconnect.h"
@@ -29,6 +30,7 @@ static struct c2s_packet_handler
 	{PLAYER_POS,      34,  STATE_AUTHENTICATED,   HARD_SIZE, packet_position},
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,   HARD_SIZE, packet_player_look},
 	{PLAYER_POS_LOOK, 42,  STATE_AUTHENTICATED,   HARD_SIZE, packet_position_and_look},
+	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,   HARD_SIZE, packet_held_item_change},
 	{CLOSE_WINDOW,     2,  STATE_AUTHENTICATED,   HARD_SIZE, packet_close_window},
 	{DISCONNECT,       3,  STATE_ANY,             SOFT_SIZE, packet_disconnect},
 };

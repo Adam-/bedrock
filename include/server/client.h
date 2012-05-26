@@ -36,6 +36,8 @@ struct bedrock_client
 
 	bedrock_list columns;           /* columns this player knows about */
 	bedrock_list players;           /* players this player knows about */
+
+	int16_t selected_slot;          /* slot the player has selected, 0-8 */
 };
 
 extern bedrock_list client_list;
