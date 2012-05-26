@@ -19,7 +19,6 @@
 #include "packet/packet_spawn_named_entity.h"
 #include "packet/packet_column.h"
 #include "packet/packet_column_allocation.h"
-#include "packet/packet_set_slot.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
