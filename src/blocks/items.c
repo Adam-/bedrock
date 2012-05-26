@@ -47,3 +47,19 @@ struct bedrock_item bedrock_items[] = {
 	{ITEM_FISHING_ROD,        "Fishing rod",        ITEM_FLAG_DAMAGABLE},
 	{ITEM_SHEARS,             "Shears",             ITEM_FLAG_DAMAGABLE}
 };
+
+static int item_compare(const item_type *id, const struct bedrock_item *item)
+{
+	if (*id < item->id)
+		return -1;
+	else if (*id > item->id)
+		return 1;
+	return 0;
+}
+
+typedef int (*compare_func)(const void *, const void *);
+
+struct bedrock_item *item_find(item_type id)
+{
+	return bsearch(&id, bedrock_items, sizeof(bedrock_items) / sizeof(struct bedrock_item), sizeof(struct bedrock_item), (compare_func) item_compare);
+}

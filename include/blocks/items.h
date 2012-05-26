@@ -164,5 +164,7 @@ struct bedrock_item
 
 extern struct bedrock_item bedrock_items[];
 
+extern struct bedrock_item *item_find(item_type id);
+
 
 
