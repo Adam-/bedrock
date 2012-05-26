@@ -19,6 +19,7 @@ enum
 	ENTITY_HEAD_LOOK              = 0x23,
 	MAP_COLUMN_ALLOCATION         = 0x32,
 	MAP_COLUMN                    = 0x33,
+	SET_SLOT                      = 0x67,
 	PLAYER_LIST                   = 0xC9,
 	DISCONNECT                    = 0xFF
 };
