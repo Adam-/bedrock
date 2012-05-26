@@ -5,7 +5,7 @@
 
 int packet_login_request(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
-	size_t offset = 1;
+	size_t offset = PACKET_HEADER_LENGTH;
 	int32_t version, i;
 	char username[BEDROCK_USERNAME_MAX], unused[1];
 	int8_t b;

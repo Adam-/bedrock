@@ -4,7 +4,7 @@
 
 int packet_handshake(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
-	size_t offset = 1;
+	size_t offset = PACKET_HEADER_LENGTH;
 	struct bedrock_world *world;
 	char username[BEDROCK_USERNAME_MAX + 1 + 64 + 1 + 5];
 	char *p;

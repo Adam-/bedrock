@@ -39,6 +39,8 @@ enum
 	ERROR_UNEXPECTED     = -3
 };
 
+#define PACKET_HEADER_LENGTH 1
+
 extern int packet_parse(struct bedrock_client *client, const unsigned char *buffer, size_t len);
 
 extern void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size);
