@@ -7,6 +7,8 @@
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
+#include "blocks/items.h"
+#include "blocks/window.h"
 #include "packet/packet_spawn_point.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
@@ -19,6 +21,7 @@
 #include "packet/packet_spawn_named_entity.h"
 #include "packet/packet_column.h"
 #include "packet/packet_column_allocation.h"
+#include "packet/packet_set_slot.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -663,6 +666,23 @@ void client_send_login_sequence(struct bedrock_client *client)
 
 	/* Send player position */
 	packet_send_position_and_look(client);
+
+	/* Send inventory */
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	{
+		nbt_tag *c = node->data;
+		int16_t *id = nbt_read(c, TAG_SHORT, 1, "id"),
+				*damage = nbt_read(c, TAG_SHORT, 1, "Damage");
+		int8_t *count = nbt_read(c, TAG_BYTE, 1, "Count"),
+				*slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+
+		struct bedrock_item *item = item_find_or_create(*id);
+
+		if (*slot >= 0 && *slot <= 8)
+			*slot += 36;
+
+		packet_send_set_slot(client, WINDOW_INVENTORY, *slot, item, *count, *damage);
+	}
 
 	/* Send the player lists */
 	LIST_FOREACH(&client_list, node)

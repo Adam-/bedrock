@@ -1,3 +1,4 @@
+#include "server/bedrock.h"
 #include "blocks/items.h"
 
 struct bedrock_item bedrock_items[] = {
@@ -62,4 +63,22 @@ typedef int (*compare_func)(const void *, const void *);
 struct bedrock_item *item_find(item_type id)
 {
 	return bsearch(&id, bedrock_items, sizeof(bedrock_items) / sizeof(struct bedrock_item), sizeof(struct bedrock_item), (compare_func) item_compare);
+}
+
+struct bedrock_item *item_find_or_create(item_type id)
+{
+	static struct bedrock_item i;
+	struct bedrock_item *item = item_find(id);
+
+	if (item == NULL)
+	{
+		bedrock_log(LEVEL_DEBUG, "items: Unrecognized item %d", id);
+
+		i.flags = 0;
+		i.id = id;
+		i.name = "Unknown";
+		item = &i;
+	}
+
+	return item;
 }

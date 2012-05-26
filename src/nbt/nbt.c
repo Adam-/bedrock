@@ -263,7 +263,7 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 	return t;
 }
 
-nbt_tag *nbt_get(nbt_tag *tag, size_t size, ...)
+nbt_tag *nbt_get(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 {
 	va_list list;
 	va_start(list, size);
@@ -272,6 +272,7 @@ nbt_tag *nbt_get(nbt_tag *tag, size_t size, ...)
 
 	va_end(list);
 
+	bedrock_assert(tag->type == type, return NULL);
 	return tag;
 }
 

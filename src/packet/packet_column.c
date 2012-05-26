@@ -21,7 +21,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 
-	tag = nbt_get(column->data, 2, "Level", "Sections");
+	tag = nbt_get(column->data, TAG_LIST, 2, "Level", "Sections");
 	bedrock_assert(tag != NULL && tag->type == TAG_LIST, return);
 	bitmask = 0;
 	LIST_FOREACH(&tag->payload.tag_compound, node)

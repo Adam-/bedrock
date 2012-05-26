@@ -18,7 +18,7 @@ void packet_send_set_slot(struct bedrock_client *client, uint8_t window_id, uint
 		client_send_int(client, &item->id, sizeof(int16_t));
 		client_send_int(client, &count, sizeof(count));
 		client_send_int(client, &damage, sizeof(damage));
-		if (item->flags & ITEM_FLAG_ENCHANTABLE)
+		if (item->flags & ITEM_FLAG_DAMAGABLE)
 		{
 			int16_t s = -1;
 			client_send_int(client, &s, sizeof(s));
