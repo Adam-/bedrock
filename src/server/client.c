@@ -134,7 +134,7 @@ static void client_free(struct bedrock_client *client)
 
 			if (c->authenticated == STATE_AUTHENTICATED && c != client)
 			{
-				packet_send_player_list_item(c, client->name, false, 0);
+				packet_send_player_list_item(c, client, false);
 				packet_send_chat_message(c, "%s left the game", client->name);
 			}
 		}
@@ -692,9 +692,9 @@ void client_send_login_sequence(struct bedrock_client *client)
 		if (c->authenticated == STATE_AUTHENTICATED)
 		{
 			/* Send this new client to every client that is authenticated */
-			packet_send_player_list_item(c, client->name, true, 0);
+			packet_send_player_list_item(c, client, true);
 			/* Send this client to the new client */
-			packet_send_player_list_item(client, c->name, true, 0);
+			packet_send_player_list_item(client, c, true);
 
 			packet_send_chat_message(c, "%s joined the game", client->name);
 		}

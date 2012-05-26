@@ -47,6 +47,10 @@ struct bedrock_client
 	bedrock_list columns;                 /* columns this player knows about */
 	bedrock_list players;                 /* players this player knows about */
 
+	struct timespec ping_time_sent;       /* time keepalive was sent */
+	uint32_t ping_id;                     /* ping id sent */
+	uint16_t ping;                        /* ping in ms */
+
 	int16_t selected_slot;                /* slot the player has selected, 0-8 */
 	bedrock_client_entity_action action;  /* action the player is doing */
 };
