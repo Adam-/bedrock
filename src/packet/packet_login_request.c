@@ -42,7 +42,7 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	client_send_int(client, nbt_read(client->world->data, TAG_BYTE, 2, "Data", "hardcore"), sizeof(uint8_t)); /* hardcore */
 	b = 0;
 	client_send_int(client, &b, sizeof(b)); /* Not used */
-	b = 8;
+	b = BEDROCK_MAX_USERS;
 	client_send_int(client, &b, sizeof(b)); /* Max players */
 
 	client->authenticated = STATE_AUTHENTICATED;

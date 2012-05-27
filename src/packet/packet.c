@@ -13,6 +13,7 @@
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
+#include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
 
 static struct c2s_packet_handler
@@ -34,6 +35,7 @@ static struct c2s_packet_handler
 	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,   HARD_SIZE, packet_held_item_change},
 	{ENTITY_ACTION,    6,  STATE_AUTHENTICATED,   HARD_SIZE, packet_entity_action},
 	{CLOSE_WINDOW,     2,  STATE_AUTHENTICATED,   HARD_SIZE, packet_close_window},
+	{LIST_PING,        1,  STATE_UNAUTHENTICATED, HARD_SIZE, packet_list_ping},
 	{DISCONNECT,       3,  STATE_ANY,             SOFT_SIZE, packet_disconnect},
 };
 

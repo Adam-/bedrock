@@ -25,6 +25,7 @@ enum
 	CLOSE_WINDOW                  = 0x65,
 	SET_SLOT                      = 0x67,
 	PLAYER_LIST                   = 0xC9,
+	LIST_PING                     = 0xFE,
 	DISCONNECT                    = 0xFF
 };
 
