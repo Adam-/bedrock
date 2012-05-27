@@ -1,12 +1,15 @@
 #include "server/client.h"
 #include "packet/packet.h"
+#include "blocks/items.h"
 
 void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedrock_client *c)
 {
 	uint32_t abs_x, abs_y, abs_z;
 	float yaw, pitch;
 	int8_t y, p;
-	uint16_t item = 0; // XXX
+	struct bedrock_item *item;
+
+	item = client_get_inventory_item(c, c->selected_slot);
 
 	abs_x = *client_get_pos_x(c) * 32;
 	abs_y = *client_get_pos_y(c) * 32;
@@ -26,5 +29,5 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	client_send_int(client, &abs_z, sizeof(abs_z));
 	client_send_int(client, &y, sizeof(y));
 	client_send_int(client, &p, sizeof(p));
-	client_send_int(client, &item, sizeof(item));
+	client_send_int(client, &item->id, sizeof(item->id));
 }

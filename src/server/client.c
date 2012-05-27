@@ -385,6 +385,23 @@ uint8_t *client_get_on_ground(struct bedrock_client *client)
 	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
+struct bedrock_item *client_get_inventory_item(struct bedrock_client *client, uint8_t slot)
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	{
+		nbt_tag *c = node->data;
+		int16_t *i = nbt_read(c, TAG_SHORT, 1, "id");
+		uint8_t *s = nbt_read(c, TAG_BYTE, 1, "Slot");
+
+		if (*s == slot)
+			return item_find_or_create(*i);
+	}
+
+	return item_find_or_create(0);
+}
+
 void client_update_chunks(struct bedrock_client *client)
 {
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
@@ -411,7 +428,7 @@ void client_update_chunks(struct bedrock_client *client)
 		{
 			bedrock_list_del_node(&client->columns, node);
 
-			bedrock_log(LEVEL_DEBUG, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
+			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
 			--c->region->player_column_count;
 
@@ -432,7 +449,7 @@ void client_update_chunks(struct bedrock_client *client)
 
 	if (bedrock_list_has_data(&client->columns, c) == false)
 	{
-		bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+		bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
 
 		++region->player_column_count;
 
@@ -456,7 +473,7 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
 
 			++region->player_column_count;
 
@@ -476,7 +493,7 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
 
 			++region->player_column_count;
 
@@ -496,7 +513,7 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
 
 			++region->player_column_count;
 
@@ -516,7 +533,7 @@ void client_update_chunks(struct bedrock_client *client)
 			if (bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_DEBUG, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
+			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
 
 			++region->player_column_count;
 
@@ -674,14 +691,15 @@ void client_send_login_sequence(struct bedrock_client *client)
 		int16_t *id = nbt_read(c, TAG_SHORT, 1, "id"),
 				*damage = nbt_read(c, TAG_SHORT, 1, "Damage");
 		int8_t *count = nbt_read(c, TAG_BYTE, 1, "Count"),
-				*slot = nbt_read(c, TAG_BYTE, 1, "Slot");
-
+				slot;
 		struct bedrock_item *item = item_find_or_create(*id);
 
-		if (*slot >= 0 && *slot <= 8)
-			*slot += 36;
+		nbt_copy(c, TAG_BYTE, &slot, sizeof(slot), 1, "Slot");
 
-		packet_send_set_slot(client, WINDOW_INVENTORY, *slot, item, *count, *damage);
+		if (slot >= 0 && slot <= 8)
+			slot += 36;
+
+		packet_send_set_slot(client, WINDOW_INVENTORY, slot, item, *count, *damage);
 	}
 
 	/* Send the player lists */

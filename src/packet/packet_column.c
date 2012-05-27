@@ -28,7 +28,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	{
 		nbt_tag *sec = node->data;
 
-		nbt_copy(sec, &b, sizeof(b), 1, "Y");
+		nbt_copy(sec, TAG_BYTE, &b, sizeof(b), 1, "Y");
 		bitmask |= 1 << b;
 	}
 	client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map

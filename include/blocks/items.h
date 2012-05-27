@@ -157,7 +157,7 @@ enum
 
 struct bedrock_item
 {
-	item_type id;
+	uint16_t id;
 	const char *name;
 	uint8_t flags;
 };

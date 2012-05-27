@@ -72,7 +72,7 @@ struct bedrock_item *item_find_or_create(item_type id)
 
 	if (item == NULL)
 	{
-		bedrock_log(LEVEL_DEBUG, "items: Unrecognized item %d", id);
+		bedrock_log(LEVEL_DEBUG, "item: Unrecognized item %d", id);
 
 		i.flags = 0;
 		i.id = id;

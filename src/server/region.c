@@ -148,7 +148,7 @@ void region_queue_free(struct bedrock_region *region)
 {
 	if (bedrock_list_has_data(&empty_regions, region) == false)
 	{
-		bedrock_log(LEVEL_DEBUG, "region: Queueing region %d, %d for free", region->x, region->z);
+		bedrock_log(LEVEL_COLUMN, "region: Queueing region %d, %d for free", region->x, region->z);
 		bedrock_list_add(&empty_regions, region);
 	}
 }
@@ -163,7 +163,7 @@ void region_free_queue()
 
 		if (region->player_column_count == 0)
 		{
-			bedrock_log(LEVEL_DEBUG, "region: Freeing region %d, %d", region->x, region->z);
+			bedrock_log(LEVEL_COLUMN, "region: Freeing region %d, %d", region->x, region->z);
 			region_free(region);
 		}
 	}

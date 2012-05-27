@@ -15,7 +15,7 @@ void packet_send_set_slot(struct bedrock_client *client, uint8_t window_id, uint
 	}
 	else
 	{
-		client_send_int(client, &item->id, sizeof(int16_t));
+		client_send_int(client, &item->id, sizeof(item->id));
 		client_send_int(client, &count, sizeof(count));
 		client_send_int(client, &damage, sizeof(damage));
 		if (item->flags & ITEM_FLAG_DAMAGABLE)

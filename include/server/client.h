@@ -82,6 +82,7 @@ extern double *client_get_pos_z(struct bedrock_client *client);
 extern float *client_get_yaw(struct bedrock_client *client);
 extern float *client_get_pitch(struct bedrock_client *client);
 extern uint8_t *client_get_on_ground(struct bedrock_client *client);
+extern struct bedrock_item *client_get_inventory_item(struct bedrock_client *client, uint8_t slot);
 
 extern void client_update_chunks(struct bedrock_client *client);
 extern void client_update_players(struct bedrock_client *client);
