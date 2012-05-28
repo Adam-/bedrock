@@ -1,3 +1,6 @@
+#ifndef SERVER_BEDROCK_H
+#define SERVER_BEDROCK_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -29,3 +32,4 @@ typedef enum
 extern void bedrock_update_time();
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);
 
+#endif // SERVER_BEDROCK_H

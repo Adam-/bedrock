@@ -22,6 +22,8 @@ bedrock_buffer *bedrock_buffer_create(const void *data, size_t length, size_t ca
 
 void bedrock_buffer_free(bedrock_buffer *buffer)
 {
+	if (buffer == NULL)
+		return;
 	bedrock_free(buffer->data);
 	bedrock_free(buffer);
 }

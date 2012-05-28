@@ -25,6 +25,7 @@ typedef struct _nbt_tag
 {
 	uint8_t type;
 	char *name;
+	struct _nbt_tag *owner;
 
 	union
 	{

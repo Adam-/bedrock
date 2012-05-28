@@ -119,11 +119,7 @@ void region_load(struct bedrock_region *region)
 			continue;
 		}
 
-		column = bedrock_malloc(sizeof(struct bedrock_column));
-		column->region = region;
-		memcpy(&column->x, nbt_read(tag, TAG_INT, 2, "Level", "xPos"), sizeof(column->x));
-		memcpy(&column->z, nbt_read(tag, TAG_INT, 2, "Level", "zPos"), sizeof(column->z));
-		column->data = tag;
+		column = column_create(region, tag);
 
 		bedrock_list_add(&region->columns, column);
 
@@ -155,9 +151,9 @@ void region_queue_free(struct bedrock_region *region)
 
 void region_free_queue()
 {
-	bedrock_node *node;
+	bedrock_node *node, *node2;
 
-	LIST_FOREACH(&empty_regions, node)
+	LIST_FOREACH_SAFE(&empty_regions, node, node2)
 	{
 		struct bedrock_region *region = node->data;
 

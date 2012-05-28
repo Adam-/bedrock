@@ -10,10 +10,10 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 {
 	uint8_t b;
 	uint16_t bitmask;
-	nbt_tag *tag;
 	bedrock_node *node;
 	compression_buffer *buffer;
 	const struct nbt_tag_byte_array *blocks;
+	int i;
 
 	client_send_header(client, MAP_COLUMN);
 	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
@@ -21,15 +21,16 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	b = 1;
 	client_send_int(client, &b, sizeof(b)); // Ground up continuous
 
-	tag = nbt_get(column->data, TAG_LIST, 2, "Level", "Sections");
-	bedrock_assert(tag != NULL && tag->type == TAG_LIST, return);
 	bitmask = 0;
-	LIST_FOREACH(&tag->payload.tag_compound, node)
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
-		nbt_tag *sec = node->data;
+		struct bedrock_chunk *chunk = column->chunks[i];
 
-		nbt_copy(sec, TAG_BYTE, &b, sizeof(b), 1, "Y");
-		bitmask |= 1 << b;
+		if (!chunk)
+			continue;
+
+		chunk_decompress(chunk);
+		bitmask |= 1 << chunk->y;
 	}
 	client_send_int(client, &bitmask, sizeof(bitmask)); // primary bit map
 
@@ -39,44 +40,46 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	buffer = compression_compress_init(COLUMN_BUFFER_SIZE);
 	bedrock_assert(buffer, return);
 
-	LIST_FOREACH(&tag->payload.tag_compound, node)
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
-		nbt_tag *sec = node->data;
+		struct bedrock_chunk *chunk = column->chunks[i];
 
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Blocks");
-		bedrock_assert(blocks->length == 4096, goto error);
+		if (!chunk)
+			continue;
 
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
+		bedrock_assert(sizeof(chunk->blocks) == 4096, goto error);
+
+		compression_compress_deflate(buffer, chunk->blocks, sizeof(chunk->blocks));
 	}
 
-	LIST_FOREACH(&tag->payload.tag_compound, node)
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
-		nbt_tag *sec = node->data;
+		struct bedrock_chunk *chunk = column->chunks[i];
 
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "Data");
-		bedrock_assert(blocks->length == 2048, goto error);
+		if (!chunk)
+			continue;
 
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
+		compression_compress_deflate(buffer, chunk->data, 2048);
 	}
 
-	LIST_FOREACH(&tag->payload.tag_compound, node)
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
-		nbt_tag *sec = node->data;
+		struct bedrock_chunk *chunk = column->chunks[i];
 
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "BlockLight");
-		bedrock_assert(blocks->length == 2048, goto error);
+		if (!chunk)
+			continue;
 
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
+		compression_compress_deflate(buffer, chunk->blocklight, 2048);
 	}
 
-	LIST_FOREACH(&tag->payload.tag_compound, node)
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
-		nbt_tag *sec = node->data;
+		struct bedrock_chunk *chunk = column->chunks[i];
 
-		blocks = nbt_read(sec, TAG_BYTE_ARRAY, 1, "SkyLight");
-		bedrock_assert(blocks->length == 2048, goto error);
+		if (!chunk)
+			continue;
 
-		compression_compress_deflate(buffer, blocks->data, blocks->length);
+		compression_compress_deflate(buffer, chunk->skylight, 2048);
 	}
 
 	blocks = nbt_read(column->data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
@@ -93,6 +96,10 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 
  error:
 	compression_compress_end(buffer);
+
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+		if (column->chunks[i])
+			chunk_compress(column->chunks[i]);
 }
 
 void packet_send_column_empty(struct bedrock_client *client, struct bedrock_column *column)

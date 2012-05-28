@@ -92,6 +92,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
 
 				nested_tag->type = tag_type;
+				nested_tag->owner = tag;
 				nested_tag = read_unnamed_tag(nested_tag, data, size);
 
 				if (nested_tag != NULL)
@@ -104,6 +105,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			while (true)
 			{
 				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
+				nested_tag->owner = tag;
 				nested_tag = read_named_tag(nested_tag, data, size);
 
 				if (nested_tag == NULL)
@@ -179,6 +181,13 @@ nbt_tag *nbt_parse(const unsigned char *data, size_t size)
 void nbt_free(nbt_tag *tag)
 {
 	bedrock_assert(tag != NULL, return);
+	bedrock_assert(tag->type == TAG_COMPOUND || tag->owner != NULL, ;);
+
+	if (tag->owner != NULL)
+	{
+		bedrock_assert(tag->owner->type == TAG_LIST || tag->owner->type == TAG_COMPOUND, ;);
+		bedrock_list_del(&tag->owner->payload.tag_list, tag);
+	}
 
 	bedrock_free(tag->name);
 
@@ -272,7 +281,7 @@ nbt_tag *nbt_get(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 
 	va_end(list);
 
-	bedrock_assert(tag->type == type, return NULL);
+	bedrock_assert(tag != NULL && tag->type == type, return NULL);
 	return tag;
 }
 
