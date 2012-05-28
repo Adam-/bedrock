@@ -166,7 +166,8 @@ static void client_free(struct bedrock_client *client)
 
 	bedrock_list_del(&client_list, client);
 
-	nbt_free(client->data);
+	if (client->data != NULL)
+		nbt_free(client->data);
 	bedrock_buffer_free(client->out_buffer);
 	bedrock_free(client);
 }
