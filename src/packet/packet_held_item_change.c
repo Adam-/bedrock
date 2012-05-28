@@ -2,7 +2,7 @@
 #include "packet/packet.h"
 #include "packet/packet_entity_equipment.h"
 #include "nbt/nbt.h"
-#include "blocks/items.h"
+#include "util/list.h"
 
 int packet_held_item_change(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {

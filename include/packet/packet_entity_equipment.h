@@ -1,3 +1,4 @@
+#include "blocks/items.h"
 
 enum
 {

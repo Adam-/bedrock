@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 include_directories(include)
 
 set(BEDROCK_SOURCES
+./src/packet/packet_entity_action.c
 ./src/packet/packet_keep_alive.c
 ./src/packet/packet_player_look.c
 ./src/packet/packet_column_allocation.c
@@ -11,17 +12,23 @@ set(BEDROCK_SOURCES
 ./src/packet/packet_entity_relative_move.c
 ./src/packet/packet.c
 ./src/packet/packet_chat_message.c
+./src/packet/packet_held_item_change.c
+./src/packet/packet_list_ping.c
+./src/packet/packet_entity_equipment.c
 ./src/packet/packet_entity_look_and_relative_move.c
 ./src/packet/packet_disconnect.c
 ./src/packet/packet_spawn_named_entity.c
+./src/packet/packet_set_slot.c
 ./src/packet/packet_position_and_look.c
 ./src/packet/packet_column.c
 ./src/packet/packet_handshake.c
 ./src/packet/packet_position.c
+./src/packet/packet_entity_metadata.c
 ./src/packet/packet_player_list_item.c
 ./src/packet/packet_player.c
 ./src/packet/packet_destroy_entity.c
 ./src/packet/packet_entity_teleport.c
+./src/packet/packet_close_window.c
 ./src/packet/packet_spawn_point.c
 ./src/nbt/nbt.c
 ./src/util/endian.c
@@ -38,6 +45,7 @@ set(BEDROCK_SOURCES
 ./src/server/bedrock.c
 ./src/server/client.c
 ./src/io/epoll.c
+./src/blocks/items.c
 ./src/comrpession/compression.c
 )
 

@@ -2,7 +2,7 @@
 #include "packet/packet.h"
 #include "packet/packet_disconnect.h"
 
-int packet_list_ping(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_list_ping(struct bedrock_client *client, const unsigned char __attribute__((__unused__)) *buffer, size_t __attribute__((__unused__)) len)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char string[BEDROCK_MAX_STRING_LENGTH];
