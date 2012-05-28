@@ -385,21 +385,20 @@ uint8_t *client_get_on_ground(struct bedrock_client *client)
 	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
-struct bedrock_item *client_get_inventory_item(struct bedrock_client *client, uint8_t slot)
+nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot)
 {
 	bedrock_node *node;
 
 	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
 	{
 		nbt_tag *c = node->data;
-		int16_t *i = nbt_read(c, TAG_SHORT, 1, "id");
 		uint8_t *s = nbt_read(c, TAG_BYTE, 1, "Slot");
 
 		if (*s == slot)
-			return item_find_or_create(*i);
+			return c;
 	}
 
-	return item_find_or_create(0);
+	return NULL;
 }
 
 void client_update_chunks(struct bedrock_client *client)

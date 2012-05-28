@@ -6,6 +6,7 @@ enum
 	LOGIN_REQUEST                 = 0x01,
 	HANDSHAKE                     = 0x02,
 	CHAT_MESSAGE                  = 0x03,
+	ENTITY_EQUIPMENT              = 0x05,
 	SPAWN_POINT                   = 0x06,
 	PLAYER                        = 0x0A,
 	PLAYER_POS                    = 0x0B,

@@ -1,15 +1,24 @@
 #include "server/client.h"
 #include "packet/packet.h"
 #include "blocks/items.h"
+#include "nbt/nbt.h"
 
 void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedrock_client *c)
 {
 	uint32_t abs_x, abs_y, abs_z;
 	float yaw, pitch;
 	int8_t y, p;
+	nbt_tag *tag;
 	struct bedrock_item *item;
 
-	item = client_get_inventory_item(c, c->selected_slot);
+	tag = client_get_inventory_tag(c, c->selected_slot);
+	if (tag != NULL)
+	{
+		uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id");
+		item = item_find_or_create(*id);
+	}
+	else
+		item = item_find_or_create(0);
 
 	abs_x = *client_get_pos_x(c) * 32;
 	abs_y = *client_get_pos_y(c) * 32;
