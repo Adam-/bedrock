@@ -14,6 +14,9 @@ typedef struct
 	z_stream stream;
 } compression_buffer;
 
+#define ZLIB_HEADER_SIZE 2
+
+extern compression_buffer *compression_compress_init_type(size_t buffer_size, int type);
 extern compression_buffer *compression_compress_init(size_t buffer_size);
 extern void compression_compress_end(compression_buffer *buffer);
 extern void compression_compress_deflate(compression_buffer *buffer, const char *data, size_t len);

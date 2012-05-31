@@ -3,7 +3,7 @@
 #include "util/util.h"
 #include "util/memory.h"
 
-compression_buffer *compression_compress_init(size_t buffer_size)
+compression_buffer *compression_compress_init_type(size_t buffer_size, int type)
 {
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
@@ -13,7 +13,7 @@ compression_buffer *compression_compress_init(size_t buffer_size)
 	buffer->stream.zfree = Z_NULL;
 	buffer->stream.opaque = Z_NULL;
 
-	int i = deflateInit2(&buffer->stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15, 8, Z_DEFAULT_STRATEGY);
+	int i = deflateInit2(&buffer->stream, type, Z_DEFLATED, 15, 8, Z_DEFAULT_STRATEGY);
 	if (i != Z_OK)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error initializing deflate stream - error code %d", i);
@@ -24,6 +24,11 @@ compression_buffer *compression_compress_init(size_t buffer_size)
 	buffer->buffer = bedrock_buffer_create(NULL, 0, buffer_size);
 
 	return buffer;
+}
+
+compression_buffer *compression_compress_init(size_t buffer_size)
+{
+	return compression_compress_init_type(buffer_size, Z_DEFAULT_COMPRESSION);
 }
 
 void compression_compress_end(compression_buffer *buffer)
@@ -57,14 +62,22 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 		stream->next_out = buf->data + buf->length;
 		stream->avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
 
-		i = deflate(stream, Z_BLOCK);
+		i = deflate(stream, Z_FULL_FLUSH);//Z_BLOCK);
 		if (i == Z_OK || i == Z_STREAM_END)
 			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - buffer->stream.avail_out;
 	}
-	while (stream->avail_in > 0);
+	while (i == Z_OK);
+	//while (stream->avail_in > 0);
 
-	if (i != Z_OK)
-		bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
+	//if (i != Z_OK)
+		//bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
+}
+
+void compression_compress_deflate_append(compression_buffer *buffer, const char *data, size_t len)
+{
+	bedrock_assert(buffer != NULL && buffer->type == ZLIB_COMPRESS && data != NULL && len > 0, return);
+
+	compression_compress_deflate(buffer, NULL, 0);
 }
 
 compression_buffer *compression_decompress_init(size_t buffer_size)
