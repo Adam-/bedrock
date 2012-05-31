@@ -1,6 +1,7 @@
 #include "server/column.h"
 #include "util/util.h"
 #include "compression/compression.h"
+#include "util/memory.h"
 
 #define DATA_CHUNK_SIZE 1024
 

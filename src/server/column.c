@@ -34,7 +34,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Data")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
+		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 		chunk->compressed_data = buffer->buffer;
 		buffer->buffer = NULL;
 		compression_compress_reset(buffer);
@@ -42,7 +42,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "SkyLight")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
+		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 		chunk->compressed_skylight = buffer->buffer;
 		buffer->buffer = NULL;
 		compression_compress_reset(buffer);
@@ -50,7 +50,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "BlockLight")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
+		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 		chunk->compressed_blocklight = buffer->buffer;
 		buffer->buffer = NULL;
 		compression_compress_reset(buffer);
@@ -58,7 +58,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Blocks")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 4096, ;);
-		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
+		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 		chunk->compressed_blocks = buffer->buffer;
 		buffer->buffer = NULL;
 		compression_compress_reset(buffer);
@@ -70,7 +70,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 	tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 	byte_array = &tag->payload.tag_byte_array;
 	bedrock_assert(byte_array->length == 256, ;);
-	compression_compress_deflate(buffer, byte_array->data, byte_array->length);
+	compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 	column->compressed_biomes = buffer->buffer;
 	buffer->buffer = NULL;
 	compression_compress_end(buffer);

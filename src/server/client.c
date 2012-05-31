@@ -68,7 +68,7 @@ bool client_load(struct bedrock_client *client)
 	char path[PATH_MAX];
 	int fd;
 	struct stat file_info;
-	char *file_base;
+	unsigned char *file_base;
 	compression_buffer *cb;
 	nbt_tag *tag;
 

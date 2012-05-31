@@ -22,3 +22,5 @@ struct bedrock_chunk
 
 extern struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y);
 extern void chunk_free(struct bedrock_chunk *chunk);
+extern void chunk_decompress(struct bedrock_chunk *chunk);
+extern void chunk_compress(struct bedrock_chunk *chunk);

@@ -31,7 +31,7 @@ bool world_load(struct bedrock_world *world)
 	char path[PATH_MAX];
 	int fd;
 	struct stat file_info;
-	char *file_base;
+	unsigned char *file_base;
 	compression_buffer *cb;
 	nbt_tag *tag;
 
