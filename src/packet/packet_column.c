@@ -4,7 +4,7 @@
 #include "compression/compression.h"
 #include "nbt/nbt.h"
 
-#define COLUMN_BUFFER_SIZE 4096
+#define COLUMN_BUFFER_SIZE 65536
 
 void packet_send_column(struct bedrock_client *client, struct bedrock_column *column)
 {
