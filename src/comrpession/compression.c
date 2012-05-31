@@ -8,6 +8,8 @@ compression_buffer *compression_compress_init_type(size_t buffer_size, int type)
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_COMPRESS;
+	buffer->buffer_size = buffer_size;
+	buffer->decompress_type = type;
 
 	buffer->stream.zalloc = Z_NULL;
 	buffer->stream.zfree = Z_NULL;
@@ -39,6 +41,24 @@ void compression_compress_end(compression_buffer *buffer)
 	bedrock_free(buffer);
 }
 
+void compression_compress_reset(compression_buffer *buffer)
+{
+	int i;
+
+	bedrock_assert(buffer->type == ZLIB_COMPRESS, return);
+
+	deflateEnd(&buffer->stream);
+
+	i = deflateInit2(&buffer->stream, buffer->type, Z_DEFLATED, 15, 8, Z_DEFAULT_STRATEGY);
+	if (i != Z_OK)
+		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing deflate stream - error code %d", i);
+
+	if (buffer->buffer != NULL)
+		buffer->buffer->length = 0;
+	else
+		buffer->buffer = bedrock_buffer_create(NULL, 0, buffer->buffer_size);
+}
+
 void compression_compress_deflate(compression_buffer *buffer, const char *data, size_t len)
 {
 	int i;
@@ -67,10 +87,6 @@ void compression_compress_deflate(compression_buffer *buffer, const char *data, 
 			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - buffer->stream.avail_out;
 	}
 	while (i == Z_OK);
-	//while (stream->avail_in > 0);
-
-	//if (i != Z_OK)
-		//bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
 }
 
 void compression_compress_deflate_append(compression_buffer *buffer, const char *data, size_t len)
@@ -85,6 +101,7 @@ compression_buffer *compression_decompress_init(size_t buffer_size)
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_DECOMPRESS;
+	buffer->buffer_size = buffer_size;
 
 	buffer->stream.zalloc = Z_NULL;
 	buffer->stream.zfree = Z_NULL;
@@ -115,11 +132,13 @@ void compression_decompress_reset(compression_buffer *buffer)
 {
 	int i;
 
+	bedrock_assert(buffer->type == ZLIB_DECOMPRESS, return);
+
 	inflateEnd(&buffer->stream);
 
 	i = inflateInit2(&buffer->stream, 15 + 32);
 	if (i != Z_OK)
-		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing deflate stream - error code %d", i);
+		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing inflate stream - error code %d", i);
 
 	buffer->buffer->length = 0;
 }
