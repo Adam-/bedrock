@@ -427,6 +427,7 @@ void client_update_chunks(struct bedrock_client *client)
 		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
 			bedrock_list_del_node(&client->columns, node);
+			bedrock_free(node);
 
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
