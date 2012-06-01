@@ -3,7 +3,7 @@
 #include "compression/compression.h"
 #include "util/memory.h"
 
-#define DATA_CHUNK_SIZE 4096 + 2048 + 2048 + 2048
+#define DATA_CHUNK_SIZE 16384
 
 struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 {

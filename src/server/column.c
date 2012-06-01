@@ -3,7 +3,7 @@
 #include "util/memory.h"
 #include "compression/compression.h"
 
-#define DATA_CHUNK_SIZE 1024
+#define DATA_CHUNK_SIZE 8192
 
 struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
 {

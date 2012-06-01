@@ -10,7 +10,7 @@ typedef struct
 	size_t capacity;
 } bedrock_buffer;
 
-#define BEDROCK_BUFFER_DEFAULT_SIZE 4096
+#define BEDROCK_BUFFER_DEFAULT_SIZE 1024
 
 extern bedrock_buffer *bedrock_buffer_create(const void *data, size_t length, size_t capacity);
 extern void bedrock_buffer_free(bedrock_buffer *buffer);
