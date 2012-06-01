@@ -22,8 +22,8 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 		nbt_tag *chunk_tag = node->data;
 		uint8_t y;
 		struct bedrock_chunk *chunk;
-		struct nbt_tag_byte_array *byte_array;
 		compression_buffer *buffer;
+		struct nbt_tag_byte_array *byte_array;
 
 		nbt_copy(chunk_tag, TAG_BYTE, &y, sizeof(y), 1, "Y");
 		bedrock_assert(y < sizeof(column->chunks) / sizeof(struct bedrock_chunk *), continue);
@@ -32,38 +32,29 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		chunk = column->chunks[y] = chunk_create(column, y);
 
-		// XXX WHY IS THIS NOT IN CHUNK.C
+		buffer = compression_compress_init(DATA_CHUNK_SIZE);
+
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Data")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		buffer = compression_compress(DATA_CHUNK_SIZE, byte_array->data, byte_array->length);
-		chunk->compressed_data2 = buffer->buffer;
-		buffer->buffer = NULL;
-		compression_compress_end(buffer);
-		bedrock_buffer_resize(chunk->compressed_data2, chunk->compressed_data2->length);
+		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "SkyLight")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		buffer = compression_compress(DATA_CHUNK_SIZE, byte_array->data, byte_array->length);
-		chunk->compressed_skylight = buffer->buffer;
-		buffer->buffer = NULL;
-		compression_compress_end(buffer);
-		bedrock_buffer_resize(chunk->compressed_skylight, chunk->compressed_skylight->length);
+		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "BlockLight")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		buffer = compression_compress(DATA_CHUNK_SIZE, byte_array->data, byte_array->length);
-		chunk->compressed_blocklight = buffer->buffer;
-		buffer->buffer = NULL;
-		compression_compress_end(buffer);
-		bedrock_buffer_resize(chunk->compressed_blocklight, chunk->compressed_blocklight->length);
+		compression_compress_deflate(buffer, byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Blocks")->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == 4096, ;);
-		buffer = compression_compress(DATA_CHUNK_SIZE, byte_array->data, byte_array->length);
-		chunk->compressed_blocks = buffer->buffer;
+		bedrock_assert(sizeof(chunk->blocks) == byte_array->length, ;);
+		memcpy(chunk->blocks, byte_array->data, byte_array->length);
+
+		bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
+		chunk->compressed_data = buffer->buffer;
 		buffer->buffer = NULL;
-		compression_compress_end(buffer);
-		bedrock_buffer_resize(chunk->compressed_blocks, chunk->compressed_blocks->length);
+
+		compression_compress_end(buffer); // XXX reset
 	}
 
 	nbt_free(sections);
