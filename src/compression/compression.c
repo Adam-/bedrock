@@ -34,7 +34,7 @@ void compression_compress_end(compression_buffer *buffer)
 	bedrock_free(buffer);
 }
 
-void compression_compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len)
+static void compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len, int type)
 {
 	int i;
 	z_stream *stream;
@@ -57,14 +57,24 @@ void compression_compress_deflate(compression_buffer *buffer, const unsigned cha
 		stream->next_out = buf->data + buf->length;
 		stream->avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
 
-		i = deflate(stream, Z_BLOCK);
+		i = deflate(stream, type);
 		if (i == Z_OK || i == Z_STREAM_END)
 			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - buffer->stream.avail_out;
 	}
-	while (stream->avail_in > 0);
+	while (stream->avail_out == 0);
 
-	if (i != Z_OK)
+	if (i != Z_OK && i != Z_STREAM_END)
 		bedrock_log(LEVEL_CRIT, "zlib: Error deflating stream - error code %d", i);
+}
+
+void compression_compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len)
+{
+	compress_deflate(buffer, data, len, Z_BLOCK);
+}
+
+void compression_compress_deflate_finish(compression_buffer *buffer, const unsigned char *data, size_t len)
+{
+	compress_deflate(buffer, data, len, Z_FINISH);
 }
 
 compression_buffer *compression_decompress_init(size_t buffer_size)
@@ -134,11 +144,11 @@ void compression_decompress_inflate(compression_buffer *buffer, const unsigned c
 		stream->next_out = buf->data + buf->length;
 		stream->avail_out = BEDROCK_BUFFER_DEFAULT_SIZE;
 
-		i = inflate(stream, Z_BLOCK);
+		i = inflate(stream, Z_NO_FLUSH);
 		if (i == Z_OK || i == Z_STREAM_END)
 			buf->length += BEDROCK_BUFFER_DEFAULT_SIZE - stream->avail_out;
 	}
-	while (i == Z_OK);
+	while (stream->avail_out == 0);
 
 	if (i != Z_OK && i != Z_STREAM_END)
 		bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);

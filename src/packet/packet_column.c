@@ -11,7 +11,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	uint8_t b;
 	uint16_t bitmask;
 	compression_buffer *buffer;
-	const struct nbt_tag_byte_array *blocks;
+	const struct nbt_tag_byte_array *biomes;
 	int i;
 
 	client_send_header(client, MAP_COLUMN);
@@ -79,10 +79,10 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		compression_compress_deflate(buffer, chunk->skylight, 2048);
 	}
 
-	blocks = nbt_read(column->data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-	bedrock_assert(blocks->length == 256, goto error);
+	biomes = nbt_read(column->data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+	bedrock_assert(biomes->length == 256, goto error);
 
-	compression_compress_deflate(buffer, (const unsigned char *) blocks->data, blocks->length);
+	compression_compress_deflate_finish(buffer, (const unsigned char *) biomes->data, biomes->length);
 
 	uint32_t ii = buffer->buffer->length;
 	client_send_int(client, &ii, sizeof(ii)); // length

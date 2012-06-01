@@ -48,7 +48,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "BlockLight")->payload.tag_byte_array;
 		bedrock_assert(byte_array->length == 2048, ;);
-		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
+		compression_compress_deflate_finish(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
 		bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 		chunk->compressed_data = buffer->buffer;

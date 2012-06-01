@@ -3,7 +3,7 @@
 #include "compression/compression.h"
 #include "util/memory.h"
 
-#define DATA_CHUNK_SIZE 1024
+#define DATA_CHUNK_SIZE 4096 + 2048 + 2048 + 2048
 
 struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 {
@@ -40,7 +40,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
-	bedrock_assert(chunk->decompressed_data->length == 4096 + 2048 + 2048 + 2048, return);
+	bedrock_assert(chunk->decompressed_data->length == 4096 + 2048 + 2048 + 2048, ;);
 
 	chunk->blocks = chunk->decompressed_data->data;
 	chunk->data = chunk->blocks + 4096;

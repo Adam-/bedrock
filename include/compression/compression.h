@@ -17,6 +17,7 @@ typedef struct
 extern compression_buffer *compression_compress_init(size_t buffer_size);
 extern void compression_compress_end(compression_buffer *buffer);
 extern void compression_compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len);
+extern void compression_compress_deflate_finish(compression_buffer *buffer, const unsigned char *data, size_t len);
 
 extern compression_buffer *compression_decompress_init(size_t buffer_size);
 extern void compression_decompress_end(compression_buffer *buffer);
