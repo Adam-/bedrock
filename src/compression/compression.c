@@ -8,6 +8,7 @@ compression_buffer *compression_compress_init(size_t buffer_size)
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_COMPRESS;
+	buffer->buffer_size = buffer_size;
 
 	buffer->stream.zalloc = Z_NULL;
 	buffer->stream.zfree = Z_NULL;
@@ -21,7 +22,7 @@ compression_buffer *compression_compress_init(size_t buffer_size)
 		return NULL;
 	}
 
-	buffer->buffer = bedrock_buffer_create(NULL, 0, buffer_size);
+	buffer->buffer = bedrock_buffer_create(NULL, 0, buffer->buffer_size);
 
 	return buffer;
 }
@@ -32,6 +33,22 @@ void compression_compress_end(compression_buffer *buffer)
 	deflateEnd(&buffer->stream);
 	bedrock_buffer_free(buffer->buffer);
 	bedrock_free(buffer);
+}
+
+void compression_compress_reset(compression_buffer *buffer)
+{
+	int i;
+
+	bedrock_assert(buffer != NULL && buffer->type == ZLIB_COMPRESS, return);
+
+	i = deflateReset(&buffer->stream);
+	if (i != Z_OK)
+		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing deflate stream - error code %d", i);
+
+	if (buffer->buffer != NULL)
+		buffer->buffer->length = 0;
+	else
+		buffer->buffer = bedrock_buffer_create(NULL, 0, buffer->buffer_size);
 }
 
 static void compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len, int type)
@@ -82,6 +99,7 @@ compression_buffer *compression_decompress_init(size_t buffer_size)
 	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_DECOMPRESS;
+	buffer->buffer_size = buffer_size;
 
 	buffer->stream.zalloc = Z_NULL;
 	buffer->stream.zfree = Z_NULL;
@@ -112,13 +130,16 @@ void compression_decompress_reset(compression_buffer *buffer)
 {
 	int i;
 
-	inflateEnd(&buffer->stream);
+	bedrock_assert(buffer != NULL && buffer->type == ZLIB_DECOMPRESS, return);
 
-	i = inflateInit2(&buffer->stream, 15 + 32);
+	i = inflateReset(&buffer->stream);
 	if (i != Z_OK)
 		bedrock_log(LEVEL_CRIT, "zlib: Error reinitializing deflate stream - error code %d", i);
 
-	buffer->buffer->length = 0;
+	if (buffer->buffer != NULL)
+		buffer->buffer->length = 0;
+	else
+		buffer->buffer = bedrock_buffer_create(NULL, 0, buffer->buffer_size);
 }
 
 void compression_decompress_inflate(compression_buffer *buffer, const unsigned char *data, size_t len)
