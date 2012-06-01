@@ -36,11 +36,13 @@
 
 bedrock_list client_list;
 uint32_t entity_id = 0;
+
+static bedrock_memory_pool client_pool;
 static bedrock_list exiting_client_list;
 
 struct bedrock_client *client_create()
 {
-	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
+	struct bedrock_client *client = bedrock_malloc_pool(&client_pool, sizeof(struct bedrock_client));
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
@@ -169,7 +171,7 @@ static void client_free(struct bedrock_client *client)
 	if (client->data != NULL)
 		nbt_free(client->data);
 	bedrock_buffer_free(client->out_buffer);
-	bedrock_free(client);
+	bedrock_free_pool(&client_pool, client);
 }
 
 void client_exit(struct bedrock_client *client)
