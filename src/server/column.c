@@ -8,22 +8,22 @@
 struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
 {
 	struct bedrock_column *column = bedrock_malloc(sizeof(struct bedrock_column));
-	nbt_tag *sections;
+	nbt_tag *tag;
 	bedrock_node *node;
+	compression_buffer *buffer;
+	struct nbt_tag_byte_array *byte_array;
 
 	column->region = region;
 	nbt_copy(data, TAG_INT, &column->x, sizeof(column->x), 2, "Level", "xPos");
 	nbt_copy(data, TAG_INT, &column->z, sizeof(column->z), 2, "Level", "zPos");
 	column->data = data;
 
-	sections = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
-	LIST_FOREACH(&sections->payload.tag_list, node)
+	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
+	LIST_FOREACH(&tag->payload.tag_list, node)
 	{
 		nbt_tag *chunk_tag = node->data;
 		uint8_t y;
 		struct bedrock_chunk *chunk;
-		compression_buffer *buffer;
-		struct nbt_tag_byte_array *byte_array;
 
 		nbt_copy(chunk_tag, TAG_BYTE, &y, sizeof(y), 1, "Y");
 		bedrock_assert(y < sizeof(column->chunks) / sizeof(struct bedrock_chunk *), continue);
@@ -57,7 +57,17 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 		compression_compress_end(buffer); // XXX reset
 	}
 
-	nbt_free(sections);
+	nbt_free(tag);
+
+	tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+	byte_array = &tag->payload.tag_byte_array;
+	bedrock_assert(byte_array->length == BEDROCK_BIOME_LENGTH, ;);
+	buffer = compression_compress(BEDROCK_BUFFER_DEFAULT_SIZE, (const unsigned char *) byte_array->data, byte_array->length);
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
+	column->biomes = buffer->buffer;
+	buffer->buffer = NULL;
+	compression_compress_end(buffer);
+	nbt_free(tag);
 
 	return column;
 }

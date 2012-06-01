@@ -157,7 +157,7 @@ void compression_decompress_inflate(compression_buffer *buffer, const unsigned c
 compression_buffer *compression_compress(size_t buffer_size, const unsigned char *data, size_t len)
 {
 	compression_buffer *buffer = compression_compress_init(buffer_size);
-	compression_compress_deflate(buffer, data, len);
+	compression_compress_deflate_finish(buffer, data, len);
 	return buffer;
 }
 

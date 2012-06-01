@@ -13,6 +13,9 @@ struct bedrock_column
 
 	/* Chunks in this column */
 	struct bedrock_chunk *chunks[BEDROCK_CHUNKS_PER_COLUMN];
+
+	/* Compressed biome data */
+	bedrock_buffer *biomes;
 };
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
