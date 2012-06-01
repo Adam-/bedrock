@@ -1,5 +1,7 @@
 #include "util/memory.h"
 
+uint64_t bedrock_memory = 0;
+
 void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 {
 	bedrock_memory_block *block;
@@ -40,9 +42,13 @@ void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
  */
 void *bedrock_malloc(size_t size)
 {
-	void *memory = calloc(1, size);
+	void *memory = calloc(1, size + sizeof(size_t));
+	size_t *sz = memory;
+	memory = ((size_t *) memory) + 1;
 	if (!memory)
 		abort();
+	*sz = size + sizeof(size_t);
+	bedrock_memory += size + sizeof(size_t);
 	return memory;
 }
 
@@ -51,9 +57,28 @@ void *bedrock_malloc(size_t size)
  */
 void *bedrock_realloc(void *pointer, size_t size)
 {
-	pointer = realloc(pointer, size);
-	if (!pointer && size)
+	size_t *sz;
+
+	if (pointer == NULL)
+		return bedrock_malloc(size);
+	else if (size == 0)
+	{
+		bedrock_free(pointer);
+		return NULL;
+	}
+
+	sz = pointer = ((size_t *) pointer) - 1;
+	bedrock_memory -= *sz;
+
+	pointer = realloc(pointer, size + sizeof(size_t));
+	if (pointer == NULL)
 		abort();
+
+	sz = pointer;
+	*sz = size;
+	bedrock_memory += size;
+	pointer = ((size_t *) pointer) + 1;
+
 	return pointer;
 }
 
@@ -61,7 +86,14 @@ void *bedrock_realloc(void *pointer, size_t size)
  */
 void bedrock_free(void *pointer)
 {
-	if (pointer)
-		free(pointer);
+	size_t *sz;
+
+	if (pointer == NULL)
+		return;
+
+	sz = ((size_t *) pointer) - 1;
+	bedrock_memory -= *sz;
+
+	free(sz);
 }
 

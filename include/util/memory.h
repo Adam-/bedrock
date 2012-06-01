@@ -1,6 +1,8 @@
 #include "util.h"
 #include "list.h"
 
+#include <stdint.h>
+
 typedef struct
 {
 	bedrock_list list;
@@ -13,6 +15,8 @@ typedef struct
 	size_t size;
 	unsigned char *memory;
 } bedrock_memory_block;
+
+extern uint64_t bedrock_memory;
 
 extern void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size);
 extern void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr);
