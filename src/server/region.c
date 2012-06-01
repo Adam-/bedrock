@@ -38,7 +38,7 @@ void region_load(struct bedrock_region *region)
 {
 	int i;
 	struct stat file_info;
-	char *file_base;
+	unsigned char *file_base;
 	compression_buffer *cb;
 
 	bedrock_assert(region->columns.count == 0, return);
@@ -72,7 +72,7 @@ void region_load(struct bedrock_region *region)
 	/* Header appears to consist of REGION_HEADER_SIZE unsigned big endian integers */
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
 	{
-		char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
+		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
 		uint32_t length;
 		nbt_tag *tag;

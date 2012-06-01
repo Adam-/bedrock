@@ -1,6 +1,7 @@
 #include "server/column.h"
 #include "util/util.h"
 #include "compression/compression.h"
+#include "util/memory.h"
 
 #define DATA_CHUNK_SIZE 1024
 
@@ -39,10 +40,12 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
+	bedrock_assert(chunk->decompressed_data->length == 4096 + 2048 + 2048 + 2048, return);
+
 	chunk->blocks = chunk->decompressed_data->data;
-	chunk->data = chunk->decompressed_data->data + 2048; //
-	chunk->skylight = chunk->decompressed_data->data + 4096; // XXX
-	chunk->blocklight = chunk->decompressed_data->data + 6144; // XXX
+	chunk->data = chunk->blocks + 4096;
+	chunk->skylight = chunk->data + 2048;
+	chunk->blocklight = chunk->skylight + 2048;
 }
 
 void chunk_compress(struct bedrock_chunk *chunk)

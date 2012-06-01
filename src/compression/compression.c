@@ -34,7 +34,7 @@ void compression_compress_end(compression_buffer *buffer)
 	bedrock_free(buffer);
 }
 
-void compression_compress_deflate(compression_buffer *buffer, const char *data, size_t len)
+void compression_compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len)
 {
 	int i;
 	z_stream *stream;
@@ -111,7 +111,7 @@ void compression_decompress_reset(compression_buffer *buffer)
 	buffer->buffer->length = 0;
 }
 
-void compression_decompress_inflate(compression_buffer *buffer, const char *data, size_t len)
+void compression_decompress_inflate(compression_buffer *buffer, const unsigned char *data, size_t len)
 {
 	int i;
 	z_stream *stream;
@@ -144,14 +144,14 @@ void compression_decompress_inflate(compression_buffer *buffer, const char *data
 		bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
 }
 
-compression_buffer *compression_compress(size_t buffer_size, const char *data, size_t len)
+compression_buffer *compression_compress(size_t buffer_size, const unsigned char *data, size_t len)
 {
 	compression_buffer *buffer = compression_compress_init(buffer_size);
 	compression_compress_deflate(buffer, data, len);
 	return buffer;
 }
 
-compression_buffer *compression_decompress(size_t buffer_size, const char *data, size_t len)
+compression_buffer *compression_decompress(size_t buffer_size, const unsigned char *data, size_t len)
 {
 	compression_buffer *buffer = compression_decompress_init(buffer_size);
 	compression_decompress_inflate(buffer, data, len);
