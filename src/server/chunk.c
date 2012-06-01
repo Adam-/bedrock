@@ -2,6 +2,7 @@
 #include "util/util.h"
 #include "compression/compression.h"
 #include "util/memory.h"
+#include "server/config.h"
 
 #define DATA_CHUNK_SIZE 16384
 
