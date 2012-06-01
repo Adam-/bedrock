@@ -20,7 +20,7 @@ void chunk_free(struct bedrock_chunk *chunk)
 	chunk_compress(chunk);
 
 	bedrock_buffer_free(chunk->compressed_blocks);
-	bedrock_buffer_free(chunk->compressed_data);
+	bedrock_buffer_free(chunk->compressed_data2);
 	bedrock_buffer_free(chunk->compressed_skylight);
 	bedrock_buffer_free(chunk->compressed_blocklight);
 
@@ -32,9 +32,9 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	compression_buffer *buffer;
 
 	bedrock_assert(chunk != NULL, return);
-	bedrock_assert(!chunk->blocks == !chunk->data && !chunk->data == !chunk->skylight && !chunk->skylight == !chunk->blocklight, return);
+	bedrock_assert(!chunk->data == !chunk->skylight && !chunk->data == !chunk->blocklight, return);
 
-	if (chunk->decompressed_data != NULL)
+	if (chunk->decompressed_data2 != NULL)
 		return;
 
 	buffer = compression_decompress(DATA_CHUNK_SIZE, chunk->compressed_blocks->data, chunk->compressed_blocks->length);
@@ -42,8 +42,8 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
-	buffer = compression_decompress(DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
-	chunk->decompressed_data = buffer->buffer;
+	buffer = compression_decompress(DATA_CHUNK_SIZE, chunk->compressed_data2->data, chunk->compressed_data2->length);
+	chunk->decompressed_data2 = buffer->buffer;
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
@@ -58,7 +58,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	compression_decompress_end(buffer);
 
 	chunk->blocks = chunk->decompressed_blocks->data;
-	chunk->data = chunk->decompressed_data->data;
+	chunk->data = chunk->decompressed_data2->data;
 	chunk->skylight = chunk->decompressed_skylight->data;
 	chunk->blocklight = chunk->decompressed_blocklight->data;
 }
@@ -73,8 +73,8 @@ void chunk_compress(struct bedrock_chunk *chunk)
 	bedrock_buffer_free(chunk->decompressed_blocks);
 	chunk->decompressed_blocks = NULL;
 
-	bedrock_buffer_free(chunk->decompressed_data);
-	chunk->decompressed_data = NULL;
+	bedrock_buffer_free(chunk->decompressed_data2);
+	chunk->decompressed_data2 = NULL;
 
 	bedrock_buffer_free(chunk->decompressed_skylight);
 	chunk->decompressed_skylight = NULL;

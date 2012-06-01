@@ -12,8 +12,6 @@ typedef struct
 	bedrock_buffer *buffer;
 	compression_stream_type type;
 	z_stream stream;
-	size_t buffer_size;
-	int decompress_type;
 } compression_buffer;
 
 #define ZLIB_HEADER_SIZE 2
