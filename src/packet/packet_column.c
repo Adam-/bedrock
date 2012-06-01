@@ -45,11 +45,9 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		struct bedrock_chunk *chunk = column->chunks[i];
 
 		if (!chunk)
-			continue;
+			continue;;
 
-		bedrock_assert(sizeof(chunk->blocks) == 4096, goto error);
-
-		compression_compress_deflate(buffer, chunk->blocks, sizeof(chunk->blocks));
+		compression_compress_deflate(buffer, chunk->blocks, 4096);
 	}
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)

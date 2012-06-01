@@ -39,13 +39,15 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
-	chunk->data = chunk->decompressed_data->data;
-	chunk->skylight = chunk->decompressed_data->data + 2048; // XXX
-	chunk->blocklight = chunk->decompressed_data->data + 4096; // XXX
+	chunk->blocks = chunk->decompressed_data->data;
+	chunk->data = chunk->decompressed_data->data + 2048; //
+	chunk->skylight = chunk->decompressed_data->data + 4096; // XXX
+	chunk->blocklight = chunk->decompressed_data->data + 6144; // XXX
 }
 
 void chunk_compress(struct bedrock_chunk *chunk)
 {
+	chunk->blocks = NULL;
 	chunk->data = NULL;
 	chunk->skylight = NULL;
 	chunk->blocklight = NULL;

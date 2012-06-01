@@ -8,14 +8,12 @@ struct bedrock_chunk
 	/* Y coordinate */
 	uint8_t y;
 
-	/* Actual blocks */
-	uint8_t blocks[BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK];
-
 	/* A buffer of the compressed data use to fill below */
 	bedrock_buffer *compressed_data;
 
 	/* Only available if this chunk is decompressed! */
 	bedrock_buffer *decompressed_data;
+	uint8_t *blocks;
 	uint8_t *data;
 	uint8_t *skylight;
 	uint8_t *blocklight;
