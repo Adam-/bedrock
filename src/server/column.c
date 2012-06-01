@@ -75,8 +75,11 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 void column_free(struct bedrock_column *column)
 {
 	int i;
+
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);
+
+	bedrock_buffer_free(column->biomes);
 
 	nbt_free(column->data);
 	bedrock_free(column);
