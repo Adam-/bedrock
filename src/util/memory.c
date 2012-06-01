@@ -10,7 +10,7 @@ void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 
 	block = bedrock_malloc(sizeof(bedrock_memory_block) + size);
 	block->size = size;
-	block->memory = block + 1;
+	block->memory = (unsigned char *) (block + 1);
 
 	pool->size += size;
 	bedrock_list_add_node(&pool->list, &block->node, block);
