@@ -38,7 +38,7 @@ typedef struct _nbt_tag
 
 		struct nbt_tag_byte_array
 		{
-			int8_t *data;
+			char *data;
 			int32_t length;
 		} tag_byte_array;
 
