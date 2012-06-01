@@ -33,3 +33,13 @@
 
 /* The maximum string length allowed, including the trailing \0 */
 #define BEDROCK_MAX_STRING_LENGTH 120
+
+/* Number of blocks on one side of a chunk. Cube to get the number of blocks actually in a chunk */
+#define BEDROCK_BLOCKS_PER_CHUNK   16
+/* The number of chunks per column */
+#define BEDROCK_CHUNKS_PER_COLUMN  16
+/* The number of columsn per region */
+#define BEDROCK_COLUMNS_PER_REGION 32
+
+#define BEDROCK_BLOCK_LENGTH 4096
+#define BEDROCK_DATA_LENGTH 2048

@@ -35,19 +35,19 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 		buffer = compression_compress_init(DATA_CHUNK_SIZE);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Blocks")->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == 4096, ;);
+		bedrock_assert(byte_array->length == BEDROCK_BLOCK_LENGTH, ;);
 		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Data")->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == 2048, ;);
+		bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
 		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "SkyLight")->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == 2048, ;);
+		bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
 		compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
 		byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "BlockLight")->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == 2048, ;);
+		bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
 		compression_compress_deflate_finish(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
 		bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);

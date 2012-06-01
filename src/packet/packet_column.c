@@ -46,7 +46,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		if (!chunk)
 			continue;;
 
-		compression_compress_deflate(buffer, chunk->blocks, 4096);
+		compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
 	}
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
@@ -56,7 +56,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		if (!chunk)
 			continue;
 
-		compression_compress_deflate(buffer, chunk->data, 2048);
+		compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);
 	}
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
@@ -66,7 +66,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		if (!chunk)
 			continue;
 
-		compression_compress_deflate(buffer, chunk->blocklight, 2048);
+		compression_compress_deflate(buffer, chunk->blocklight, BEDROCK_DATA_LENGTH);
 	}
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
@@ -76,7 +76,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 		if (!chunk)
 			continue;
 
-		compression_compress_deflate(buffer, chunk->skylight, 2048);
+		compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
 	}
 
 	biomes = nbt_read(column->data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");

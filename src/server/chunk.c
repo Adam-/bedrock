@@ -40,12 +40,12 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
 
-	bedrock_assert(chunk->decompressed_data->length == 4096 + 2048 + 2048 + 2048, ;);
+	bedrock_assert(chunk->decompressed_data->length == BEDROCK_BLOCK_LENGTH + BEDROCK_DATA_LENGTH + BEDROCK_DATA_LENGTH + BEDROCK_DATA_LENGTH, ;);
 
 	chunk->blocks = chunk->decompressed_data->data;
-	chunk->data = chunk->blocks + 4096;
-	chunk->skylight = chunk->data + 2048;
-	chunk->blocklight = chunk->skylight + 2048;
+	chunk->data = chunk->blocks + BEDROCK_BLOCK_LENGTH;
+	chunk->skylight = chunk->data + BEDROCK_DATA_LENGTH;
+	chunk->blocklight = chunk->skylight + BEDROCK_DATA_LENGTH;
 }
 
 void chunk_compress(struct bedrock_chunk *chunk)
