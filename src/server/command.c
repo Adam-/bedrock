@@ -39,7 +39,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 	char command_buf[BEDROCK_MAX_STRING_LENGTH];
 	char *front, *end;
 	struct bedrock_command *command;
-	int argc = 0;
+	size_t argc = 0;
 	char *argv[MAX_PARAMETERS];
 
 	strncpy(command_buf, buf, sizeof(command_buf));
@@ -81,7 +81,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 	if (!command->can_use(client))
 		return;
 
-	command->handler(client, argc, argv);
+	command->handler(client, argc, (const char **) argv);
 }
 
 void command_reply(struct bedrock_client *client, const char *fmt, ...)
@@ -89,7 +89,7 @@ void command_reply(struct bedrock_client *client, const char *fmt, ...)
 	va_list args;
 	char message[BEDROCK_MAX_STRING_LENGTH];
 
-	message[0] = SPECIAL_CHAR;
+	message[0] = (char) SPECIAL_CHAR;
 	message[1] = COLOR_GREY;
 
 	va_start(args, fmt);
