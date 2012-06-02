@@ -139,7 +139,7 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_list_del(&region->world->regions, region);
 	bedrock_list_clear(&region->columns);
-	bedrock_free(region);
+	bedrock_free_pool(&region_pool, region);
 }
 
 void region_queue_free(struct bedrock_region *region)

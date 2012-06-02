@@ -36,5 +36,6 @@ void command_memory(struct bedrock_client *client, int argc, const char **argv)
 	command_reply(client, "Total memory: %0.2LfMB", memory);
 
 	show_memory_for_pool(client, "Client pool", &client_pool);
+	show_memory_for_pool(client, "World pool", &world_pool);
 	show_memory_for_pool(client, "Region pool", &region_pool);
 }

@@ -16,11 +16,12 @@
 #define WORLD_BUFFER_SIZE 4096
 #define WORLD_LEVEL_FILE "level.dat"
 
+bedrock_memory_pool world_pool = BEDROCK_MEMORY_POOL_INIT;
 bedrock_list world_list;
 
 struct bedrock_world *world_create(const char *name, const char *path)
 {
-	struct bedrock_world *world = bedrock_malloc(sizeof(struct bedrock_world));
+	struct bedrock_world *world = bedrock_malloc_pool(&world_pool, sizeof(struct bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
 	bedrock_list_add(&world_list, world);
@@ -62,7 +63,7 @@ bool world_load(struct bedrock_world *world)
 
 	close(fd);
 
-	cb = compression_decompress(NULL, WORLD_BUFFER_SIZE, file_base, file_info.st_size);
+	cb = compression_decompress(&world_pool, WORLD_BUFFER_SIZE, file_base, file_info.st_size);
 	munmap(file_base, file_info.st_size);
 	if (cb == NULL)
 	{
@@ -70,7 +71,7 @@ bool world_load(struct bedrock_world *world)
 		return false;
 	}
 
-	tag = nbt_parse(NULL, cb->buffer->data, cb->buffer->length);
+	tag = nbt_parse(&world_pool, cb->buffer->data, cb->buffer->length);
 	compression_decompress_end(cb);
 	if (tag == NULL)
 	{
@@ -92,7 +93,7 @@ void world_free(struct bedrock_world *world)
 	bedrock_list_clear(&world->regions);
 
 	bedrock_list_del(&world_list, world);
-	bedrock_free(world);
+	bedrock_free_pool(&world_pool, world);
 }
 
 struct bedrock_world *world_find(const char *name)
