@@ -2,6 +2,7 @@
 #define BEDROCK_NBT_TAG_H
 
 #include "util/list.h"
+#include "util/memory.h"
 
 #include <stdint.h>
 
@@ -23,6 +24,7 @@ typedef enum
 
 typedef struct _nbt_tag
 {
+	bedrock_memory_pool *pool;
 	uint8_t type;
 	char *name;
 	struct _nbt_tag *owner;

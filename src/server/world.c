@@ -70,7 +70,7 @@ bool world_load(struct bedrock_world *world)
 		return false;
 	}
 
-	tag = nbt_parse(cb->buffer->data, cb->buffer->length);
+	tag = nbt_parse(NULL, cb->buffer->data, cb->buffer->length);
 	compression_decompress_end(cb);
 	if (tag == NULL)
 	{

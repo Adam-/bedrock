@@ -6,7 +6,8 @@ void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 {
 	bedrock_memory_block *block;
 
-	bedrock_assert(pool != NULL && size > 0, return NULL);
+	if (pool == NULL)
+		return bedrock_malloc(size);
 
 	block = bedrock_malloc(sizeof(bedrock_memory_block) + size);
 	block->size = size;
@@ -22,7 +23,11 @@ void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
 {
 	bedrock_memory_block *block;
 
-	bedrock_assert(pool != NULL, return);
+	if (pool == NULL)
+	{
+		bedrock_free(ptr);
+		return;
+	}
 
 	if (ptr == NULL)
 		return;
@@ -34,6 +39,37 @@ void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
 	bedrock_list_del_node(&pool->list, &block->node);
 
 	bedrock_free(block);
+}
+
+void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size)
+{
+	bedrock_memory_block *block;
+
+	if (pool == NULL)
+		return bedrock_realloc(pointer, size);
+	else if (pointer == NULL)
+		return bedrock_malloc_pool(pool, size);
+	else if (size == 0)
+	{
+		bedrock_free_pool(pool, pointer);
+		return NULL;
+	}
+
+	block = ((bedrock_memory_block *) pointer) - 1;
+	bedrock_assert(block->memory == pointer, return NULL);
+
+	pool->size -= block->size;
+
+	block = bedrock_realloc(block, sizeof(bedrock_memory_block) + size);
+	if (block == NULL)
+		abort();
+
+	pool->size += size;
+
+	block->size = size;
+	block->memory = (unsigned char *) (block + 1);
+
+	return block->memory;
 }
 
 /** Allocate memory

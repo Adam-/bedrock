@@ -61,7 +61,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			struct nbt_tag_byte_array *tba = &tag->payload.tag_byte_array;
 
 			CHECK_RETURN(read_bytes(&tba->length, sizeof(tba->length), data, size, true), error);
-			tba->data = bedrock_malloc(tba->length);
+			tba->data = bedrock_malloc_pool(tag->pool, tba->length);
 			CHECK_RETURN(read_bytes(tba->data, tba->length, data, size, false), error);
 			break;
 		}
@@ -71,7 +71,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 
 			CHECK_RETURN(read_bytes(&str_len, sizeof(str_len), data, size, true), error);
 
-			tag->payload.tag_string = bedrock_malloc(str_len + 1);
+			tag->payload.tag_string = bedrock_malloc_pool(tag->pool, str_len + 1);
 			CHECK_RETURN(read_bytes(tag->payload.tag_string, str_len, data, size, false), error);
 			tag->payload.tag_string[str_len] = 0;
 
@@ -89,8 +89,9 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 
 			for (i = 0; i < tag_length; ++i)
 			{
-				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
+				nbt_tag *nested_tag = bedrock_malloc_pool(tag->pool, sizeof(nbt_tag));
 
+				nested_tag->pool = tag->pool;
 				nested_tag->type = tag_type;
 				nested_tag->owner = tag;
 				nested_tag = read_unnamed_tag(nested_tag, data, size);
@@ -104,7 +105,8 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 		{
 			while (true)
 			{
-				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
+				nbt_tag *nested_tag = bedrock_malloc_pool(tag->pool, sizeof(nbt_tag));
+				nested_tag->pool = tag->pool;
 				nested_tag->owner = tag;
 				nested_tag = read_named_tag(nested_tag, data, size);
 
@@ -123,7 +125,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			int32_t i;
 
 			CHECK_RETURN(read_bytes(&tia->length, sizeof(tia->length), data, size, true), error);
-			tia->data = bedrock_malloc(sizeof(int32_t) * tia->length);
+			tia->data = bedrock_malloc_pool(tag->pool, sizeof(int32_t) * tia->length);
 			CHECK_RETURN(read_bytes(tia->data, sizeof(int32_t) * tia->length, data, size, false), error);
 
 			for (i = 0; i < tia->length; ++i)
@@ -158,7 +160,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 
 	CHECK_RETURN(read_bytes(&name_length, sizeof(name_length), data, size, true), error);
 
-	tag->name = bedrock_malloc(name_length + 1);
+	tag->name = bedrock_malloc_pool(tag->pool, name_length + 1);
 	CHECK_RETURN(read_bytes(tag->name, name_length, data, size, false), error);
 	tag->name[name_length] = 0;
 
@@ -172,9 +174,10 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	return NULL;
 }
 
-nbt_tag *nbt_parse(const unsigned char *data, size_t size)
+nbt_tag *nbt_parse(bedrock_memory_pool *pool, const unsigned char *data, size_t size)
 {
-	nbt_tag *tag = bedrock_malloc(sizeof(nbt_tag));
+	nbt_tag *tag = bedrock_malloc_pool(pool, sizeof(nbt_tag));
+	tag->pool = pool;
 	return read_named_tag(tag, &data, &size);
 }
 
@@ -189,15 +192,15 @@ void nbt_free(nbt_tag *tag)
 		bedrock_list_del(&tag->owner->payload.tag_list, tag);
 	}
 
-	bedrock_free(tag->name);
+	bedrock_free_pool(tag->pool, tag->name);
 
 	switch (tag->type)
 	{
 		case TAG_BYTE_ARRAY:
-			bedrock_free(tag->payload.tag_byte_array.data);
+			bedrock_free_pool(tag->pool, tag->payload.tag_byte_array.data);
 			break;
 		case TAG_STRING:
-			bedrock_free(tag->payload.tag_string);
+			bedrock_free_pool(tag->pool, tag->payload.tag_string);
 			break;
 		case TAG_LIST:
 			tag->payload.tag_list.free = (bedrock_free_func) nbt_free;
@@ -208,13 +211,13 @@ void nbt_free(nbt_tag *tag)
 			bedrock_list_clear(&tag->payload.tag_compound);
 			break;
 		case TAG_INT_ARRAY:
-			bedrock_free(tag->payload.tag_int_array.data);
+			bedrock_free_pool(tag->pool, tag->payload.tag_int_array.data);
 			break;
 		default:
 			break;
 	}
 
-	bedrock_free(tag);
+	bedrock_free_pool(tag->pool, tag);
 }
 
 static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)

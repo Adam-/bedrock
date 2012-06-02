@@ -42,7 +42,7 @@ struct bedrock_client *client_create()
 	struct bedrock_client *client = bedrock_malloc_pool(&client_pool, sizeof(struct bedrock_client));
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
-	client->out_buffer = bedrock_buffer_create(NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
+	client->out_buffer = bedrock_buffer_create(&client_pool, NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -107,7 +107,7 @@ bool client_load(struct bedrock_client *client)
 		return false;
 	}
 
-	tag = nbt_parse(cb->buffer->data, cb->buffer->length);
+	tag = nbt_parse(&client_pool, cb->buffer->data, cb->buffer->length);
 	compression_decompress_end(cb);
 	if (tag == NULL)
 	{
