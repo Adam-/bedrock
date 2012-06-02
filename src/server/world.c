@@ -62,7 +62,7 @@ bool world_load(struct bedrock_world *world)
 
 	close(fd);
 
-	cb = compression_decompress(WORLD_BUFFER_SIZE, file_base, file_info.st_size);
+	cb = compression_decompress(NULL, WORLD_BUFFER_SIZE, file_base, file_info.st_size);
 	munmap(file_base, file_info.st_size);
 	if (cb == NULL)
 	{

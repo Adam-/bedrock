@@ -18,7 +18,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 	nbt_copy(data, TAG_INT, &column->z, sizeof(column->z), 2, "Level", "zPos");
 	column->data = data;
 
-	buffer = compression_compress_init(DATA_CHUNK_SIZE);
+	buffer = compression_compress_init(NULL, DATA_CHUNK_SIZE);
 
 	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
 	LIST_FOREACH(&tag->payload.tag_list, node)

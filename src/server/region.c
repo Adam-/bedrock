@@ -22,9 +22,11 @@
 
 static bedrock_list empty_regions;
 
+bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT;
+
 struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 {
-	struct bedrock_region *region = bedrock_malloc(sizeof(struct bedrock_region));
+	struct bedrock_region *region = bedrock_malloc_pool(&region_pool, sizeof(struct bedrock_region));
 	region->world = world;
 	region->x = x;
 	region->z = z;
@@ -67,7 +69,7 @@ void region_load(struct bedrock_region *region)
 
 	close(i);
 
-	cb = compression_decompress_init(REGION_BUFFER_SIZE);
+	cb = compression_decompress_init(&region_pool, REGION_BUFFER_SIZE);
 
 	/* Header appears to consist of REGION_HEADER_SIZE unsigned big endian integers */
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
@@ -111,7 +113,7 @@ void region_load(struct bedrock_region *region)
 			continue;
 		}
 
-		tag = nbt_parse(NULL, cb->buffer->data, cb->buffer->length);
+		tag = nbt_parse(&region_pool, cb->buffer->data, cb->buffer->length);
 		compression_decompress_reset(cb);
 		if (tag == NULL)
 		{

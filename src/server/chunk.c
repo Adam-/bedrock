@@ -36,7 +36,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	if (chunk->decompressed_data != NULL)
 		return;
 
-	buffer = compression_decompress(DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
+	buffer = compression_decompress(NULL, DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
 	chunk->decompressed_data = buffer->buffer;
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
