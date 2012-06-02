@@ -3,9 +3,10 @@
 
 #include "util/fd.h"
 #include "util/list.h"
+#include "util/buffer.h"
+#include "util/memory.h"
 #include "server/config.h"
 #include "server/world.h"
-#include "util/buffer.h"
 
 typedef enum
 {
@@ -59,6 +60,7 @@ struct bedrock_client
 
 extern bedrock_list client_list;
 extern uint32_t entity_id;
+extern bedrock_memory_pool client_pool;
 
 extern struct bedrock_client *client_create();
 extern struct bedrock_client *client_find(const char *name);

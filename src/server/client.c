@@ -1,7 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/column.h"
-#include "util/memory.h"
 #include "io/io.h"
 #include "packet/packet.h"
 #include "compression/compression.h"
@@ -34,8 +33,8 @@
 
 bedrock_list client_list;
 uint32_t entity_id = 0;
+bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT;
 
-static bedrock_memory_pool client_pool;
 static bedrock_list exiting_client_list;
 
 struct bedrock_client *client_create()

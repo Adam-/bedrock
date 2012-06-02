@@ -16,6 +16,8 @@ typedef struct
 	unsigned char *memory;
 } bedrock_memory_block;
 
+#define BEDROCK_MEMORY_POOL_INIT { LIST_INIT, 0 }
+
 extern uint64_t bedrock_memory;
 
 extern void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size);
