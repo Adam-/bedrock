@@ -1,6 +1,7 @@
+#include "server/bedrock.h"
 #include "server/client.h"
 #include "packet/packet.h"
-#include "server/bedrock.h"
+#include "server/command.h"
 #include "packet/packet_chat_message.h"
 
 int packet_chat_message(struct bedrock_client *client, const unsigned char *buffer, size_t len)
@@ -11,8 +12,20 @@ int packet_chat_message(struct bedrock_client *client, const unsigned char *buff
 
 	packet_read_string(buffer, len, &offset, message, sizeof(message));
 
-	if (offset <= ERROR_UNKNOWN)
+	if (offset <= ERROR_UNKNOWN || !*message)
 		return offset;
+
+	{
+		char *p = strrchr(message, SPECIAL_CHAR);
+		if (p != NULL && p - message == strlen(message) - 1)
+			return ERROR_INVALID_FORMAT;
+	}
+
+	if (*message == '/')
+	{
+		command_run(client, message + 1);
+		return offset;
+	}
 
 	snprintf(final_message, sizeof(final_message), "<%s> %s", client->name, message);
 

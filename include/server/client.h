@@ -54,7 +54,7 @@ struct bedrock_client
 	int16_t selected_slot;                /* slot the player has selected, 0-8 */
 	bedrock_client_entity_action action;  /* action the player is doing */
 
-	double stance;
+	double stance;                         /* players's stance */
 };
 
 extern bedrock_list client_list;
