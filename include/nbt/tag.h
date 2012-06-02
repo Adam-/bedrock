@@ -24,7 +24,7 @@ typedef enum
 
 typedef struct _nbt_tag
 {
-	bedrock_memory_pool *pool;
+	struct bedrock_memory_pool *pool;
 	uint8_t type;
 	char *name;
 	struct _nbt_tag *owner;

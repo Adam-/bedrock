@@ -22,7 +22,7 @@
 
 static bedrock_list empty_regions;
 
-bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT;
 
 struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 {
@@ -31,6 +31,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->x = x;
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
+	region->columns.pool = &region_pool;
 	region->columns.free = (bedrock_free_func) column_free;
 	bedrock_list_add(&world->regions, region);
 	return region;

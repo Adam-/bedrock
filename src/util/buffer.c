@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-bedrock_buffer *bedrock_buffer_create(bedrock_memory_pool *pool, const void *data, size_t length, size_t capacity)
+bedrock_buffer *bedrock_buffer_create(struct bedrock_memory_pool *pool, const void *data, size_t length, size_t capacity)
 {
 	bedrock_buffer *buffer;
 

@@ -2,7 +2,7 @@
 
 uint64_t bedrock_memory = 0;
 
-void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
+void *bedrock_malloc_pool(struct bedrock_memory_pool *pool, size_t size)
 {
 	bedrock_memory_block *block;
 
@@ -19,7 +19,7 @@ void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 	return block->memory;
 }
 
-void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
+void bedrock_free_pool(struct bedrock_memory_pool *pool, void *ptr)
 {
 	bedrock_memory_block *block;
 
@@ -41,7 +41,7 @@ void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
 	bedrock_free(block);
 }
 
-void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size)
+void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size_t size)
 {
 	bedrock_memory_block *block;
 
@@ -71,6 +71,23 @@ void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size
 
 	return block->memory;
 }
+
+#if 0
+void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
+{
+	return bedrock_malloc(size);
+}
+
+void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
+{
+	bedrock_free(ptr);
+}
+
+void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size)
+{
+	return bedrock_realloc(pointer, size);
+}
+#endif
 
 /** Allocate memory
  * @param size The size of memory to allocate
@@ -132,4 +149,3 @@ void bedrock_free(void *pointer)
 
 	free(sz);
 }
-

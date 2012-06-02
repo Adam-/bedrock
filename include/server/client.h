@@ -60,7 +60,7 @@ struct bedrock_client
 
 extern bedrock_list client_list;
 extern uint32_t entity_id;
-extern bedrock_memory_pool client_pool;
+extern struct bedrock_memory_pool client_pool;
 
 extern struct bedrock_client *client_create();
 extern struct bedrock_client *client_find(const char *name);

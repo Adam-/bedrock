@@ -33,7 +33,7 @@
 
 bedrock_list client_list;
 uint32_t entity_id = 0;
-bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT;
 
 static bedrock_list exiting_client_list;
 
@@ -43,6 +43,8 @@ struct bedrock_client *client_create()
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer = bedrock_buffer_create(&client_pool, NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
+	client->columns.pool = &client_pool;
+	client->players.pool = &client_pool;
 	bedrock_list_add(&client_list, client);
 	return client;
 }

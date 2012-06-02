@@ -174,7 +174,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	return NULL;
 }
 
-nbt_tag *nbt_parse(bedrock_memory_pool *pool, const unsigned char *data, size_t size)
+nbt_tag *nbt_parse(struct bedrock_memory_pool *pool, const unsigned char *data, size_t size)
 {
 	nbt_tag *tag = bedrock_malloc_pool(pool, sizeof(nbt_tag));
 	tag->pool = pool;

@@ -6,11 +6,11 @@
 
 #include <stdint.h>
 
-typedef struct
+struct bedrock_memory_pool
 {
 	bedrock_list list;
 	size_t size;
-} bedrock_memory_pool;
+};
 
 typedef struct
 {
@@ -23,9 +23,9 @@ typedef struct
 
 extern uint64_t bedrock_memory;
 
-extern void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size);
-extern void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr);
-extern void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size);
+extern void *bedrock_malloc_pool(struct bedrock_memory_pool *pool, size_t size);
+extern void bedrock_free_pool(struct bedrock_memory_pool *pool, void *ptr);
+extern void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size_t size);
 
 extern void *bedrock_malloc(size_t size);
 extern void *bedrock_realloc(void *pointer, size_t size);

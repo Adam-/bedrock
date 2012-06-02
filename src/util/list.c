@@ -22,7 +22,7 @@ bedrock_node *bedrock_list_add(bedrock_list *list, void *data)
 
 	bedrock_assert(list != NULL && data != NULL, return NULL);
 
-	node = bedrock_malloc(sizeof(bedrock_node));
+	node = bedrock_malloc_pool(list->pool, sizeof(bedrock_node));
 	bedrock_list_add_node(list, node, data);
 	return node;
 }
@@ -124,7 +124,7 @@ void *bedrock_list_del(bedrock_list *list, const void *data)
 		if (list->compare(data, n->data))
 		{
 			void *data = bedrock_list_del_node(list, n);
-			bedrock_free(n);
+			bedrock_free_pool(list->pool, n);
 			return data;
 		}
 	}
@@ -202,7 +202,7 @@ void bedrock_list_clear(bedrock_list *list)
 	LIST_FOREACH_SAFE(list, n, tn)
 	{
 		bedrock_list_del_node(list, n);
-		bedrock_free(n);
+		bedrock_free_pool(list->pool, n);
 	}
 }
 

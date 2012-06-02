@@ -19,7 +19,7 @@ struct bedrock_chunk
 	uint8_t *blocklight;
 };
 
-extern bedrock_memory_pool chunk_pool;
+extern struct bedrock_memory_pool chunk_pool;
 
 extern struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y);
 extern void chunk_free(struct bedrock_chunk *chunk);

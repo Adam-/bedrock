@@ -16,7 +16,7 @@
 #define WORLD_BUFFER_SIZE 4096
 #define WORLD_LEVEL_FILE "level.dat"
 
-bedrock_memory_pool world_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool world_pool = BEDROCK_MEMORY_POOL_INIT;
 bedrock_list world_list;
 
 struct bedrock_world *world_create(const char *name, const char *path)
@@ -24,6 +24,7 @@ struct bedrock_world *world_create(const char *name, const char *path)
 	struct bedrock_world *world = bedrock_malloc_pool(&world_pool, sizeof(struct bedrock_world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
+	world->regions.pool = &world_pool;
 	bedrock_list_add(&world_list, world);
 	return world;
 }
