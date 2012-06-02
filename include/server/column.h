@@ -18,5 +18,7 @@ struct bedrock_column
 	bedrock_buffer *biomes;
 };
 
+extern bedrock_memory_pool column_pool;
+
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);

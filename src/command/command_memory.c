@@ -1,6 +1,6 @@
 #include "server/client.h"
-#include "server/region.h"
 #include "server/command.h"
+#include "server/column.h"
 
 static void show_memory_for_pool(struct bedrock_client *client, const char *pool_name, bedrock_memory_pool *pool)
 {
@@ -38,4 +38,6 @@ void command_memory(struct bedrock_client *client, int argc, const char **argv)
 	show_memory_for_pool(client, "Client pool", &client_pool);
 	show_memory_for_pool(client, "World pool", &world_pool);
 	show_memory_for_pool(client, "Region pool", &region_pool);
+	show_memory_for_pool(client, "Column pool", &column_pool);
+	show_memory_for_pool(client, "Chunk pool", &chunk_pool);
 }

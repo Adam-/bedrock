@@ -6,9 +6,11 @@
 
 #define DATA_CHUNK_SIZE 16384
 
+bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT;
+
 struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 {
-	struct bedrock_chunk *chunk = bedrock_malloc(sizeof(struct bedrock_chunk));
+	struct bedrock_chunk *chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
 	chunk->column = column;
 	chunk->y = y;
 	return chunk;
@@ -23,7 +25,7 @@ void chunk_free(struct bedrock_chunk *chunk)
 
 	bedrock_buffer_free(chunk->compressed_data);
 
-	bedrock_free(chunk);
+	bedrock_free_pool(&chunk_pool, chunk);
 }
 
 void chunk_decompress(struct bedrock_chunk *chunk)
@@ -36,7 +38,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	if (chunk->decompressed_data != NULL)
 		return;
 
-	buffer = compression_decompress(NULL, DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
+	buffer = compression_decompress(&chunk_pool, DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
 	chunk->decompressed_data = buffer->buffer;
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
