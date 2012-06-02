@@ -219,7 +219,7 @@ void client_event_read(bedrock_fd *fd, void *data)
 
 	client->in_buffer_len += i;
 
-	while ((i = packet_parse(client, client->in_buffer, client->in_buffer_len)) > 0)
+	while (io_has(fd, OP_READ) && (i = packet_parse(client, client->in_buffer, client->in_buffer_len)) > 0)
 	{
 		bedrock_assert((size_t) i <= client->in_buffer_len, break);
 

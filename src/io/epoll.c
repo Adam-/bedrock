@@ -70,6 +70,11 @@ void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 	}
 }
 
+bool io_has(bedrock_fd *fd, bedrock_io_ops flag)
+{
+	return (fd->ops & flag) != 0;
+}
+
 void io_process()
 {
 	struct epoll_event events[128];
