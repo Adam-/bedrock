@@ -41,11 +41,16 @@ set(BEDROCK_SOURCES
 ./src/server/listener.c
 ./src/server/world.c
 ./src/server/chunk.c
+./src/server/command.c
 ./src/server/bedrock.c
 ./src/server/client.c
 ./src/compression/compression.c
 ./src/io/epoll.c
 ./src/blocks/items.c
+./src/command/command_memory.c
+./src/command/command_version.c
+./src/command/command_uptime.c
+./src/command/command_help.c
 )
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")

@@ -17,7 +17,7 @@ int packet_chat_message(struct bedrock_client *client, const unsigned char *buff
 
 	{
 		char *p = strrchr(message, SPECIAL_CHAR);
-		if (p != NULL && p - message == strlen(message) - 1)
+		if (p != NULL && (size_t) (p - message) == strlen(message) - 1)
 			return ERROR_INVALID_FORMAT;
 	}
 
