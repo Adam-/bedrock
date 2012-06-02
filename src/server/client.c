@@ -615,7 +615,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
-	bool update_loc, update_rot, teleport, update_chunk;
+	bool update_loc, update_rot, update_chunk;
 
 	bedrock_node *node;
 
@@ -647,13 +647,12 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (!update_loc && !update_rot)
 		return;
 
-	teleport = abs(x - old_x) > 4 || abs(y - old_y) > 4 || abs(z - old_z) > 4;
-
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		packet_send_entity_teleport(c, client);
+		if (update_loc)
+			packet_send_entity_teleport(c, client);
 
 		if (update_rot)
 			packet_send_entity_head_look(c, client);

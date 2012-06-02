@@ -9,13 +9,11 @@ set(BEDROCK_SOURCES
 ./src/packet/packet_column_allocation.c
 ./src/packet/packet_entity_head_look.c
 ./src/packet/packet_login_request.c
-./src/packet/packet_entity_relative_move.c
 ./src/packet/packet.c
 ./src/packet/packet_chat_message.c
 ./src/packet/packet_held_item_change.c
 ./src/packet/packet_list_ping.c
 ./src/packet/packet_entity_equipment.c
-./src/packet/packet_entity_look_and_relative_move.c
 ./src/packet/packet_disconnect.c
 ./src/packet/packet_spawn_named_entity.c
 ./src/packet/packet_set_slot.c
