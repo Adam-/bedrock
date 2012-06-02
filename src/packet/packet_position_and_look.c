@@ -16,6 +16,8 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 	packet_read_int(buffer, len, &offset, &pitch, sizeof(pitch));
 	packet_read_int(buffer, len, &offset, &on_ground, sizeof(on_ground));
 
+	client->stance = stance;
+
 	client_update_position(client, x, y, z, yaw, pitch, on_ground);
 
 	return offset;
@@ -23,14 +25,23 @@ int packet_position_and_look(struct bedrock_client *client, const unsigned char 
 
 void packet_send_position_and_look(struct bedrock_client *client)
 {
-	double d;
+	//double d;
 
 	client_send_header(client, PLAYER_POS_LOOK);
 	client_send_int(client, client_get_pos_x(client), sizeof(double)); // X
-	d = *client_get_pos_y(client);
-	d += 2;
-	client_send_int(client, &d, sizeof(d)); // Stance
-	client_send_int(client, &d, sizeof(d)); // Y
+	//d = *client_get_pos_y(client);
+	//d += 2;
+	//d += 1.62;
+	//client_send_int(client, &d, sizeof(d)); // Stance
+	printf("Y is %f stance is %f\n", *client_get_pos_y(client), client->stance);
+	if (client->stance)
+		client_send_int(client, &client->stance, sizeof(client->stance)); // Stance
+	else
+	{
+		double d = *client_get_pos_y(client) + 2;//1.62;
+		client_send_int(client, &d, sizeof(d)); // Stance
+	}
+	client_send_int(client, client_get_pos_y(client), sizeof(double)); // Y
 	client_send_int(client, client_get_pos_z(client), sizeof(double)); // Z
 	client_send_int(client, client_get_yaw(client), sizeof(float)); // Yaw
 	client_send_int(client, client_get_pitch(client), sizeof(float)); // Pitch

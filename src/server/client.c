@@ -15,8 +15,6 @@
 #include "packet/packet_chat_message.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
-#include "packet/packet_entity_relative_move.h"
-#include "packet/packet_entity_look_and_relative_move.h"
 #include "packet/packet_entity_teleport.h"
 #include "packet/packet_spawn_named_entity.h"
 #include "packet/packet_column.h"
@@ -655,13 +653,9 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	{
 		struct bedrock_client *c = node->data;
 
-		if (update_loc && teleport)
-			packet_send_entity_teleport(c, client);
-		else if (update_loc && update_rot)
-			packet_send_entity_look_and_relative_move(c, client, c_x, c_y, c_z, new_y, new_p);
-		else if (update_loc)
-			packet_send_entity_relative_move(c, client, c_x, c_y, c_z);
-		else if (update_rot)
+		packet_send_entity_teleport(c, client);
+
+		if (update_rot)
 			packet_send_entity_head_look(c, client);
 	}
 
