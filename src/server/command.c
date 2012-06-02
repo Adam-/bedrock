@@ -2,13 +2,15 @@
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 #include "command/command_help.h"
+#include "command/command_uptime.h"
 #include "command/command_version.h"
 
 #define MAX_PARAMETERS 15
 
 struct bedrock_command commands[] = {
-	{"HELP",    "test", "shows this message",   0, 0, command_anyone, command_help},
-	{"VERSION", "test", "shows server version", 0, 0, command_anyone, command_version}
+	{"HELP",    "", "shows this message",   0, 0, command_anyone, command_help},
+	{"UPTIME",  "", "shows server uptime",  0, 0, command_anyone, command_uptime},
+	{"VERSION", "", "shows server version", 0, 0, command_anyone, command_version}
 };
 
 int command_count = sizeof(commands) / sizeof(struct bedrock_command);

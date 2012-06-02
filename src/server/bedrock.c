@@ -11,6 +11,7 @@
 #include <errno.h>
 
 bool bedrock_running = true;
+time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
 uint16_t bedrock_tick = 0;
 static struct timespec last_tick;
@@ -77,6 +78,7 @@ int main(int argc, char **argv)
 	struct bedrock_world *world;
 
 	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
+	bedrock_start = time(NULL);
 	last_tick = bedrock_time;
 
 	world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);

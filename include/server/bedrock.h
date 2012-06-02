@@ -15,6 +15,7 @@
 #define BEDROCK_VERSION_EXTRA "-beta"
 
 extern bool bedrock_running;
+extern time_t bedrock_start;
 extern struct timespec bedrock_time;
 extern uint16_t bedrock_tick;
 
