@@ -1,6 +1,7 @@
 #include "server/client.h"
 #include "packet/packet.h"
 #include "packet/packet_disconnect.h"
+#include "packet/packet_chat_message.h"
 
 int packet_list_ping(struct bedrock_client *client, const unsigned char __attribute__((__unused__)) *buffer, size_t __attribute__((__unused__)) len)
 {
@@ -17,7 +18,7 @@ int packet_list_ping(struct bedrock_client *client, const unsigned char __attrib
 			++count;
 	}
 
-	snprintf(string, sizeof(string), "%s\247%d\247%d", BEDROCK_DESCRIPTION, count, BEDROCK_MAX_USERS);
+	snprintf(string, sizeof(string), "%s%c%d%c%d", BEDROCK_DESCRIPTION, SPECIAL_CHAR, count, SPECIAL_CHAR, BEDROCK_MAX_USERS);
 	packet_send_disconnect(client, string);
 
 	return offset;
