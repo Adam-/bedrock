@@ -4,46 +4,39 @@ uint64_t bedrock_memory = 0;
 
 void *bedrock_malloc_pool(struct bedrock_memory_pool *pool, size_t size)
 {
-	bedrock_memory_block *block;
+	void *memory;
 
 	if (pool == NULL)
 		return bedrock_malloc(size);
 
-	block = bedrock_malloc(sizeof(bedrock_memory_block) + size);
-	block->size = size;
-	block->memory = (unsigned char *) (block + 1);
-
+	memory = bedrock_malloc(size);
 	pool->size += size;
-	bedrock_list_add_node(&pool->list, &block->node, block);
 
-	return block->memory;
+	return memory;
 }
 
-void bedrock_free_pool(struct bedrock_memory_pool *pool, void *ptr)
+void bedrock_free_pool(struct bedrock_memory_pool *pool, void *pointer)
 {
-	bedrock_memory_block *block;
+	size_t *sz;
 
 	if (pool == NULL)
 	{
-		bedrock_free(ptr);
+		bedrock_free(pointer);
 		return;
 	}
 
-	if (ptr == NULL)
+	if (pointer == NULL)
 		return;
 
-	block = ((bedrock_memory_block *) ptr) - 1;
-	bedrock_assert(block->memory == ptr, return);
+	sz = ((size_t *) pointer) - 1;
+	pool->size -= *sz;
 
-	pool->size -= block->size;
-	bedrock_list_del_node(&pool->list, &block->node);
-
-	bedrock_free(block);
+	bedrock_free(pointer);
 }
 
 void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size_t size)
 {
-	bedrock_memory_block *block;
+	size_t *sz;
 
 	if (pool == NULL)
 		return bedrock_realloc(pointer, size);
@@ -55,39 +48,17 @@ void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size
 		return NULL;
 	}
 
-	block = ((bedrock_memory_block *) pointer) - 1;
-	bedrock_assert(block->memory == pointer, return NULL);
+	sz = ((size_t *) pointer) - 1;
+	pool->size -= *sz;
 
-	pool->size -= block->size;
-
-	block = bedrock_realloc(block, sizeof(bedrock_memory_block) + size);
-	if (block == NULL)
+	pointer = bedrock_realloc(pointer, size);
+	if (pointer == NULL)
 		abort();
 
 	pool->size += size;
 
-	block->size = size;
-	block->memory = (unsigned char *) (block + 1);
-
-	return block->memory;
+	return pointer;
 }
-
-#if 0
-void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
-{
-	return bedrock_malloc(size);
-}
-
-void bedrock_free_pool(bedrock_memory_pool *pool, void *ptr)
-{
-	bedrock_free(ptr);
-}
-
-void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size)
-{
-	return bedrock_realloc(pointer, size);
-}
-#endif
 
 /** Allocate memory
  * @param size The size of memory to allocate

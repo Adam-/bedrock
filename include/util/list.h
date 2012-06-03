@@ -3,8 +3,6 @@
 
 #include "util.h"
 
-struct bedrock_memory_pool;
-
 typedef struct _bedrock_node
 {
 	struct _bedrock_node *next, *prev;
@@ -15,7 +13,7 @@ typedef void (*bedrock_free_func)(void *);
 
 typedef struct
 {
-	struct bedrock_memory_pool *pool;
+	bedrock_memory_pool *pool;
 	bedrock_node *head, *tail;
 	size_t count;
 	bool (*compare)(const void *data1, const void *data2);
