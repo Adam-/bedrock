@@ -1,11 +1,12 @@
 #include "util/list.h"
 
 #include <pthread.h>
+#include <semaphore.h>
 
 typedef struct
 {
 	pthread_t handle;
-	bool exit;
+	volatile sem_t exit;
 	void (*entry)(void *);
 	void *data;
 } bedrock_thread;

@@ -14,10 +14,10 @@ static void pipe_reader(bedrock_fd *fd, void *data)
 
 	while (recv(fd->fd, buf, sizeof(buf), 0) == sizeof(buf));
 
-	p->onnotify(p->data);
+	p->on_notify(p->data);
 }
 
-bedrock_pipe *bedrock_pipe_open(const char *desc, void (*onnotify)(void *), void *data)
+bedrock_pipe *bedrock_pipe_open(const char *desc, void (*on_notify)(void *), void *data)
 {
 	int fds[2];
 	char fulldesc[32];
@@ -40,7 +40,7 @@ bedrock_pipe *bedrock_pipe_open(const char *desc, void (*onnotify)(void *), void
 	snprintf(fulldesc, sizeof(fulldesc), "write pipe - %s", desc);
 	bedrock_fd_open(&p->write_fd, fds[1], FD_PIPE, fulldesc);
 
-	p->onnotify = onnotify;
+	p->on_notify = on_notify;
 	p->data = data;
 
 	p->read_fd.read_handler = pipe_reader;
