@@ -68,7 +68,7 @@ void bedrock_timer_process()
 
 		bedrock_list_del_node(&timer_list, node);
 		bedrock_free(t);
-		bedrock_free(node);
+		bedrock_free_pool(timer_list.pool, node);
 	}
 }
 

@@ -32,7 +32,7 @@
 
 #define PLAYER_BUFFER_SIZE 4096
 
-bedrock_list client_list;
+bedrock_list client_list = LIST_INIT;
 uint32_t entity_id = 0;
 bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT;
 
@@ -429,7 +429,7 @@ void client_update_chunks(struct bedrock_client *client)
 		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
 			bedrock_list_del_node(&client->columns, node);
-			bedrock_free(node);
+			bedrock_free_pool(client->columns.pool, node);
 
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
