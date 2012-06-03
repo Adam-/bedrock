@@ -61,8 +61,8 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), (compare_func) packet_compare);
 	if (handler == NULL)
 	{
-		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s, dropping client", id, client_get_ip(client));
-		client_exit(client);
+		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s", id, client_get_ip(client));
+		client->in_buffer_len = 0;
 		return -1;
 	}
 
