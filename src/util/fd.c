@@ -6,7 +6,7 @@
 
 static bedrock_list fdlist;
 
-bedrock_fd *bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc)
+void bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc)
 {
 	bedrock_assert(f != NULL, return NULL);
 
@@ -18,8 +18,6 @@ bedrock_fd *bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const c
 	f->open = true;
 
 	bedrock_list_add(&fdlist, f);
-
-	return f;
 }
 
 void bedrock_fd_close(bedrock_fd *f)
