@@ -1,4 +1,5 @@
 #include "nbt/tag.h"
+#include "util/thread.h"
 
 #include <limits.h>
 
@@ -8,7 +9,11 @@ struct bedrock_region
 	int x;
 	int z;
 	char path[PATH_MAX];
-	bedrock_list columns;
+
+	/* Must be held when reading or writing to columns! */
+	bedrock_mutex column_mutex;
+	/* Columns in this region */
+	bedrock_list columns2;
 
 	/* The number of columns in this region in use by players. +1 per player per column.
 	 * When this reaches 0 no players are in nor in render distance of this region, and
@@ -20,7 +25,6 @@ struct bedrock_region
 extern bedrock_memory_pool region_pool;
 
 extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);
-extern void region_load(struct bedrock_region *region);
 extern void region_free(struct bedrock_region *region);
 extern void region_queue_free(struct bedrock_region *region);
 extern void region_free_queue();

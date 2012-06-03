@@ -133,7 +133,6 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 	}
 
 	region = region_create(world, region_x, region_z);
-	region_load(region);
 
 	return region;
 }

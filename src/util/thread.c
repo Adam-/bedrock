@@ -13,7 +13,7 @@ static void *thread_entry(void *data)
 	pthread_exit(0);
 }
 
-void bedrock_thread_start(void (*entry)(void *), void *data)
+void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)
 {
 	bedrock_thread *thread = bedrock_malloc(sizeof(bedrock_thread));
 	int err;
@@ -26,6 +26,7 @@ void bedrock_thread_start(void (*entry)(void *), void *data)
 	}
 
 	thread->entry = entry;
+	thread->at_exit = at_exit;
 	thread->data = data;
 
 	bedrock_list_add(&thread_list, thread);
@@ -58,6 +59,9 @@ void bedrock_thread_process()
 			else
 				bedrock_log(LEVEL_DEBUG, "thread: Joining thread %d", thread->handle);
 
+			if (thread->at_exit)
+				thread->at_exit(thread->data);
+
 			sem_destroy(&thread->exit);
 			bedrock_free(thread);
 
@@ -67,24 +71,17 @@ void bedrock_thread_process()
 	}
 }
 
-bedrock_mutex *bedrock_mutex_init(const char *desc)
+void bedrock_mutex_init(bedrock_mutex *mutex, const char *desc)
 {
-	bedrock_mutex *mutex = bedrock_malloc(sizeof(bedrock_mutex));
 	int i;
 
 	strncpy(mutex->desc, desc, sizeof(mutex->desc));
 
 	i = pthread_mutex_init(&mutex->mutex, NULL);
 	if (i)
-	{
 		bedrock_log(LEVEL_CRIT, "thread: Unable to initialize mutex %s - %s", desc, strerror(errno));
-		bedrock_free(mutex);
-		mutex = NULL;
-	}
 	else
 		bedrock_log(LEVEL_DEBUG, "thread: Successfully initialized mutex %s", desc);
-
-	return mutex;
 }
 
 void bedrock_mutex_destroy(bedrock_mutex *mutex)
@@ -120,7 +117,7 @@ bool bedrock_mutex_trylock(bedrock_mutex *mutex)
 	return pthread_mutex_trylock(&mutex->mutex) == 0;
 }
 
-void bedrock_mutex_unock(bedrock_mutex *mutex)
+void bedrock_mutex_unlock(bedrock_mutex *mutex)
 {
 	int i;
 

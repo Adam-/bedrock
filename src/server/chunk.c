@@ -38,6 +38,7 @@ struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y, nbt
 	bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
 	compression_compress_deflate_finish(buffer, (const unsigned char *) byte_array->data, byte_array->length);
 
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	chunk->compressed_data = buffer->buffer;
 	buffer->buffer = NULL;
 

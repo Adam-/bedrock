@@ -6,6 +6,7 @@
 #include "server/world.h"
 #include "server/column.h"
 #include "util/timer.h"
+#include "server/client.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -24,27 +25,14 @@ static bedrock_list empty_regions;
 
 bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT;
 
-struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
-{
-	struct bedrock_region *region = bedrock_malloc_pool(&region_pool, sizeof(struct bedrock_region));
-	region->world = world;
-	region->x = x;
-	region->z = z;
-	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
-	region->columns.pool = &region_pool;
-	region->columns.free = (bedrock_free_func) column_free;
-	bedrock_list_add(&world->regions, region);
-	return region;
-}
-
-void region_load(struct bedrock_region *region)
+static void region_load(struct bedrock_region *region)
 {
 	int i;
 	struct stat file_info;
 	unsigned char *file_base;
 	compression_buffer *cb;
 
-	bedrock_assert(region->columns.count == 0, return);
+	bedrock_assert(region->columns2.count == 0, return);
 
 	i = open(region->path, O_RDONLY);
 	if (i == -1)
@@ -124,7 +112,9 @@ void region_load(struct bedrock_region *region)
 
 		column = column_create(region, tag);
 
-		bedrock_list_add(&region->columns, column);
+		bedrock_mutex_lock(&region->column_mutex);
+		bedrock_list_add(&region->columns2, column);
+		bedrock_mutex_unlock(&region->column_mutex);
 
 		bedrock_log(LEVEL_DEBUG, "region: Successfully loaded column at %d, %d from %s", column->x, column->z, region->path);
 	}
@@ -134,12 +124,53 @@ void region_load(struct bedrock_region *region)
 	munmap(file_base, file_info.st_size);
 }
 
+static void region_exit(struct bedrock_region *region)
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *client = node->data;
+
+		if (client->authenticated == STATE_AUTHENTICATED)
+		{
+			client_update_chunks(client);
+		}
+	}
+}
+
+struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
+{
+	struct bedrock_region *region = bedrock_malloc_pool(&region_pool, sizeof(struct bedrock_region));
+
+	region->world = world;
+	region->x = x;
+	region->z = z;
+	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
+
+	bedrock_mutex_init(&region->column_mutex, "region column mutex");
+	region->columns2.pool = &region_pool;
+	region->columns2.free = (bedrock_free_func) column_free;
+
+	bedrock_list_add(&world->regions, region);
+
+	//bedrock_thread_start(region_load, region_exit, region);
+	region_load(region);
+
+	return region;
+}
+
 void region_free(struct bedrock_region *region)
 {
 	bedrock_list_del(&empty_regions, region);
 
 	bedrock_list_del(&region->world->regions, region);
-	bedrock_list_clear(&region->columns);
+
+	bedrock_mutex_lock(&region->column_mutex);
+	bedrock_list_clear(&region->columns2);
+	bedrock_mutex_unlock(&region->column_mutex);
+	bedrock_mutex_destroy(&region->column_mutex);
+
 	bedrock_free_pool(&region_pool, region);
 }
 
@@ -175,19 +206,27 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 {
 	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	struct bedrock_column *column = NULL;
 
 	column_x = floor(column_x);
 	column_z = floor(column_z);
 
-	LIST_FOREACH(&region->columns, n)
-	{
-		struct bedrock_column *column = n->data;
+	bedrock_mutex_lock(&region->column_mutex);
 
-		if (column->x == column_x && column->z == column_z)
-			return column;
-		else if (column->z > column_z || (column->z == column_z && column->x > column_x))
+	LIST_FOREACH(&region->columns2, n)
+	{
+		struct bedrock_column *c = n->data;
+
+		if (c->x == column_x && c->z == column_z)
+		{
+			column = c;
+			break;
+		}
+		else if (c->z > column_z || (c->z == column_z && c->x > column_x))
 			break;
 	}
 
-	return NULL;
+	bedrock_mutex_unlock(&region->column_mutex);
+
+	return column;
 }
