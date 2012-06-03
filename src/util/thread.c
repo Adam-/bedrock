@@ -67,3 +67,68 @@ void bedrock_thread_process()
 	}
 }
 
+bedrock_mutex *bedrock_mutex_init(const char *desc)
+{
+	bedrock_mutex *mutex = bedrock_malloc(sizeof(bedrock_mutex));
+	int i;
+
+	strncpy(mutex->desc, desc, sizeof(mutex->desc));
+
+	i = pthread_mutex_init(&mutex->mutex, NULL);
+	if (i)
+	{
+		bedrock_log(LEVEL_CRIT, "thread: Unable to initialize mutex %s - %s", desc, strerror(errno));
+		bedrock_free(mutex);
+		mutex = NULL;
+	}
+	else
+		bedrock_log(LEVEL_DEBUG, "thread: Successfully initialized mutex %s", desc);
+
+	return mutex;
+}
+
+void bedrock_mutex_destroy(bedrock_mutex *mutex)
+{
+	int i;
+	bedrock_assert(mutex != NULL, return);
+
+	i = pthread_mutex_destroy(&mutex->mutex);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to destroy mutex %s - %s", mutex->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_DEBUG, "thread: Successfully destroyed mutex %s", mutex->desc);
+
+	bedrock_free(mutex);
+}
+
+void bedrock_mutex_lock(bedrock_mutex *mutex)
+{
+	int i;
+
+	bedrock_assert(mutex != NULL, return);
+
+	i = pthread_mutex_lock(&mutex->mutex);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to lock mutex %s - %s", mutex->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_DEBUG, "thread: Successfully locked mutex %s", mutex->desc);
+}
+
+bool bedrock_mutex_trylock(bedrock_mutex *mutex)
+{
+	bedrock_assert(mutex != NULL, return false);
+	return pthread_mutex_trylock(&mutex->mutex) == 0;
+}
+
+void bedrock_mutex_unock(bedrock_mutex *mutex)
+{
+	int i;
+
+	bedrock_assert(mutex != NULL, return);
+
+	i = pthread_mutex_unlock(&mutex->mutex);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to unlock mutex %s - %s", mutex->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_DEBUG, "thread: Successfully unlocked mutex %s", mutex->desc);
+}
