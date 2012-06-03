@@ -12,6 +12,8 @@ struct bedrock_world
 	char path[PATH_MAX];
 	nbt_tag *data;
 	bedrock_list regions;
+
+	int64_t time;
 };
 
 extern bedrock_memory_pool world_pool;

@@ -13,7 +13,6 @@
 bool bedrock_running = true;
 time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
-uint16_t bedrock_tick = 0;
 static struct timespec last_tick;
 
 void bedrock_update_time()
@@ -35,9 +34,15 @@ void bedrock_update_time()
 	tick_diff = diff / BEDROCK_TICK_LENGTH;
 	if (tick_diff > 0)
 	{
+		bedrock_node *node;
+
 		last_tick = bedrock_time;
-		bedrock_tick += tick_diff;
-		bedrock_tick %= BEDROCK_DAY_LENGTH;
+
+		LIST_FOREACH(&world_list, node)
+		{
+			struct bedrock_world *world = node->data;
+			world->time += tick_diff;
+		}
 
 		bedrock_timer_process();
 	}

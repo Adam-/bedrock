@@ -8,17 +8,18 @@
 #include "nbt/nbt.h"
 #include "blocks/items.h"
 #include "blocks/window.h"
-#include "packet/packet_spawn_point.h"
-#include "packet/packet_position_and_look.h"
-#include "packet/packet_player_list_item.h"
 #include "packet/packet_chat_message.h"
+#include "packet/packet_column.h"
+#include "packet/packet_column_allocation.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
+#include "packet/packet_position_and_look.h"
+#include "packet/packet_player_list_item.h"
 #include "packet/packet_spawn_named_entity.h"
-#include "packet/packet_column.h"
-#include "packet/packet_column_allocation.h"
+#include "packet/packet_spawn_point.h"
 #include "packet/packet_set_slot.h"
+#include "packet/packet_time.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -674,6 +675,9 @@ void client_send_login_sequence(struct bedrock_client *client)
 	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
 	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
 	packet_send_spawn_point(client, *spawn_x, *spawn_y, *spawn_z);
+
+	/* Send time */
+	packet_send_time(client);
 
 	/* Send chunks */
 	client_update_chunks(client);

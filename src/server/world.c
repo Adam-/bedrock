@@ -81,6 +81,7 @@ bool world_load(struct bedrock_world *world)
 	}
 
 	world->data = tag;
+	nbt_copy(world->data, TAG_LONG, &world->time, sizeof(world->time), 2, "Data", "Time");
 	bedrock_log(LEVEL_DEBUG, "world: Successfully loaded world information file %s", path);
 
 	return true;
