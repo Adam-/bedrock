@@ -10,10 +10,6 @@ struct bedrock_region
 	char path[PATH_MAX];
 	bedrock_list columns;
 
-	/* Set to true when this region is fully loaded from disk.
-	 */
-	volatile bool loaded;
-
 	/* The number of columns in this region in use by players. +1 per player per column.
 	 * When this reaches 0 no players are in nor in render distance of this region, and
 	 * the region can be unloaded from memory.
