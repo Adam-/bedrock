@@ -6,7 +6,7 @@
 typedef struct
 {
 	pthread_t handle;
-	volatile sem_t exit;
+	sem_t exit;
 	void (*entry)(void *);
 	void *data;
 } bedrock_thread;

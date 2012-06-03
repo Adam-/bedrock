@@ -21,6 +21,7 @@ set(BEDROCK_SOURCES
 ./src/packet/packet_column.c
 ./src/packet/packet_handshake.c
 ./src/packet/packet_position.c
+./src/packet/packet_time.c
 ./src/packet/packet_entity_metadata.c
 ./src/packet/packet_player_list_item.c
 ./src/packet/packet_player.c
@@ -32,7 +33,9 @@ set(BEDROCK_SOURCES
 ./src/util/endian.c
 ./src/util/string.c
 ./src/util/timer.c
+./src/util/thread.c
 ./src/util/memory.c
+./src/util/pipe.c
 ./src/util/list.c
 ./src/util/buffer.c
 ./src/util/fd.c
@@ -51,6 +54,7 @@ set(BEDROCK_SOURCES
 ./src/command/command_version.c
 ./src/command/command_uptime.c
 ./src/command/command_help.c
+
 )
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")

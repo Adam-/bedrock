@@ -8,7 +8,7 @@ static bedrock_list fdlist;
 
 void bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc)
 {
-	bedrock_assert(f != NULL, return NULL);
+	bedrock_assert(f != NULL, return);
 
 	f->fd = fd;
 	f->type = type;

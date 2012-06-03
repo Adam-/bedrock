@@ -6,6 +6,7 @@
 #include "io/io.h"
 #include "util/timer.h"
 #include "packet/packet_keep_alive.h"
+#include "util/thread.h"
 
 #include <time.h>
 #include <errno.h>
