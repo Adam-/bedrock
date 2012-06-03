@@ -6,7 +6,7 @@
 
 #define DATA_CHUNK_SIZE 16384
 
-struct bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT;
+bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT;
 
 struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 {

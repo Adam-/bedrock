@@ -1,6 +1,6 @@
 #include "nbt/tag.h"
 
-extern nbt_tag *nbt_parse(struct bedrock_memory_pool *pool, const unsigned char *data, size_t size);
+extern nbt_tag *nbt_parse(bedrock_memory_pool *pool, const unsigned char *data, size_t size);
 extern void nbt_free(nbt_tag *tag);
 
 extern nbt_tag *nbt_get(nbt_tag *tag, nbt_tag_type type, size_t size, ...);

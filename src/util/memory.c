@@ -2,7 +2,7 @@
 
 uint64_t bedrock_memory = 0;
 
-void *bedrock_malloc_pool(struct bedrock_memory_pool *pool, size_t size)
+void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 {
 	void *memory;
 
@@ -10,12 +10,12 @@ void *bedrock_malloc_pool(struct bedrock_memory_pool *pool, size_t size)
 		return bedrock_malloc(size);
 
 	memory = bedrock_malloc(size);
-	pool->size += size;
+	*pool += size;
 
 	return memory;
 }
 
-void bedrock_free_pool(struct bedrock_memory_pool *pool, void *pointer)
+void bedrock_free_pool(bedrock_memory_pool *pool, void *pointer)
 {
 	size_t *sz;
 
@@ -29,12 +29,12 @@ void bedrock_free_pool(struct bedrock_memory_pool *pool, void *pointer)
 		return;
 
 	sz = ((size_t *) pointer) - 1;
-	pool->size -= *sz;
+	*pool -= *sz;
 
 	bedrock_free(pointer);
 }
 
-void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size_t size)
+void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size)
 {
 	size_t *sz;
 
@@ -49,13 +49,13 @@ void *bedrock_realloc_pool(struct bedrock_memory_pool *pool, void *pointer, size
 	}
 
 	sz = ((size_t *) pointer) - 1;
-	pool->size -= *sz;
+	*pool -= *sz;
 
 	pointer = bedrock_realloc(pointer, size);
 	if (pointer == NULL)
 		abort();
 
-	pool->size += size;
+	*pool += size;
 
 	return pointer;
 }

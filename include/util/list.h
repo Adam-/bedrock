@@ -2,6 +2,7 @@
 #define BEDROCK_UTIL_LIST_H
 
 #include "util.h"
+#include "memory.h"
 
 typedef struct _bedrock_node
 {

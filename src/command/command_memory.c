@@ -2,12 +2,12 @@
 #include "server/command.h"
 #include "server/column.h"
 
-static void show_memory_for_pool(struct bedrock_client *client, const char *pool_name, struct bedrock_memory_pool *pool)
+static void show_memory_for_pool(struct bedrock_client *client, const char *pool_name, bedrock_memory_pool *pool)
 {
 	long double memory, percent;
 	char *unit;
 
-	memory = pool->size / 1024.0;
+	memory = *pool / 1024.0;
 	unit = "KB";
 	if (memory > 5 * 1024)
 	{
@@ -21,7 +21,7 @@ static void show_memory_for_pool(struct bedrock_client *client, const char *pool
 		}
 	}
 
-	percent = ((long double) pool->size / (long double) bedrock_memory) * 100.0;
+	percent = ((long double) *pool / (long double) bedrock_memory) * 100.0;
 	command_reply(client, "%s: %0.2Lf%s (%0.2Lf%%)", pool_name, memory, unit, percent);
 }
 
@@ -32,11 +32,11 @@ static void show_other_memory(struct bedrock_client *client)
 
 	unused_memory = bedrock_memory;
 
-	unused_memory -= client_pool.size;
-	unused_memory -= world_pool.size;
-	unused_memory -= region_pool.size;
-	unused_memory -= column_pool.size;
-	unused_memory -= chunk_pool.size;
+	unused_memory -= client_pool;
+	unused_memory -= world_pool;
+	unused_memory -= region_pool;
+	unused_memory -= column_pool;
+	unused_memory -= chunk_pool;
 
 	memory = unused_memory / 1024.0;
 	unit = "KB";
