@@ -3,16 +3,46 @@
 #include "compression/compression.h"
 #include "util/memory.h"
 #include "server/config.h"
+#include "nbt/nbt.h"
 
+#define BLOCK_CHUNK_SIZE 8192
 #define DATA_CHUNK_SIZE 16384
 
 bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT;
 
-struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
+struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y, nbt_tag *chunk_tag)
 {
-	struct bedrock_chunk *chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
+	struct bedrock_chunk *chunk;
+	compression_buffer *buffer;
+	struct nbt_tag_byte_array *byte_array;
+
+	chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
 	chunk->column = column;
 	chunk->y = y;
+
+	buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+
+	byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Blocks")->payload.tag_byte_array;
+	bedrock_assert(byte_array->length == BEDROCK_BLOCK_LENGTH, ;);
+	compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
+
+	byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Data")->payload.tag_byte_array;
+	bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
+	compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
+
+	byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "SkyLight")->payload.tag_byte_array;
+	bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
+	compression_compress_deflate(buffer, (const unsigned char *) byte_array->data, byte_array->length);
+
+	byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "BlockLight")->payload.tag_byte_array;
+	bedrock_assert(byte_array->length == BEDROCK_DATA_LENGTH, ;);
+	compression_compress_deflate_finish(buffer, (const unsigned char *) byte_array->data, byte_array->length);
+
+	chunk->compressed_data = buffer->buffer;
+	buffer->buffer = NULL;
+
+	compression_compress_end(buffer);
+
 	return chunk;
 }
 
