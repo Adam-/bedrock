@@ -25,7 +25,7 @@ void packet_send_position_and_look(struct bedrock_client *client)
 {
 	client_send_header(client, PLAYER_POS_LOOK);
 	client_send_int(client, client_get_pos_x(client), sizeof(double)); // X
-	if (client->stance && 0)
+	if (client->stance)
 		client_send_int(client, &client->stance, sizeof(client->stance)); // Stance
 	else
 	{

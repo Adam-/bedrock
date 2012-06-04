@@ -698,7 +698,6 @@ void client_finish_login_sequence(struct bedrock_client *client)
 
 	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
 
-	printf("Finishing burst\n");
 	/* Send player position */
 	packet_send_position_and_look(client);
 
