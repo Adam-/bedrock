@@ -49,7 +49,7 @@ void compression_compress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(NULL, NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create(buffer->pool, NULL, 0, buffer->buffer_size);
 }
 
 static void compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len, int type)
@@ -141,7 +141,7 @@ void compression_decompress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(NULL, NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create(buffer->pool, NULL, 0, buffer->buffer_size);
 }
 
 void compression_decompress_inflate(compression_buffer *buffer, const unsigned char *data, size_t len)

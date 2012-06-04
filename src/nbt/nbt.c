@@ -106,6 +106,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			while (true)
 			{
 				nbt_tag *nested_tag = bedrock_malloc_pool(tag->pool, sizeof(nbt_tag));
+
 				nested_tag->pool = tag->pool;
 				nested_tag->owner = tag;
 				nested_tag = read_named_tag(nested_tag, data, size);
