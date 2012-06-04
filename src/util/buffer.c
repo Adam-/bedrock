@@ -30,15 +30,11 @@ void bedrock_buffer_free(bedrock_buffer *buffer)
 
 void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 {
-	if (buffer->capacity - buffer->length < size)
+	size_t s_free = buffer->capacity - buffer->length;
+	if (s_free < size)
 	{
-		size_t i, n = size + buffer->length, old = buffer->capacity;
-		for (i = 1; i < sizeof(size_t) * CHAR_BIT; i <<= 1)
-			n |= n >> i;
-		n ^= n >> 1;
-		n <<= 1;
-
-		buffer->capacity = n;
+		size_t old = buffer->capacity;
+		buffer->capacity *= 2;
 		buffer->data = bedrock_realloc_pool(buffer->pool, buffer->data, buffer->capacity);
 
 		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %p from %ld to %ld", buffer, old, buffer->capacity);
