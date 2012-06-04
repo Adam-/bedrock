@@ -94,8 +94,6 @@ void bedrock_mutex_destroy(bedrock_mutex *mutex)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to destroy mutex %s - %s", mutex->desc, strerror(errno));
 	else
 		bedrock_log(LEVEL_THREAD, "thread: Successfully destroyed mutex %s", mutex->desc);
-
-	bedrock_free(mutex);
 }
 
 void bedrock_mutex_lock(bedrock_mutex *mutex)
