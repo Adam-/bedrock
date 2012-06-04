@@ -3,7 +3,7 @@
 
 #include "util.h"
 
-typedef size_t bedrock_memory_pool;
+typedef int64_t bedrock_memory_pool;
 
 #include "list.h"
 

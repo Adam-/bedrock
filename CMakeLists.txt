@@ -50,11 +50,13 @@ set(BEDROCK_SOURCES
 ./src/compression/compression.c
 ./src/io/epoll.c
 ./src/blocks/items.c
+./src/command/command_stats.c
 ./src/command/command_memory.c
 ./src/command/command_version.c
 ./src/command/command_uptime.c
+./src/command/command_players.c
 ./src/command/command_help.c
-
+./src/command/command_shutdown.c
 )
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")

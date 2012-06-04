@@ -154,7 +154,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 
 	bedrock_list_add(&world->regions, region);
 
-	bedrock_thread_start(region_load, region_exit, region);
+	bedrock_thread_start((bedrock_thread_entry) region_load, (bedrock_thread_exit) region_exit, region);
 
 	return region;
 }
