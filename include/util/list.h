@@ -2,7 +2,6 @@
 #define BEDROCK_UTIL_LIST_H
 
 #include "util.h"
-#include "memory.h"
 
 typedef struct _bedrock_node
 {
@@ -14,7 +13,7 @@ typedef void (*bedrock_free_func)(void *);
 
 typedef struct
 {
-	bedrock_memory_pool *pool;
+	struct bedrock_memory_pool *pool;
 	bedrock_node *head, *tail;
 	size_t count;
 	bool (*compare)(const void *data1, const void *data2);
