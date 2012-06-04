@@ -26,7 +26,7 @@ static void insert_timer(bedrock_timer *timer)
 	bedrock_list_add(&timer_list, timer);
 }
 
-void bedrock_timer_schedule(uint64_t ticks_from_now, void (*func)(void *), void *data)
+void bedrock_timer_schedule(uint64_t ticks_from_now, timer_callback callback, void *data)
 {
 	bedrock_timer *timer = bedrock_malloc(sizeof(bedrock_timer));
 
@@ -42,11 +42,28 @@ void bedrock_timer_schedule(uint64_t ticks_from_now, void (*func)(void *), void 
 	timer->tick.tv_nsec = ticks_from_now % 1000000000;
 
 	timer->data = data;
-	timer->func = func;
+	timer->callback = callback;
 
 	bedrock_log(LEVEL_DEBUG, "timer: New timer %p scheduled for %ld.%ld, now it is %ld.%ld", timer, timer->tick.tv_sec, timer->tick.tv_nsec, bedrock_time.tv_sec, bedrock_time.tv_nsec);
 
 	insert_timer(timer);
+}
+
+void bedrock_timer_cancel_all_for(timer_callback callback)
+{
+	bedrock_node *node, *node2;
+
+	LIST_FOREACH_SAFE(&timer_list, node, node2)
+	{
+		bedrock_timer *t = node->data;
+
+		if (t->callback == callback)
+		{
+			bedrock_list_del_node(&timer_list, node);
+			bedrock_free(t);
+			bedrock_free_pool(timer_list.pool, node);
+		}
+	}
 }
 
 void bedrock_timer_process()
@@ -64,7 +81,7 @@ void bedrock_timer_process()
 
 		bedrock_log(LEVEL_DEBUG, "timer: Calling timer %p, scheduled for %ld.%ld", t, t->tick.tv_sec, t->tick.tv_nsec);
 
-		t->func(t->data);
+		t->callback(t->data);
 
 		bedrock_list_del_node(&timer_list, node);
 		bedrock_free(t);

@@ -91,18 +91,24 @@ int main(int argc, char **argv)
 	if (world_load(world) == false)
 		exit(1);
 
-	bedrock_timer_schedule(400, send_keepalive, NULL);
-	bedrock_timer_schedule(6000, region_free_queue, NULL);
-
 	io_init();
 	listener_init();
 
-	while (bedrock_running)
+	bedrock_timer_schedule(400, send_keepalive, NULL);
+	bedrock_timer_schedule(6000, region_free_queue, NULL);
+
+	while (bedrock_running || client_list.count > 0)
 	{
 		io_process();
 		client_process_exits();
 	}
 
+	bedrock_thread_exit_all();
+
+	bedrock_timer_cancel_all_for(send_keepalive);
+	bedrock_timer_cancel_all_for(region_free_queue);
+
+	listener_shutdown();
 	io_shutdown();
 	world_free(world);
 

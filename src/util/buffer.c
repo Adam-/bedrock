@@ -30,8 +30,7 @@ void bedrock_buffer_free(bedrock_buffer *buffer)
 
 void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 {
-	size_t s_free = buffer->capacity - buffer->length;
-	if (s_free < size)
+	while (buffer->capacity - buffer->length < size)
 	{
 		size_t old = buffer->capacity;
 		buffer->capacity *= 2;

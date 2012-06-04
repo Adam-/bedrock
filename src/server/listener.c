@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+static bedrock_fd fd;
+
 static void accept_client(bedrock_fd *fd, void __attribute__((__unused__)) *unused)
 {
 	struct bedrock_client *client;
@@ -51,7 +53,6 @@ static void accept_client(bedrock_fd *fd, void __attribute__((__unused__)) *unus
 
 void listener_init()
 {
-	static bedrock_fd fd;
 	int listen_fd;
 	socklen_t opt = 1;
 
@@ -90,6 +91,10 @@ void listener_init()
 
 	fd.read_handler = accept_client;
 
-	bedrock_fd_open(&fd, fd.fd, FD_SOCKET, "listener");
 	io_set(&fd, OP_READ, 0);
+}
+
+void listener_shutdown()
+{
+	bedrock_fd_close(&fd);
 }

@@ -9,7 +9,7 @@ static void *thread_entry(void *data)
 {
 	bedrock_thread *thread = data;
 	thread->entry(thread->data);
-	bedrock_assert(sem_post(&thread->exit) == 0, ;);
+	bedrock_thread_set_exit(thread);
 	pthread_exit(0);
 }
 
@@ -43,6 +43,17 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", thread->handle);
 }
 
+bool bedrock_thread_want_exit(bedrock_thread *thread)
+{
+	int val = 0;
+	return sem_getvalue(&thread->exit, &val) == 0 && val;
+}
+
+void bedrock_thread_set_exit(bedrock_thread *thread)
+{
+	bedrock_assert(sem_post(&thread->exit) == 0, ;);
+}
+
 void bedrock_thread_process()
 {
 	bedrock_node *node, *node2;;
@@ -50,9 +61,8 @@ void bedrock_thread_process()
 	LIST_FOREACH_SAFE(&thread_list, node, node2)
 	{
 		bedrock_thread *thread = node->data;
-		int val = 0;
 
-		if (sem_getvalue(&thread->exit, &val) == 0 && val)
+		if (bedrock_thread_want_exit(thread))
 		{
 			if (pthread_join(thread->handle, NULL))
 				bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
@@ -68,6 +78,32 @@ void bedrock_thread_process()
 			bedrock_list_del_node(&thread_list, node);
 			bedrock_free_pool(thread_list.pool, node);
 		}
+	}
+}
+
+void bedrock_thread_exit_all()
+{
+	bedrock_node *node, *node2;;
+
+	LIST_FOREACH_SAFE(&thread_list, node, node2)
+	{
+		bedrock_thread *thread = node->data;
+
+		bedrock_thread_set_exit(thread);
+
+		if (pthread_join(thread->handle, NULL))
+			bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
+		else
+			bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", thread->handle);
+
+		if (thread->at_exit)
+			thread->at_exit(thread->data);
+
+		sem_destroy(&thread->exit);
+		bedrock_free(thread);
+
+		bedrock_list_del_node(&thread_list, node);
+		bedrock_free_pool(thread_list.pool, node);
 	}
 }
 
