@@ -459,6 +459,10 @@ void client_update_chunks(struct bedrock_client *client)
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
 			bedrock_list_add(&client->columns, c);
+
+			/* Loading the column the player is in on a bursting player, finish burst */
+			if (client->authenticated == STATE_BURSTING)
+				client_finish_login_sequence(client);
 		}
 
 	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
@@ -597,10 +601,11 @@ void client_update_players(struct bedrock_client *client)
 }
 
 /* Called after a player moves, to inform other players about it */
-void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, uint8_t on_ground)
+void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground)
 {
 	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
+	double old_stance = client->stance;
 	uint8_t old_on_ground = *client_get_on_ground(client);
 
 	double old_column_x = old_x / BEDROCK_BLOCKS_PER_CHUNK, old_column_z = old_z / BEDROCK_BLOCKS_PER_CHUNK,
@@ -617,7 +622,10 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	bedrock_node *node;
 
-	if (old_x == x && old_y == y && old_z == z && old_pitch == pitch && old_yaw == yaw && old_on_ground == on_ground)
+	if (old_x == x && old_y == y && old_z == z && old_yaw == yaw && old_pitch == pitch && old_stance == stance && old_on_ground == on_ground)
+		return;
+	/* Bursting clients try to move themselves during login for some reason. Don't allow it. */
+	else if (client->authenticated == STATE_BURSTING)
 		return;
 
 	if (old_x != x)
@@ -630,6 +638,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
+	client->stance = stance;
 
 	c_x = (x - old_x) * 32;
 	c_y = (y - old_y) * 32;
@@ -660,11 +669,18 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		client_update_chunks(client);
 }
 
-/* Right after a successful login, start the login sequence */
-void client_send_login_sequence(struct bedrock_client *client)
+/* Starts the login sequence. This is split up in to two parts because client_update_chunks
+ * may not have the chunks available this player is in until later. client_finish_login_sequence
+ * is called when the column the player is in is allocated to the client.
+ */
+void client_start_login_sequence(struct bedrock_client *client)
 {
 	int32_t *spawn_x, *spawn_y, *spawn_z;
-	bedrock_node *node;
+
+	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
+
+	/* Send time */
+	packet_send_time(client);
 
 	/* Send world spawn point */
 	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
@@ -672,14 +688,21 @@ void client_send_login_sequence(struct bedrock_client *client)
 	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
 	packet_send_spawn_point(client, *spawn_x, *spawn_y, *spawn_z);
 
-	/* Send time */
-	packet_send_time(client);
-
 	/* Send chunks */
 	client_update_chunks(client);
+}
 
+void client_finish_login_sequence(struct bedrock_client *client)
+{
+	bedrock_node *node;
+
+	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
+
+	printf("Finishing burst\n");
 	/* Send player position */
 	packet_send_position_and_look(client);
+
+	client->authenticated = STATE_AUTHENTICATED;
 
 	/* Send inventory */
 	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)

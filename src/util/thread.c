@@ -40,7 +40,7 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 		bedrock_free(thread);
 	}
 	else
-		bedrock_log(LEVEL_DEBUG, "thread: Created thread %d", thread->handle);
+		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", thread->handle);
 }
 
 void bedrock_thread_process()
@@ -57,7 +57,7 @@ void bedrock_thread_process()
 			if (pthread_join(thread->handle, NULL))
 				bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
 			else
-				bedrock_log(LEVEL_DEBUG, "thread: Joining thread %d", thread->handle);
+				bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", thread->handle);
 
 			if (thread->at_exit)
 				thread->at_exit(thread->data);
@@ -81,7 +81,7 @@ void bedrock_mutex_init(bedrock_mutex *mutex, const char *desc)
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to initialize mutex %s - %s", desc, strerror(errno));
 	else
-		bedrock_log(LEVEL_DEBUG, "thread: Successfully initialized mutex %s", desc);
+		bedrock_log(LEVEL_THREAD, "thread: Successfully initialized mutex %s", desc);
 }
 
 void bedrock_mutex_destroy(bedrock_mutex *mutex)
@@ -93,7 +93,7 @@ void bedrock_mutex_destroy(bedrock_mutex *mutex)
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to destroy mutex %s - %s", mutex->desc, strerror(errno));
 	else
-		bedrock_log(LEVEL_DEBUG, "thread: Successfully destroyed mutex %s", mutex->desc);
+		bedrock_log(LEVEL_THREAD, "thread: Successfully destroyed mutex %s", mutex->desc);
 
 	bedrock_free(mutex);
 }
@@ -108,7 +108,7 @@ void bedrock_mutex_lock(bedrock_mutex *mutex)
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to lock mutex %s - %s", mutex->desc, strerror(errno));
 	else
-		bedrock_log(LEVEL_DEBUG, "thread: Successfully locked mutex %s", mutex->desc);
+		bedrock_log(LEVEL_THREAD, "thread: Successfully locked mutex %s", mutex->desc);
 }
 
 bool bedrock_mutex_trylock(bedrock_mutex *mutex)
@@ -127,5 +127,5 @@ void bedrock_mutex_unlock(bedrock_mutex *mutex)
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to unlock mutex %s - %s", mutex->desc, strerror(errno));
 	else
-		bedrock_log(LEVEL_DEBUG, "thread: Successfully unlocked mutex %s", mutex->desc);
+		bedrock_log(LEVEL_THREAD, "thread: Successfully unlocked mutex %s", mutex->desc);
 }

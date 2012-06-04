@@ -13,7 +13,7 @@ struct bedrock_region
 	/* Must be held when reading or writing to columns! */
 	bedrock_mutex column_mutex;
 	/* Columns in this region */
-	bedrock_list columns2;
+	bedrock_list columns;
 
 	/* The number of columns in this region in use by players. +1 per player per column.
 	 * When this reaches 0 no players are in nor in render distance of this region, and

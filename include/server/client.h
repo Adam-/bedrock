@@ -13,7 +13,8 @@ typedef enum
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
 	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
 	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
-	STATE_AUTHENTICATED   = 1 << 3,     /* Authenticated and in the game */
+	STATE_BURSTING        = 1 << 3,      /* Successfully authenticated but not in the game yet */
+	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
@@ -90,8 +91,9 @@ extern nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t 
 
 extern void client_update_chunks(struct bedrock_client *client);
 extern void client_update_players(struct bedrock_client *client);
-extern void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, uint8_t on_ground);
+extern void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground);
 
-extern void client_send_login_sequence(struct bedrock_client *client);
+extern void client_start_login_sequence(struct bedrock_client *client);
+extern void client_finish_login_sequence(struct bedrock_client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H

@@ -15,7 +15,7 @@ int packet_keep_alive(struct bedrock_client *client, const unsigned char *buffer
 	else if (id != client->ping_id)
 	{
 		bedrock_log(LEVEL_INFO, "client: Dropping client %s (%s) due to invalid keepalive ID.", client->name, client_get_ip(client));
-		packet_send_disconnect(client, "Ping timeout");
+		//packet_send_disconnect(client, "Ping timeout");
 	}
 	else
 	{
