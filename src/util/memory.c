@@ -30,6 +30,7 @@ void bedrock_free_pool(bedrock_memory_pool *pool, void *pointer)
 
 	sz = ((size_t *) pointer) - 1;
 	*pool -= *sz;
+	bedrock_assert(*pool >= 0, *pool = 0);
 
 	bedrock_free(pointer);
 }
@@ -56,6 +57,7 @@ void *bedrock_realloc_pool(bedrock_memory_pool *pool, void *pointer, size_t size
 		abort();
 
 	*pool += size;
+	bedrock_assert(*pool >= 0, *pool = 0);
 
 	return pointer;
 }

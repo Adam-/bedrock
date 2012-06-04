@@ -9,7 +9,7 @@ typedef size_t bedrock_memory_pool;
 
 #define BEDROCK_MEMORY_POOL_INIT 0
 
-extern uint64_t bedrock_memory;
+extern int64_t bedrock_memory;
 
 extern void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size);
 extern void bedrock_free_pool(bedrock_memory_pool *pool, void *pointer);
