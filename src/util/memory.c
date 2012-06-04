@@ -1,6 +1,6 @@
 #include "util/memory.h"
 
-uint64_t bedrock_memory = 0;
+int64_t bedrock_memory = 0;
 
 void *bedrock_malloc_pool(bedrock_memory_pool *pool, size_t size)
 {

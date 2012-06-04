@@ -3,6 +3,7 @@
 #include "packet/packet_chat_message.h"
 #include "command/command_help.h"
 #include "command/command_memory.h"
+#include "command/command_stats.h"
 #include "command/command_uptime.h"
 #include "command/command_version.h"
 
@@ -11,6 +12,7 @@
 struct bedrock_command commands[] = {
 	{"HELP",    "", "shows this message",   0, 0, command_anyone, command_help},
 	{"MEMORY",  "", "shows memory usage",   0, 0, command_anyone, command_memory},
+	{"STATS",   "", "shows statistics",     0, 0, command_anyone, command_stats},
 	{"UPTIME",  "", "shows server uptime",  0, 0, command_anyone, command_uptime},
 	{"VERSION", "", "shows server version", 0, 0, command_anyone, command_version}
 };
