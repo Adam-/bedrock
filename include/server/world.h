@@ -16,7 +16,7 @@ struct bedrock_world
 	int64_t time;
 };
 
-extern bedrock_memory_pool world_pool;
+extern struct bedrock_memory_pool world_pool;
 extern bedrock_list world_list;
 
 extern struct bedrock_world *world_create(const char *name, const char *path);

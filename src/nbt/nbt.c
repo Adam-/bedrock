@@ -115,6 +115,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 					break;
 
 				bedrock_log(LEVEL_NBT_DEBUG, "nbt: Read compound tag in '%s', named '%s'", tag->name ? tag->name : "(unknown)", nested_tag->name);
+
 				bedrock_list_add(&tag->payload.tag_compound, nested_tag);
 			}
 
@@ -175,7 +176,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	return NULL;
 }
 
-nbt_tag *nbt_parse(bedrock_memory_pool *pool, const unsigned char *data, size_t size)
+nbt_tag *nbt_parse(struct bedrock_memory_pool *pool, const unsigned char *data, size_t size)
 {
 	nbt_tag *tag = bedrock_malloc_pool(pool, sizeof(nbt_tag));
 	tag->pool = pool;

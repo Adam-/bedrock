@@ -5,7 +5,7 @@
 
 #define DATA_CHUNK_SIZE 2048
 
-bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT("column memory pool");
 
 struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
 {

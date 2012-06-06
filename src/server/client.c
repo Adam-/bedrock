@@ -34,7 +34,7 @@
 
 bedrock_list client_list = LIST_INIT;
 uint32_t entity_id = 0;
-bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT("client memory pool");
 
 static bedrock_list exiting_client_list;
 

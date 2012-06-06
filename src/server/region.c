@@ -23,7 +23,7 @@
 
 static bedrock_list empty_regions;
 
-bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT;
+struct bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT("region memory pool");
 
 static void region_load(struct bedrock_region *region)
 {

@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "util/thread.h"
+#include "util/memory.h"
 
 #include <errno.h>
 

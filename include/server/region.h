@@ -22,7 +22,7 @@ struct bedrock_region
 	unsigned int player_column_count;
 };
 
-extern bedrock_memory_pool region_pool;
+extern struct bedrock_memory_pool region_pool;
 
 extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);
 extern void region_free(struct bedrock_region *region);
