@@ -682,18 +682,13 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
  */
 void client_start_login_sequence(struct bedrock_client *client)
 {
-	int32_t *spawn_x, *spawn_y, *spawn_z;
-
 	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
 
 	/* Send time */
 	packet_send_time(client);
 
 	/* Send world spawn point */
-	spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX");
-	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
-	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
-	packet_send_spawn_point(client, *spawn_x, *spawn_y, *spawn_z);
+	packet_send_spawn_point(client);
 
 	/* Send chunks */
 	client_update_chunks(client);
