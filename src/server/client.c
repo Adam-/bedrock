@@ -33,6 +33,7 @@
 #define PLAYER_BUFFER_SIZE 4096
 
 bedrock_list client_list = LIST_INIT;
+int authenticated_client_count = 0;
 uint32_t entity_id = 0;
 struct bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT("client memory pool");
 
@@ -140,6 +141,9 @@ static void client_free(struct bedrock_client *client)
 				packet_send_chat_message(c, "%s left the game", client->name);
 			}
 		}
+
+		--authenticated_client_count;
+		bedrock_assert(authenticated_client_count >= 0, authenticated_client_count = 0);
 	}
 
 	LIST_FOREACH(&client->players, node)
@@ -702,6 +706,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	packet_send_position_and_look(client);
 
 	client->authenticated = STATE_AUTHENTICATED;
+	++authenticated_client_count;
 
 	/* Send inventory */
 	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)

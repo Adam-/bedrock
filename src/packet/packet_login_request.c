@@ -32,6 +32,11 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 		packet_send_disconnect(client, "Username mismatch");
 		return offset;
 	}
+	else if (authenticated_client_count >= BEDROCK_MAX_USERS)
+	{
+		packet_send_disconnect(client, "Server is full");
+		return offset;
+	}
 
 	client_send_header(client, LOGIN_REQUEST);
 	client_send_int(client, &client->id, sizeof(client->id)); /* Entity ID */
