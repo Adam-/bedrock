@@ -51,6 +51,7 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	client_send_int(client, &b, sizeof(b)); /* Max players */
 
 	client->authenticated = STATE_BURSTING;
+	++authenticated_client_count;
 	client_start_login_sequence(client);
 
 	return offset;
