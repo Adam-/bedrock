@@ -16,7 +16,7 @@ void io_init()
 		abort();
 	}
 
-	bedrock_fd_open(&efd, fd, false, "epoll file descriptor");
+	bedrock_fd_open(&efd, fd, FD_ENGINE, "epoll file descriptor");
 }
 
 void io_shutdown()

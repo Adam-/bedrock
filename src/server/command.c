@@ -1,6 +1,7 @@
 #include "server/bedrock.h"
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
+#include "command/command_fdlist.h"
 #include "command/command_help.h"
 #include "command/command_memory.h"
 #include "command/command_players.h"
@@ -12,6 +13,7 @@
 #define MAX_PARAMETERS 15
 
 struct bedrock_command commands[] = {
+	{"FDLIST",  "", "shows file descriptors", 0, 0, command_anyone, command_fdlist},
 	{"HELP",    "", "shows this message",     0, 0, command_anyone, command_help},
 	{"MEMORY",  "", "shows memory usage",     0, 0, command_anyone, command_memory},
 	{"PLAYERS", "", "lists players online",   0, 0, command_anyone, command_players},

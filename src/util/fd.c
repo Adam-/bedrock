@@ -4,7 +4,7 @@
 
 #include <unistd.h>
 
-static bedrock_list fdlist;
+bedrock_list fdlist = LIST_INIT;
 
 void bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc)
 {

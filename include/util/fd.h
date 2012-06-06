@@ -2,11 +2,13 @@
 #define BEDROCK_UTIL_FD_H
 
 #include "util.h"
+#include "list.h"
 
 #include <netinet/in.h>
 
 typedef enum
 {
+	FD_ENGINE,
 	FD_FILE,
 	FD_SOCKET,
 	FD_PIPE
@@ -32,6 +34,8 @@ typedef struct _bedrock_fd
 		struct sockaddr_in6 in6;
 	} addr;
 } bedrock_fd;
+
+bedrock_list fdlist;
 
 extern void bedrock_fd_open(bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc);
 extern void bedrock_fd_close(bedrock_fd *f);
