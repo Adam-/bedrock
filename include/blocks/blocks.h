@@ -1,3 +1,6 @@
+#include "blocks/items.h"
+
+#include <stdint.h>
 
 typedef enum
 {
@@ -134,3 +137,16 @@ typedef enum
 	BLOCK_ENDER_CHEST            /* 130 */
 } block_type;
 
+struct bedrock_block
+{
+	uint8_t id;
+	const char *name;
+	double hardness; /* Time in seconds it takes to mine this block by hand */
+	enum bedrock_item_tool_name weakness; /* Types of tools that speed up mining this block */
+	enum bedrock_item_tool_type requirement; /* Types of tools that are required to mine this block */
+};
+
+extern struct bedrock_block bedrock_blocks[];
+
+extern struct bedrock_block *block_find(block_type id);
+extern struct bedrock_block *block_find_or_create(block_type id);

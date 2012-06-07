@@ -9,8 +9,9 @@
 #include "packet/packet_player.h"
 #include "packet/packet_position.h"
 #include "packet/packet_player_look.h"
-#include "packet/packet_held_item_change.h"
 #include "packet/packet_position_and_look.h"
+#include "packet/packet_player_digging.h"
+#include "packet/packet_held_item_change.h"
 #include "packet/packet_entity_animation.h"
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
@@ -33,6 +34,7 @@ static struct c2s_packet_handler
 	{PLAYER_POS,      34,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_position},
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_player_look},
 	{PLAYER_POS_LOOK, 42,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_position_and_look},
+	{PLAYER_DIGGING,  12,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_player_digging},
 	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_held_item_change},
 	{ENTITY_ANIMATION, 6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_animation},
 	{ENTITY_ACTION,    6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_action},

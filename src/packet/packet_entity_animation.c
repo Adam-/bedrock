@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-enum Animation
+enum
 {
 	ANIMATION_NONE = 0,
 	ANIMATION_SWING_ARM = 1,

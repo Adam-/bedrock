@@ -74,9 +74,10 @@ struct bedrock_item *item_find_or_create(item_type id)
 	{
 		bedrock_log(LEVEL_DEBUG, "item: Unrecognized item %d", id);
 
-		i.flags = 0;
 		i.id = id;
 		i.name = "Unknown";
+		i.flags = 0;
+
 		item = &i;
 	}
 

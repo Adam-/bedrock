@@ -155,6 +155,26 @@ enum
 	ITEM_FLAG_ENCHANTABLE = 1 << 1
 };
 
+enum bedrock_item_tool_name
+{
+	ITEM_NONE,
+	ITEM_SWORD   = 1 << 0,
+	ITEM_SHOVEL  = 1 << 1,
+	ITEM_PICKAXE = 1 << 2,
+	ITEM_AXE     = 1 << 3,
+	ITEM_HOE     = 1 << 4
+};
+
+enum bedrock_item_tool_type
+{
+	TYPE_NONE,
+	TYPE_WOOD = 1 << 0,
+	TYPE_STONE = 1 << 1,
+	TYPE_IRON = 1 << 2,
+	TYPE_GOLD = 1 << 3,
+	TYPE_DIAMOND = 1 << 4
+};
+
 struct bedrock_item
 {
 	uint16_t id;
