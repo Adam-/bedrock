@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 

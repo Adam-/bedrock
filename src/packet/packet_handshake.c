@@ -1,5 +1,5 @@
 #include "server/client.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "packet/packet_disconnect.h"
 
 int packet_handshake(struct bedrock_client *client, const unsigned char *buffer, size_t len)

@@ -1,5 +1,5 @@
 #include "server/client.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "server/bedrock.h"
 #include "io/io.h"
 

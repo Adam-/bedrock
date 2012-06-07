@@ -1,5 +1,5 @@
 #include "server/client.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "packet/packet_disconnect.h"
 #include "packet/packet_chat_message.h"
 
