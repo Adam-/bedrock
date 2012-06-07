@@ -66,3 +66,32 @@ void column_free(struct bedrock_column *column)
 	nbt_free(column->data);
 	bedrock_free_pool(&column_pool, column);
 }
+
+struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z)
+{
+	bedrock_node *n;
+	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	struct bedrock_column *column = NULL;
+
+	column_x = floor(column_x);
+	column_z = floor(column_z);
+
+	bedrock_mutex_lock(&region->column_mutex);
+
+	LIST_FOREACH(&region->columns, n)
+	{
+		struct bedrock_column *c = n->data;
+
+		if (c->x == column_x && c->z == column_z)
+		{
+			column = c;
+			break;
+		}
+		else if (c->z > column_z || (c->z == column_z && c->x > column_x))
+			break;
+	}
+
+	bedrock_mutex_unlock(&region->column_mutex);
+
+	return column;
+}

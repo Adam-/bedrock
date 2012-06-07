@@ -22,3 +22,5 @@ extern struct bedrock_memory_pool column_pool;
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
+/* Finds the column which contains the point x and z */
+extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);

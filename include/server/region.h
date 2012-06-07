@@ -28,5 +28,5 @@ extern struct bedrock_region *region_create(struct bedrock_world *world, int x, 
 extern void region_free(struct bedrock_region *region);
 extern void region_queue_free(struct bedrock_region *region);
 extern void region_free_queue();
-/* Finds the column which contains the point x and z */
-extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
+/* Finds the region which contains the point x and z */
+extern struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z);

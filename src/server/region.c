@@ -201,31 +201,27 @@ void region_free_queue()
 	bedrock_timer_schedule(6000, region_free_queue, NULL);
 }
 
-struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z)
+struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z)
 {
-	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
-	struct bedrock_column *column = NULL;
+	double region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
+	bedrock_node *n;
+	struct bedrock_region *region;
 
-	column_x = floor(column_x);
-	column_z = floor(column_z);
+	region_x = floor(region_x);
+	region_z = floor(region_z);
 
-	bedrock_mutex_lock(&region->column_mutex);
-
-	LIST_FOREACH(&region->columns, n)
+	LIST_FOREACH(&world->regions, n)
 	{
-		struct bedrock_column *c = n->data;
+		region = n->data;
 
-		if (c->x == column_x && c->z == column_z)
-		{
-			column = c;
-			break;
-		}
-		else if (c->z > column_z || (c->z == column_z && c->x > column_x))
-			break;
+		// XXX are these in some order?
+		if (region->x == region_x && region->z == region_z)
+			return region;
 	}
 
-	bedrock_mutex_unlock(&region->column_mutex);
+	region = region_create(world, region_x, region_z);
 
-	return column;
+	return region;
 }
+

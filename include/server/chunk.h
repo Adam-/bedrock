@@ -25,3 +25,4 @@ extern struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t
 extern void chunk_free(struct bedrock_chunk *chunk);
 extern void chunk_decompress(struct bedrock_chunk *chunk);
 extern void chunk_compress(struct bedrock_chunk *chunk);
+extern struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int32_t x, uint8_t y, int32_t z);

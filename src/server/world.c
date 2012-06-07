@@ -112,28 +112,3 @@ struct bedrock_world *world_find(const char *name)
 
 	return NULL;
 }
-
-struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z)
-{
-	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
-	double region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
-	bedrock_node *n;
-	struct bedrock_region *region;
-
-	region_x = floor(region_x);
-	region_z = floor(region_z);
-
-	LIST_FOREACH(&world->regions, n)
-	{
-		region = n->data;
-
-		// XXX are these in some order?
-		if (region->x == region_x && region->z == region_z)
-			return region;
-	}
-
-	region = region_create(world, region_x, region_z);
-
-	return region;
-}
-

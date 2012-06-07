@@ -82,8 +82,10 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 }
 
+#include <signal.h> // XXX
 int main(int argc, char **argv)
 {
+	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
 
 	bedrock_start = time(NULL);

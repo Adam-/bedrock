@@ -2,6 +2,7 @@
 #include "blocks/blocks.h"
 
 struct bedrock_block bedrock_blocks[] = {
+	{BLOCK_BEDROCK, "Bedrock", 0, ITEM_NONE, TYPE_NONE}
 };
 
 static int block_compare(const block_type *id, const struct bedrock_block *block)

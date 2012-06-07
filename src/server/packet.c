@@ -102,6 +102,9 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 			case ERROR_UNEXPECTED:
 				error = "unexpected";
 				break;
+			case ERROR_NOT_ALLOWED:
+				error = "not allowed";
+				break;
 		}
 
 		bedrock_log(LEVEL_WARN, "packet: Invalid packet 0x%02x from %s - %s, dropping client", id, client_get_ip(client), error);

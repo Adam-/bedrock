@@ -38,7 +38,7 @@
 #define BEDROCK_BLOCKS_PER_CHUNK   16
 /* The number of chunks per column */
 #define BEDROCK_CHUNKS_PER_COLUMN  16
-/* The number of columsn per region */
+/* The number of columns on the side of a region. Square for (max) columns per region. */
 #define BEDROCK_COLUMNS_PER_REGION 32
 
 #define BEDROCK_BLOCK_LENGTH 4096

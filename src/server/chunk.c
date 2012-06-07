@@ -92,3 +92,20 @@ void chunk_compress(struct bedrock_chunk *chunk)
 	bedrock_buffer_free(chunk->decompressed_data);
 	chunk->decompressed_data = NULL;
 }
+
+struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int32_t x, uint8_t y, int32_t z)
+{
+	struct bedrock_region *region;
+	struct bedrock_column *column;
+
+	region = find_region_which_contains(world, x, z);
+	if (region == NULL)
+		return NULL;
+
+	column = find_column_which_contains(region, x, z);
+	if (column == NULL)
+		return NULL;
+
+	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK >= 0 && y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	return column->chunks[y / BEDROCK_BLOCKS_PER_CHUNK];
+}

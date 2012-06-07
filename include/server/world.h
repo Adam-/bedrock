@@ -24,7 +24,4 @@ extern bool world_load(struct bedrock_world *world);
 extern void world_free(struct bedrock_world *world);
 extern struct bedrock_world *world_find(const char *name);
 
-/* Finds the region which contains the point x and z */
-extern struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z);
-
 #endif // BEDROCK_SERVER_WORLD_H
