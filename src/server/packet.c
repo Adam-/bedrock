@@ -1,5 +1,5 @@
 #include "server/bedrock.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "util/endian.h"
 
 #include "packet/packet_keep_alive.h"
@@ -11,6 +11,7 @@
 #include "packet/packet_player_look.h"
 #include "packet/packet_held_item_change.h"
 #include "packet/packet_position_and_look.h"
+#include "packet/packet_entity_animation.h"
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_list_ping.h"
@@ -33,6 +34,7 @@ static struct c2s_packet_handler
 	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_player_look},
 	{PLAYER_POS_LOOK, 42,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_position_and_look},
 	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_held_item_change},
+	{ENTITY_ANIMATION, 6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_animation},
 	{ENTITY_ACTION,    6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_action},
 	{CLOSE_WINDOW,     2,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_close_window},
 	{LIST_PING,        1,  STATE_UNAUTHENTICATED,                  HARD_SIZE, packet_list_ping},

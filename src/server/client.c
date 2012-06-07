@@ -2,7 +2,7 @@
 #include "server/client.h"
 #include "server/column.h"
 #include "io/io.h"
-#include "packet/packet.h"
+#include "server/packet.h"
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
