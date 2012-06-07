@@ -37,11 +37,9 @@ void bedrock_update_time()
 		bedrock_node *node;
 
 		last_tick.tv_nsec += (tick_diff * BEDROCK_TICK_LENGTH) * 1000000;
-		while (last_tick.tv_nsec >= 1000000000)
-		{
-			++last_tick.tv_sec;
-			last_tick.tv_nsec -= 1000000000;
-		}
+
+		last_tick.tv_sec += last_tick.tv_nsec / 1000000000;
+		last_tick.tv_nsec %= 1000000000;
 
 		LIST_FOREACH(&world_list, node)
 		{
