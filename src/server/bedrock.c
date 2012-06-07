@@ -27,7 +27,7 @@ void bedrock_update_time()
 	}
 
 	/* This is in nano seconds, which is 10^-9 */
-	diff = (bedrock_time.tv_sec * 1000000000 + bedrock_time.tv_nsec) - (last_tick.tv_sec * 1000000000 + last_tick.tv_sec);
+	diff = (bedrock_time.tv_sec * 1000000000 + bedrock_time.tv_nsec) - (last_tick.tv_sec * 1000000000 + last_tick.tv_nsec);
 	/* Get milli seconds */
 	diff /= 1000000;
 
@@ -36,7 +36,12 @@ void bedrock_update_time()
 	{
 		bedrock_node *node;
 
-		last_tick = bedrock_time;
+		last_tick.tv_nsec += (tick_diff * BEDROCK_TICK_LENGTH) * 1000000;
+		while (last_tick.tv_nsec >= 1000000000)
+		{
+			++last_tick.tv_sec;
+			last_tick.tv_nsec -= 1000000000;
+		}
 
 		LIST_FOREACH(&world_list, node)
 		{
