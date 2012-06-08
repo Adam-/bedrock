@@ -4,6 +4,12 @@
 #include "blocks/blocks.h"
 #include "nbt/nbt.h"
 
+enum
+{
+	STARTED_DIGGING,
+	FINISHED_DIGGING = 2
+};
+
 int packet_player_digging(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
@@ -22,13 +28,15 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
 		return ERROR_NOT_ALLOWED;
 
+	if (status == STARTED_DIGGING)
 	{
 		struct bedrock_chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
 		uint16_t block_index;
 		struct bedrock_block *block;
 		int32_t x2, z2;
 		uint8_t y2;
-		bedrock_node *node;
+		double delay;
+		//bedrock_node *node;
 
 		if (chunk == NULL)
 			return ERROR_NOT_ALLOWED;
@@ -50,10 +58,20 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 
 		block = block_find_or_create(chunk->blocks[block_index]);
 
-		chunk->blocks[block_index] = BLOCK_AIR;
-		chunk->modified = true;
+		delay = block->hardness;
 
-		{
+		if (block->requirement != TYPE_NONE)
+
+		client->digging_data.x = x;
+		client->digging_data.y = y;
+		client->digging_data.z = z;
+		client->digging_data.id = block->id;
+		client->digging_data.end = block->hardness;
+
+		//chunk->blocks[block_index] = BLOCK_AIR;
+		//chunk->modified = true;
+
+		/*{
 			int i;
 			for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)
 				if (chunk->blocks[i] != BLOCK_AIR)
@@ -67,14 +85,9 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		LIST_FOREACH(&chunk->column->players, node)
 		{
 			struct bedrock_client *c = node->data;
-			client_send_header(c, 0x35);
-			client_send_int(c, &x, sizeof(x));
-			client_send_int(c, &y, sizeof(y));
-			client_send_int(c, &z, sizeof(z));
-			int8_t b = 0;
-			client_send_int(c, &b, sizeof(b));
-			client_send_int(c, &b, sizeof(b));
-		}
+
+			packet_send_block_change(c, x, y, z, BLOCK_AIR, 0);
+		}*/
 	}
 
 	return offset;

@@ -57,6 +57,16 @@ struct bedrock_client
 	bedrock_client_entity_action action;  /* action the player is doing */
 
 	double stance;                         /* players's stance */
+
+	struct
+	{
+		int32_t x;
+		uint8_t y;
+		uint32_t z;
+		uint8_t id;
+		long end;
+	}
+	digging_data;
 };
 
 extern bedrock_list client_list;

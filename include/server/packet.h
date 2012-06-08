@@ -26,6 +26,7 @@ enum
 	ENTITY_METADATA               = 0x28,
 	MAP_COLUMN_ALLOCATION         = 0x32,
 	MAP_COLUMN                    = 0x33,
+	BLOCK_CHANGE                  = 0x35,
 	CLOSE_WINDOW                  = 0x65,
 	SET_SLOT                      = 0x67,
 	PLAYER_LIST                   = 0xC9,

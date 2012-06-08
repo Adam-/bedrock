@@ -151,8 +151,16 @@ typedef enum
 enum
 {
 	ITEM_FLAG_NONE,
-	ITEM_FLAG_DAMAGABLE = 1 << 0,
-	ITEM_FLAG_ENCHANTABLE = 1 << 1
+	ITEM_FLAG_DAMAGABLE   = 1 << 0,
+	ITEM_FLAG_ENCHANTABLE = 1 << 1,
+	ITEM_FLAG_SWORD       = 1 << 2,
+	ITEM_FLAG_SHOVEL      = 1 << 3,
+	ITEM_FLAG_PICKAXE     = 1 << 4,
+	ITEM_FLAG_AXE         = 1 << 5,
+	ITEM_FLAG_HOE         = 1 << 6,
+	ITEM_FLAG_WOOD        = 1 << 7,
+	ITEM_FLAG_STONE       = ITEM_FLAG_WOOD | 1 << 8,
+	ITEM_FLAG_IRON        = ITEM_FLAG_STONE | 1 << 9
 };
 
 enum bedrock_item_tool_name
@@ -168,10 +176,10 @@ enum bedrock_item_tool_name
 enum bedrock_item_tool_type
 {
 	TYPE_NONE,
-	TYPE_WOOD = 1 << 0,
-	TYPE_STONE = 1 << 1,
-	TYPE_IRON = 1 << 2,
-	TYPE_GOLD = 1 << 3,
+	TYPE_WOOD    = 1 << 0,
+	TYPE_STONE   = 1 << 1,
+	TYPE_IRON    = 1 << 2,
+	TYPE_GOLD    = 1 << 3,
 	TYPE_DIAMOND = 1 << 4
 };
 
