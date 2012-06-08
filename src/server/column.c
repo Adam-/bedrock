@@ -3,6 +3,8 @@
 #include "util/memory.h"
 #include "compression/compression.h"
 
+#include <math.h>
+
 #define DATA_CHUNK_SIZE 2048
 
 struct bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT("column memory pool");

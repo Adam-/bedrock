@@ -126,6 +126,6 @@ struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int
 	printf("REGION: %d %d\n", region->x, region->z);
 	printf("COLUMN: %d %d\n", column->x, column->z);
 
-	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK >= 0 && y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	return column->chunks[y / BEDROCK_BLOCKS_PER_CHUNK];
 }

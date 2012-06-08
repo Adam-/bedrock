@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "packet/packet_entity_animation.h"
 
 enum
 {

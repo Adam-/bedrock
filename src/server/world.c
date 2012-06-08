@@ -11,7 +11,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <errno.h>
-#include <math.h>
 
 #define WORLD_BUFFER_SIZE 4096
 #define WORLD_LEVEL_FILE "level.dat"
