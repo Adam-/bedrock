@@ -8,6 +8,9 @@ struct bedrock_column
 	int32_t x;
 	int32_t z;
 
+	/* Players in render distance of this column */
+	bedrock_list players;
+
 	/* Data for this column. Note that the 'Sections' section is NOT here. We store it below. */
 	nbt_tag *data;
 

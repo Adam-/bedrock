@@ -51,12 +51,17 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 		compression_compress_end(buffer);
 	}
 
+	tag = nbt_get(data, TAG_INT_ARRAY, 2, "Level", "HeightMap");
+	nbt_free(tag);
+
 	return column;
 }
 
 void column_free(struct bedrock_column *column)
 {
 	int i;
+
+	bedrock_assert(column->players.count == 0, ;);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);

@@ -10,7 +10,7 @@ int packet_keep_alive(struct bedrock_client *client, const unsigned char *buffer
 
 	packet_read_int(buffer, len, &offset, &id, sizeof(id));
 
-	if (id == 0)
+	if (id == 0 || client->ping_id == 0)
 		;
 	else if (id != client->ping_id)
 	{

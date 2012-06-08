@@ -49,8 +49,16 @@ struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y, nbt
 
 void chunk_free(struct bedrock_chunk *chunk)
 {
+	int i;
+
 	if (!chunk)
 		return;
+
+	bedrock_log(LEVEL_DEBUG, "chunk: Freeing chunk %d in column %d,%d", chunk->y, chunk->column->x, chunk->column->z);
+
+	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+		if (chunk->column->chunks[i] == chunk)
+			chunk->column->chunks[i] = NULL;
 
 	chunk_compress(chunk);
 
@@ -70,6 +78,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 		return;
 
 	buffer = compression_decompress(&chunk_pool, DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	chunk->decompressed_data = buffer->buffer;
 	buffer->buffer = NULL;
 	compression_decompress_end(buffer);
@@ -87,19 +96,23 @@ void chunk_compress(struct bedrock_chunk *chunk)
 	if (chunk->decompressed_data == NULL)
 		return;
 
-	// XXX dirty check?
-	compression_buffer *buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+	if (chunk->modified)
+	{
+		compression_buffer *buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
 
-	compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
-	compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);
-	compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
-	compression_compress_deflate_finish(buffer, chunk->blocklight, BEDROCK_DATA_LENGTH);
+		compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
+		compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);
+		compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
+		compression_compress_deflate_finish(buffer, chunk->blocklight, BEDROCK_DATA_LENGTH);
 
-	bedrock_buffer_free(chunk->compressed_data);
-	chunk->compressed_data = buffer->buffer;
+		bedrock_buffer_free(chunk->compressed_data);
 
-	buffer->buffer = NULL;
-	compression_compress_end(buffer);
+		chunk->compressed_data = buffer->buffer;
+		bedrock_buffer_resize(chunk->compressed_data, chunk->compressed_data->length);
+
+		buffer->buffer = NULL;
+		compression_compress_end(buffer);
+	}
 
 	chunk->blocks = NULL;
 	chunk->data = NULL;
@@ -122,9 +135,6 @@ struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int
 	column = find_column_which_contains(region, x, z);
 	if (column == NULL)
 		return NULL;
-
-	printf("REGION: %d %d\n", region->x, region->z);
-	printf("COLUMN: %d %d\n", column->x, column->z);
 
 	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK >= 0 && y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	return column->chunks[y / BEDROCK_BLOCKS_PER_CHUNK];

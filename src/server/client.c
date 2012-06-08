@@ -438,6 +438,8 @@ void client_update_chunks(struct bedrock_client *client)
 			bedrock_list_del_node(&client->columns, node);
 			bedrock_free_pool(client->columns.pool, node);
 
+			bedrock_list_del(&c->players, client);
+
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
 			--c->region->player_column_count;
@@ -465,7 +467,9 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
 			bedrock_list_add(&client->columns, c);
+			bedrock_list_add(&c->players, client);
 
 			/* Loading the column the player is in on a bursting player, finish burst */
 			if (client->authenticated == STATE_BURSTING)
@@ -492,7 +496,9 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
 			bedrock_list_add(&client->columns, c);
+			bedrock_list_add(&c->players, client);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
@@ -511,7 +517,9 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
 			bedrock_list_add(&client->columns, c);
+			bedrock_list_add(&c->players, client);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
@@ -530,7 +538,9 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
 			bedrock_list_add(&client->columns, c);
+			bedrock_list_add(&c->players, client);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
@@ -549,7 +559,9 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
 			bedrock_list_add(&client->columns, c);
+			bedrock_list_add(&c->players, client);
 		}
 	}
 }
