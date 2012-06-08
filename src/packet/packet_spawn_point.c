@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "nbt/nbt.h"
 
 void packet_send_spawn_point(struct bedrock_client *client)
 {
