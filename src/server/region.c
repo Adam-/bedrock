@@ -203,11 +203,16 @@ void region_free_queue()
 
 struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z)
 {
-	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
-	double region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
+	double column_x, column_z;
+	double region_x, region_z;
 	bedrock_node *n;
 	struct bedrock_region *region;
 
+	column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	column_x = floor(column_x);
+	column_z = floor(column_z);
+
+	region_x = column_x / BEDROCK_COLUMNS_PER_REGION, region_z = column_z / BEDROCK_COLUMNS_PER_REGION;
 	region_x = floor(region_x);
 	region_z = floor(region_z);
 
