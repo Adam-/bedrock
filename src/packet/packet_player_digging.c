@@ -3,6 +3,7 @@
 #include "server/column.h"
 #include "blocks/blocks.h"
 #include "nbt/nbt.h"
+#include "packet/packet_block_change.h"
 
 enum
 {

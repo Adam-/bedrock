@@ -162,7 +162,10 @@ static void client_free(struct bedrock_client *client)
 	{
 		struct bedrock_column *c = node->data;
 
+		bedrock_list_del(&c->players, client);
+
 		--c->region->player_column_count;
+
 		if (c->region->player_column_count == 0)
 			region_queue_free(c->region);
 	}
@@ -657,7 +660,8 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
 	if (old_pitch != pitch)
 		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
-	client->stance = stance;
+	if (client->stance != stance)
+		client->stance = stance;
 
 	c_x = (x - old_x) * 32;
 	c_y = (y - old_y) * 32;
@@ -677,8 +681,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	{
 		struct bedrock_client *c = node->data;
 
-		if (update_loc)
-			packet_send_entity_teleport(c, client);
+		packet_send_entity_teleport(c, client);
 
 		if (update_rot)
 			packet_send_entity_head_look(c, client);

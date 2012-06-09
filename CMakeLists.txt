@@ -12,6 +12,7 @@ set(BEDROCK_SOURCES
 ./src/packet/packet_entity_animation.c
 ./src/packet/packet_chat_message.c
 ./src/packet/packet_held_item_change.c
+./src/packet/packet_block_change.c
 ./src/packet/packet_list_ping.c
 ./src/packet/packet_player_digging.c
 ./src/packet/packet_entity_equipment.c
