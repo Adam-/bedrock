@@ -7,11 +7,11 @@ void command_players(struct bedrock_client *client, int argc, const char **argv)
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *client = node->data;
+		struct bedrock_client *c = node->data;
 
-		if (client->authenticated == STATE_AUTHENTICATED)
+		if (c->authenticated == STATE_AUTHENTICATED)
 		{
-			command_reply(client, "%s", client->name);
+			command_reply(client, "%s", c->name);
 			++players;
 		}
 

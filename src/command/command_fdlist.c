@@ -19,15 +19,19 @@ void command_fdlist(struct bedrock_client *client, int argc, const char **argv)
 		switch (fd->type)
 		{
 			case FD_ENGINE:
+				type = "FD Engine";
 				++engines;
 				break;
 			case FD_FILE:
+				type = "File";
 				++files;
 				break;
 			case FD_SOCKET:
+				type = "Socket";
 				++sockets;
 				break;
 			case FD_PIPE:
+				type = "Pipe";
 				++pipes;
 				break;
 			default:
