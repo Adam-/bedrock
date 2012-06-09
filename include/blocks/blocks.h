@@ -1,3 +1,4 @@
+#include "server/client.h"
 #include "blocks/items.h"
 
 #include <stdint.h>

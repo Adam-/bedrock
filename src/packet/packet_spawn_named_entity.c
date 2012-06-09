@@ -2,6 +2,7 @@
 #include "server/packet.h"
 #include "blocks/items.h"
 #include "nbt/nbt.h"
+#include "packet/packet_entity_head_look.h"
 
 void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedrock_client *c)
 {
