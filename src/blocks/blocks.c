@@ -35,8 +35,8 @@ struct bedrock_block *block_find_or_create(block_type id)
 
 		b.id = id;
 		b.name = "Unknown";
-		b.hardness = 1;
-		b.no_harvest_time = 1;
+		b.hardness = 0.01;
+		b.no_harvest_time = 0.01;
 		b.weakness = ITEM_FLAG_NONE;
 		b.requirement = ITEM_FLAG_NONE;
 		b.harvest = ITEM_FLAG_NONE;
