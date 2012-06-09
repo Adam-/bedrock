@@ -162,7 +162,10 @@ static void client_free(struct bedrock_client *client)
 	{
 		struct bedrock_column *c = node->data;
 
+		bedrock_list_del(&c->players, client);
+
 		--c->region->player_column_count;
+
 		if (c->region->player_column_count == 0)
 			region_queue_free(c->region);
 	}
