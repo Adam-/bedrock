@@ -151,21 +151,27 @@ typedef enum
 enum bedrock_item_flags
 {
 	ITEM_FLAG_NONE,
-	ITEM_FLAG_DAMAGABLE   = 1 << 0,
-	ITEM_FLAG_ENCHANTABLE = 1 << 1,
-	ITEM_FLAG_SWORD       = 1 << 2,
-	ITEM_FLAG_SHOVEL      = 1 << 3,
-	ITEM_FLAG_PICKAXE     = 1 << 4,
-	ITEM_FLAG_AXE         = 1 << 5,
-	ITEM_FLAG_HOE         = 1 << 6,
-	ITEM_FLAG_WOOD        = 1 << 7,
-	ITEM_FLAG_STONE       = 1 << 8,
-	ITEM_FLAG_IRON        = 1 << 9,
-	ITEM_FLAG_GOLD        = 1 << 10,
-	ITEM_FLAG_DIAMOND     = 1 << 11,
+	ITEM_FLAG_DAMAGABLE    = 1 << 0,
+	ITEM_FLAG_ENCHANTABLE  = 1 << 1,
+	ITEM_FLAG_SWORD        = 1 << 2,
+	ITEM_FLAG_SHOVEL       = 1 << 3,
+	ITEM_FLAG_PICKAXE      = 1 << 4,
+	ITEM_FLAG_AXE          = 1 << 5,
+	ITEM_FLAG_HOE          = 1 << 6,
+	ITEM_FLAG_WOOD         = 1 << 7,
+	ITEM_FLAG_STONE        = 1 << 8,
+	ITEM_FLAG_IRON         = 1 << 9,
+	ITEM_FLAG_DIAMOND      = 1 << 10,
+	ITEM_FLAG_GOLD         = 1 << 11,
 
-	TOOL_NAME_MASK        = 0x7C,  // Sword, shovel, pickaxe, axe, hoe
-	TOOL_TYPE_MASK        = 0xF80  // Wood, stone, iron, gold, diamond
+	TOOL_NAME_MASK         = 0x7C,  // Sword, shovel, pickaxe, axe, hoe
+	TOOL_TYPE_MASK         = 0xF80, // Wood, stone, iron, gold, diamond
+
+	TOOL_TYPE_MASK_WOOD    = ITEM_FLAG_WOOD,
+	TOOL_TYPE_MASK_STONE   = ITEM_FLAG_STONE   | TOOL_TYPE_MASK_WOOD,
+	TOOL_TYPE_MASK_IRON    = ITEM_FLAG_IRON    | TOOL_TYPE_MASK_STONE,
+	TOOL_TYPE_MASK_DIAMOND = ITEM_FLAG_DIAMOND | TOOL_TYPE_MASK_IRON,
+	TOOL_TYPE_MASK_GOLD    = ITEM_FLAG_GOLD    | TOOL_TYPE_MASK_DIAMOND
 };
 
 struct bedrock_item

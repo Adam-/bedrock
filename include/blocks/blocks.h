@@ -142,12 +142,11 @@ struct bedrock_block
 {
 	uint8_t id;
 	const char *name;
-	double hardness;                     /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
-	double no_harvest_time;              /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
-	enum bedrock_item_flags weakness;    /* Types of tools (axe/pickaxe/hatchet) that speed up mining this block */
-	enum bedrock_item_flags requirement; /* Types of tools that are required to mine this block */
-	enum bedrock_item_flags harvest;     /* Types of tools (material) required to get resources from this block */
-	void (*on_mine)(struct bedrock_client *, struct bedrock_block *); /* Called when a block is successfully mined (with the correct tools). Should probably spawn resources. */
+	double hardness;                    /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
+	double no_harvest_time;             /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
+	enum bedrock_item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
+	enum bedrock_item_flags harvest;    /* Item and type required to harvest this block. */
+	void (*on_harvest)(struct bedrock_client *, struct bedrock_block *); /* Called when a block should be harvested. */
 };
 
 extern struct bedrock_block bedrock_blocks[];

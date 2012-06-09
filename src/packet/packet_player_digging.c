@@ -43,6 +43,21 @@ static double modulus(double x, double y)
 	return x - (double) (int) (x / y) * y;
 }
 
+/* Is the given item a weakness for the given block? */
+static bool is_weakness(struct bedrock_block *block, struct bedrock_item *item)
+{
+	bool has_tool_requirement, has_type_requirement;
+
+	bedrock_assert((block->weakness & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
+
+	// Extract tool name from block requirement, if one exists, and see if the player has a tool of that type. if there is no tool requirement anything goes.
+	has_tool_requirement = block->weakness & TOOL_NAME_MASK ? block->weakness & item->flags & TOOL_NAME_MASK : true;
+	// And the same for tool type requirement
+	has_type_requirement = block->weakness & TOOL_TYPE_MASK ? block->weakness & item->flags & TOOL_TYPE_MASK : true;
+
+	return has_tool_requirement && has_type_requirement;
+}
+
 /* Can the given item harvest the given block? */
 static bool can_harvest(struct bedrock_block *block, struct bedrock_item *item)
 {
@@ -67,7 +82,7 @@ static double calculate_block_time(struct bedrock_client *client, struct bedrock
 	double delay = block->no_harvest_time;
 
 	// If this block can be harvested by this item
-	if (can_harvest(block, item))
+	if (is_weakness(block, item))
 	{
 		// Set the delay to the hardness
 		delay = block->hardness;
@@ -75,7 +90,7 @@ static double calculate_block_time(struct bedrock_client *client, struct bedrock
 		// If the block has a weakness
 		if (block->weakness != ITEM_FLAG_NONE)
 		{
-			bedrock_assert((block->weakness & ~TOOL_NAME_MASK) == 0, ;);
+			bedrock_assert((block->weakness & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
 
 			// If our item matches one of the weaknesses
 			if (block->weakness & item->flags & TOOL_NAME_MASK)
@@ -142,23 +157,6 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		block = block_find_or_create(*block_id);
 
 		bedrock_log(LEVEL_DEBUG, "player digging: %s is digging coords %d,%d,%d which is of type %s", client->name, x, y, z, block->name);
-
-		if (block->requirement != ITEM_FLAG_NONE)
-		{
-			bedrock_assert((block->requirement & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
-
-			// Extract tool name from block requirement, if one exists, and see if the player has a tool of that type. if there is no tool requirement anything goes.
-			bool has_tool_requirement = block->requirement & TOOL_NAME_MASK ? block->requirement & item->flags & TOOL_NAME_MASK : true,
-					has_type_requirement = block->requirement & TOOL_TYPE_MASK ? block->requirement & item->flags & TOOL_TYPE_MASK : true;
-
-			if (!has_tool_requirement || !has_type_requirement)
-			{
-				bedrock_log(LEVEL_DEBUG, "player digging: %s does not have the required tool to mine this block", client->name);
-
-				chunk_compress(chunk);
-				return offset;
-			}
-		}
 
 		delay = calculate_block_time(client, block, item);
 
@@ -236,8 +234,8 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		}
 
 		block = block_find_or_create(*block_id);
-		if (block->on_mine != NULL && can_harvest(block, item))
-			block->on_mine(client, block);
+		if (block->on_harvest != NULL && can_harvest(block, item))
+			block->on_harvest(client, block);
 
 		// If the chunk is all air delete it;
 		for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)
