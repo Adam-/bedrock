@@ -22,7 +22,7 @@ int packet_login_request(struct bedrock_client *client, const unsigned char *buf
 	if (offset <= ERROR_UNKNOWN)
 		return offset;
 
-	if (version != BEDROCK_PROTOCOL_VERSION)
+	if (version < BEDROCK_PROTOCOL_VERSION)
 	{
 		packet_send_disconnect(client, "Incorrect version");
 		return offset;
