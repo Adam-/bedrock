@@ -235,23 +235,10 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		}
 
 		block = block_find_or_create(*block_id);
-		if (block->on_mine == NULL)
-			;
-		else if (block->harvest != ITEM_FLAG_NONE)
-		{
-			bedrock_assert((block->harvest & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
-
-			// Extract tool name from block requirement, if one exists, and see if the player has a tool of that type. if there is no tool requirement anything goes.
-			bool has_tool_requirement = block->harvest & TOOL_NAME_MASK ? block->harvest & item->flags & TOOL_NAME_MASK : true,
-					has_type_requirement = block->harvest & TOOL_TYPE_MASK ? block->harvest & item->flags & TOOL_TYPE_MASK : true;
-
-			if (has_tool_requirement && has_type_requirement)
-				block->on_mine(client, block);
-		}
-		else
+		if (block->on_mine != NULL && can_harvest(block, item))
 			block->on_mine(client, block);
 
-		// If the block is all air delete it;
+		// If the chunk is all air delete it;
 		for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)
 			if (chunk->blocks[i] != BLOCK_AIR)
 				break;
