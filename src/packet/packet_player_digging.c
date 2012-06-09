@@ -161,7 +161,7 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		delay = calculate_block_time(client, block, item);
 
 		// Special case, unmineable
-		if (delay == 0)
+		if (delay < 0)
 		{
 			chunk_compress(chunk);
 			return offset;
