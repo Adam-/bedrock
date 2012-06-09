@@ -39,4 +39,6 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	client_send_int(client, &y, sizeof(y));
 	client_send_int(client, &p, sizeof(p));
 	client_send_int(client, &item->id, sizeof(item->id));
+
+	packet_send_entity_head_look(client, c);
 }
