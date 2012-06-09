@@ -1,12 +1,16 @@
 #include "server/bedrock.h"
 #include "blocks/blocks.h"
 
+static void simple_drop(struct bedrock_client *client, struct bedrock_block *block)
+{
+
+}
+
 struct bedrock_block bedrock_blocks[] = {
-	/* Stone. Only drops an item if mined with a pickaxe, but can be mined without one. Drops cobblestone unless mined with a pickaxe. */
-	{BLOCK_STONE,       "Stone",       2.25, 7.5,  ITEM_FLAG_PICKAXE, ITEM_FLAG_PICKAXE, NULL},
-	{BLOCK_GRASS,       "Grass",       0.9,  0.9,  ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    NULL},
-	{BLOCK_DIRT,        "Dirt",        0.75, 0.75, ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    NULL},
-	{BLOCK_COBBLESTONE, "Cobblestone", 3,    10,   ITEM_FLAG_PICKAXE, ITEM_FLAG_PICKAXE, NULL},
+	{BLOCK_STONE,       "Stone",       2.25, 7.5,  ITEM_FLAG_PICKAXE, ITEM_FLAG_PICKAXE, simple_drop},
+	{BLOCK_GRASS,       "Grass",       0.9,  0.9,  ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    simple_drop},
+	{BLOCK_DIRT,        "Dirt",        0.75, 0.75, ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    simple_drop},
+	{BLOCK_COBBLESTONE, "Cobblestone", 3,    10,   ITEM_FLAG_PICKAXE, ITEM_FLAG_PICKAXE, simple_drop},
 	{BLOCK_BEDROCK,     "Bedrock",     0,    0,    ITEM_FLAG_NONE,    ITEM_FLAG_NONE,    NULL}
 };
 
