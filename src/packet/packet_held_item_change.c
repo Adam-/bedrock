@@ -27,6 +27,9 @@ int packet_held_item_change(struct bedrock_client *client, const unsigned char *
 		damage = NULL;
 	}
 
+	// No more digging now
+	memset(&client->digging_data, 0, sizeof(client->digging_data));
+
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;

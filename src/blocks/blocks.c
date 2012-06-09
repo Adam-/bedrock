@@ -2,7 +2,8 @@
 #include "blocks/blocks.h"
 
 struct bedrock_block bedrock_blocks[] = {
-	{BLOCK_BEDROCK, "Bedrock", 0, ITEM_NONE, TYPE_NONE}
+	{BLOCK_GRASS,   "Grass",   0.9, ITEM_FLAG_SHOVEL, ITEM_FLAG_NONE, ITEM_FLAG_NONE, NULL},
+	{BLOCK_BEDROCK, "Bedrock", 0,   ITEM_FLAG_NONE,   ITEM_FLAG_NONE, ITEM_FLAG_NONE, NULL}
 };
 
 static int block_compare(const block_type *id, const struct bedrock_block *block)
@@ -33,8 +34,10 @@ struct bedrock_block *block_find_or_create(block_type id)
 		b.id = id;
 		b.name = "Unknown";
 		b.hardness = 1;
-		b.weakness = ITEM_NONE;
-		b.requirement = TYPE_NONE;
+		b.weakness = ITEM_FLAG_NONE;
+		b.requirement = ITEM_FLAG_NONE;
+		b.reap = ITEM_FLAG_NONE;
+		b.on_mine = NULL;
 
 		block = &b;
 	}

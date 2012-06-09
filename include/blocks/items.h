@@ -148,7 +148,7 @@ typedef enum
 	ITEM_11_DISC                 /* 2266 */
 } item_type;
 
-enum
+enum bedrock_item_flags
 {
 	ITEM_FLAG_NONE,
 	ITEM_FLAG_DAMAGABLE   = 1 << 0,
@@ -159,11 +159,16 @@ enum
 	ITEM_FLAG_AXE         = 1 << 5,
 	ITEM_FLAG_HOE         = 1 << 6,
 	ITEM_FLAG_WOOD        = 1 << 7,
-	ITEM_FLAG_STONE       = ITEM_FLAG_WOOD | 1 << 8,
-	ITEM_FLAG_IRON        = ITEM_FLAG_STONE | 1 << 9
+	ITEM_FLAG_STONE       = 1 << 8,
+	ITEM_FLAG_IRON        = 1 << 9,
+	ITEM_FLAG_GOLD        = 1 << 10,
+	ITEM_FLAG_DIAMOND     = 1 << 11,
+
+	TOOL_NAME_MASK        = 0x7C,  // Sword, shovel, pickaxe, axe, hoe
+	TOOL_TYPE_MASK        = 0xF80  // Wood, stone, iron, gold, diamond
 };
 
-enum bedrock_item_tool_name
+/*enum bedrock_item_tool_name
 {
 	ITEM_NONE,
 	ITEM_SWORD   = 1 << 0,
@@ -181,13 +186,13 @@ enum bedrock_item_tool_type
 	TYPE_IRON    = 1 << 2,
 	TYPE_GOLD    = 1 << 3,
 	TYPE_DIAMOND = 1 << 4
-};
+};*/
 
 struct bedrock_item
 {
 	uint16_t id;
 	const char *name;
-	uint8_t flags;
+	enum bedrock_item_flags flags;
 };
 
 extern struct bedrock_item bedrock_items[];

@@ -63,8 +63,9 @@ struct bedrock_client
 		int32_t x;
 		uint8_t y;
 		uint32_t z;
-		uint8_t id;
-		long end;
+		uint8_t block_id;
+		uint16_t item_id;
+		struct timespec end;
 	}
 	digging_data;
 };
