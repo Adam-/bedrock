@@ -141,10 +141,11 @@ struct bedrock_block
 {
 	uint8_t id;
 	const char *name;
-	double hardness; /* Time in seconds it takes to mine this block by hand, if it was possible */
-	enum bedrock_item_flags weakness; /* Types of tools (axe/pickaxe/hatchet) that speed up mining this block */
+	double hardness;                     /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
+	double no_harvest_time;              /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
+	enum bedrock_item_flags weakness;    /* Types of tools (axe/pickaxe/hatchet) that speed up mining this block */
 	enum bedrock_item_flags requirement; /* Types of tools that are required to mine this block */
-	enum bedrock_item_flags reap; /* Types of tools (material) required to get resources from this block */
+	enum bedrock_item_flags harvest;     /* Types of tools (material) required to get resources from this block */
 	void (*on_mine)(struct bedrock_client *, struct bedrock_block *); /* Called when a block is successfully mined (with the correct tools). Should probably spawn resources. */
 };
 

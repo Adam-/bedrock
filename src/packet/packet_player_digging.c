@@ -42,6 +42,61 @@ static double modulus(double x, double y)
 	return x - (double) (int) (x / y) * y;
 }
 
+/* Can the given item harvest the given block? */
+static bool can_harvest(struct bedrock_block *block, struct bedrock_item *item)
+{
+	bool has_tool_requirement, has_type_requirement;
+
+	bedrock_assert((block->harvest & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
+
+	// Extract tool name from block requirement, if one exists, and see if the player has a tool of that type. if there is no tool requirement anything goes.
+	has_tool_requirement = block->harvest & TOOL_NAME_MASK ? block->harvest & item->flags & TOOL_NAME_MASK : true;
+	// And the same for tool type requirement
+	has_type_requirement = block->harvest & TOOL_TYPE_MASK ? block->harvest & item->flags & TOOL_TYPE_MASK : true;
+
+	return has_tool_requirement && has_type_requirement;
+}
+
+/* Calculate how long a block should take to mine using the given item.
+ * See: http://www.minecraftwiki.net/wiki/Digging
+ */
+static double calculate_block_time(struct bedrock_client *client, struct bedrock_block *block, struct bedrock_item *item)
+{
+	// Start with the time, in seconds, it takes to mine the block for no harvest
+	double delay = block->no_harvest_time;
+
+	// If this block can be harvested by this item
+	if (can_harvest(block, item))
+	{
+		// Set the delay to the hardness
+		delay = block->hardness;
+
+		// If the block has a weakness
+		if (block->weakness != ITEM_FLAG_NONE)
+		{
+			bedrock_assert((block->weakness & ~TOOL_NAME_MASK) == 0, ;);
+
+			// If our item matches one of the weaknesses
+			if (block->weakness & item->flags & TOOL_NAME_MASK)
+			{
+				// Reduce delay accordingly
+				if (item->flags & ITEM_FLAG_GOLD)
+					delay /= 12;
+				else if (item->flags & ITEM_FLAG_DIAMOND)
+					delay /= 8;
+				else if (item->flags & ITEM_FLAG_IRON)
+					delay /= 6;
+				else if (item->flags & ITEM_FLAG_STONE)
+					delay /= 4;
+				else if (item->flags & ITEM_FLAG_WOOD)
+					delay /= 2;
+			}
+		}
+	}
+
+	return delay;
+}
+
 int packet_player_digging(struct bedrock_client *client, const unsigned char *buffer, size_t len)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
@@ -104,26 +159,13 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 			}
 		}
 
-		delay = block->hardness;
+		delay = calculate_block_time(client, block, item);
 
-		if (block->weakness != ITEM_FLAG_NONE)
+		// Special case, unmineable
+		if (delay == 0)
 		{
-			bedrock_assert((block->weakness & ~TOOL_NAME_MASK) == 0, ;);
-
-			if (block->weakness & item->flags)
-			{
-				// http://www.minecraftwiki.net/wiki/Digging
-				if (block->weakness & item->flags & ITEM_FLAG_GOLD)
-					delay /= 12;
-				else if (block->weakness & item->flags & ITEM_FLAG_DIAMOND)
-					delay /= 8;
-				else if (block->weakness & item->flags & ITEM_FLAG_IRON)
-					delay /= 6;
-				else if (block->weakness & item->flags & ITEM_FLAG_STONE)
-					delay /= 4;
-				else if (block->weakness & item->flags & ITEM_FLAG_WOOD)
-					delay /= 2;
-			}
+			chunk_compress(chunk);
+			return offset;
 		}
 
 		client->digging_data.x = x;
@@ -195,13 +237,13 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 		block = block_find_or_create(*block_id);
 		if (block->on_mine == NULL)
 			;
-		else if (block->reap != ITEM_FLAG_NONE)
+		else if (block->harvest != ITEM_FLAG_NONE)
 		{
-			bedrock_assert((block->reap & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
+			bedrock_assert((block->harvest & ~(TOOL_NAME_MASK | TOOL_TYPE_MASK)) == 0, ;);
 
 			// Extract tool name from block requirement, if one exists, and see if the player has a tool of that type. if there is no tool requirement anything goes.
-			bool has_tool_requirement = block->reap & TOOL_NAME_MASK ? block->reap & item->flags & TOOL_NAME_MASK : true,
-					has_type_requirement = block->reap & TOOL_TYPE_MASK ? block->reap & item->flags & TOOL_TYPE_MASK : true;
+			bool has_tool_requirement = block->harvest & TOOL_NAME_MASK ? block->harvest & item->flags & TOOL_NAME_MASK : true,
+					has_type_requirement = block->harvest & TOOL_TYPE_MASK ? block->harvest & item->flags & TOOL_TYPE_MASK : true;
 
 			if (has_tool_requirement && has_type_requirement)
 				block->on_mine(client, block);
