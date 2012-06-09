@@ -2,10 +2,16 @@
 #include "blocks/blocks.h"
 
 struct bedrock_block bedrock_blocks[] = {
-	/* Stone. Only drops an item if mined with a pickaxe, but can be mined without one. Drops cobblestone unless mined with a pickaxe enchanted with Silk Touch 1 */
-	{BLOCK_STONE,   "Stone",   2.25, 7.5, ITEM_FLAG_PICKAXE, ITEM_FLAG_NONE, ITEM_FLAG_PICKAXE, NULL},
-	{BLOCK_GRASS,   "Grass",   0.9,  0.9, ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE, ITEM_FLAG_NONE, NULL},
-	{BLOCK_BEDROCK, "Bedrock", 0,    0,   ITEM_FLAG_NONE,    ITEM_FLAG_NONE, ITEM_FLAG_NONE, NULL}
+	/* Stone. Only drops an item if mined with a pickaxe, but can be mined without one. Drops cobblestone unless mined with a pickaxe. */
+	{BLOCK_STONE,       "Stone",       2.25, 7.5,  ITEM_FLAG_PICKAXE, ITEM_FLAG_NONE, ITEM_FLAG_PICKAXE, NULL},
+	{BLOCK_GRASS,       "Grass",       0.9,  0.9,  ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE, ITEM_FLAG_NONE,    NULL},
+	{BLOCK_DIRT,        "Dirt",        0.75, 0.75, ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE, ITEM_FLAG_NONE,    NULL},
+	// XXX - Some blocks having the weakness only helps if the weapon is a certain grade or more.
+	// This weakness field needs to support types. I need to have an easy mask for all types + of something.
+	// XXX It also appears requirement field is not needed, it isn't possible to have a block that can only be mined
+	// with a tool. Keep it around anyway ?
+	{BLOCK_COBBLESTONE, "Cobblestone", 3,    10,   ITEM_FLAG_PICKAXE, ITEM_FLAG_NONE, ITEM_FLAG_PICKAXE, NULL},
+	{BLOCK_BEDROCK,     "Bedrock",     0,    0,    ITEM_FLAG_NONE,    ITEM_FLAG_NONE, ITEM_FLAG_NONE,    NULL}
 };
 
 static int block_compare(const block_type *id, const struct bedrock_block *block)
