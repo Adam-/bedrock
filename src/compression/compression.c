@@ -181,6 +181,7 @@ compression_buffer *compression_compress(struct bedrock_memory_pool *pool, size_
 {
 	compression_buffer *buffer = compression_compress_init(pool, buffer_size);
 	compression_compress_deflate_finish(buffer, data, len);
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	return buffer;
 }
 
@@ -188,5 +189,6 @@ compression_buffer *compression_decompress(struct bedrock_memory_pool *pool, siz
 {
 	compression_buffer *buffer = compression_decompress_init(pool, buffer_size);
 	compression_decompress_inflate(buffer, data, len);
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	return buffer;
 }

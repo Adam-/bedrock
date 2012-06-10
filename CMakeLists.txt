@@ -21,6 +21,7 @@ set(BEDROCK_SOURCES
 ./src/packet/packet_set_slot.c
 ./src/packet/packet_position_and_look.c
 ./src/packet/packet_column.c
+./src/packet/packet_spawn_dropped_item.c
 ./src/packet/packet_handshake.c
 ./src/packet/packet_position.c
 ./src/packet/packet_time.c
@@ -61,7 +62,7 @@ set(BEDROCK_SOURCES
 ./src/command/command_players.c
 ./src/command/command_help.c
 ./src/command/command_fdlist.c
-./src/command/command_shutdown.c
+./src/command/command_shutdown.c        
 )
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
