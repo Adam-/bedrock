@@ -12,6 +12,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	uint16_t bitmask;
 	compression_buffer *buffer;
 	uint32_t i;
+	bedrock_node *node;
 
 	client_send_header(client, MAP_COLUMN);
 	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
@@ -90,6 +91,13 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		if (column->chunks[i])
 			chunk_compress(column->chunks[i]);
+
+	/* Send any items in this column */
+	LIST_FOREACH(&column->items, node)
+	{
+		struct bedrock_dropped_item *item = node->data;
+		packet_send_spawn_dropped_item(client, item);
+	}
 }
 
 void packet_send_column_empty(struct bedrock_client *client, struct bedrock_column *column)
@@ -97,6 +105,14 @@ void packet_send_column_empty(struct bedrock_client *client, struct bedrock_colu
 	uint8_t b;
 	uint16_t s;
 	uint32_t i;
+	bedrock_node *node;
+
+	/* Remove items in this column */
+	LIST_FOREACH(&column->items, node)
+	{
+		struct bedrock_dropped_item *item = node->data;
+		packet_send_destroy_entity_dropped_item(client, item);
+	}
 
 	client_send_header(client, MAP_COLUMN);
 	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X

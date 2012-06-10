@@ -17,6 +17,7 @@
 extern bool bedrock_running;
 extern time_t bedrock_start;
 extern struct timespec bedrock_time;
+extern uint32_t entity_id;
 
 typedef enum
 {

@@ -3,7 +3,6 @@
 
 static void simple_drop(struct bedrock_client *client, struct bedrock_block *block)
 {
-
 }
 
 struct bedrock_block bedrock_blocks[] = {
@@ -11,7 +10,7 @@ struct bedrock_block bedrock_blocks[] = {
 	{BLOCK_GRASS,       "Grass",       0.9,  0.9,  ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    simple_drop},
 	{BLOCK_DIRT,        "Dirt",        0.75, 0.75, ITEM_FLAG_SHOVEL,  ITEM_FLAG_NONE,    simple_drop},
 	{BLOCK_COBBLESTONE, "Cobblestone", 3,    10,   ITEM_FLAG_PICKAXE, ITEM_FLAG_PICKAXE, simple_drop},
-	{BLOCK_BEDROCK,     "Bedrock",     -1,    -1,    ITEM_FLAG_NONE,    ITEM_FLAG_NONE,    NULL}
+	{BLOCK_BEDROCK,     "Bedrock",     -1,    -1,  ITEM_FLAG_NONE,    ITEM_FLAG_NONE,    NULL}
 };
 
 static int block_compare(const block_type *id, const struct bedrock_block *block)

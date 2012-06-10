@@ -181,6 +181,22 @@ struct bedrock_item
 	enum bedrock_item_flags flags;
 };
 
+/* An item dropped on the map somewhere */
+struct bedrock_dropped_item
+{
+	/* Entity id */
+	uint32_t eid;
+	/* Column this item is in */
+	struct bedrock_column *column;
+	/* This item */
+	struct bedrock_item *item;
+	uint8_t count;
+	uint16_t data;
+	double x;
+	double y;
+	double z;
+};
+
 extern struct bedrock_item bedrock_items[];
 
 extern struct bedrock_item *item_find(item_type id);

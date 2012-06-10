@@ -18,6 +18,7 @@ enum
 	ENTITY_ANIMATION              = 0x12,
 	ENTITY_ACTION                 = 0x13,
 	SPAWN_NAMED_ENTITY            = 0x14,
+	SPAWN_DROPPED_ITEM            = 0x15,
 	DESTROY_ENTITY                = 0x1D,
 	ENTITY_RELATIVE_MOVE          = 0x1F,
 	ENTITY_LOOK_AND_RELATIVE_MOVE = 0x21,

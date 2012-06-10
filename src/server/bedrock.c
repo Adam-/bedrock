@@ -13,6 +13,8 @@
 bool bedrock_running = true;
 time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
+uint32_t entity_id = 0;
+
 static struct timespec last_tick;
 
 void bedrock_update_time()

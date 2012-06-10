@@ -72,7 +72,6 @@ struct bedrock_client
 
 extern bedrock_list client_list;
 extern int authenticated_client_count;
-extern uint32_t entity_id;
 extern struct bedrock_memory_pool client_pool;
 
 extern struct bedrock_client *client_create();

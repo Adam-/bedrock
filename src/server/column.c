@@ -65,6 +65,9 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_assert(column->players.count == 0, ;);
 
+	column->items.free = column_free_dropped_item;
+	bedrock_list_clear(&column->items);
+
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);
 
@@ -101,4 +104,25 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	bedrock_mutex_unlock(&region->column_mutex);
 
 	return column;
+}
+
+struct bedrock_dropped_item *column_create_dropped_item(struct bedrock_column *column, struct bedrock_item *item)
+{
+	struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+
+	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s in %d,%d", item->name, column->x, column->z);
+
+	di->eid = ++entity_id;
+	di->column = column;
+	di->item = item;
+	bedrock_list_add(&column->items, di);
+	return di;
+}
+
+void column_free_dropped_item(struct bedrock_dropped_item *item)
+{
+	bedrock_log(LEVEL_DEBUG, "column: Freeing dropped item %s at %f,%f,%f", item->item->name, item->x, item->y, item->z);
+
+	bedrock_list_del(&item->column->items, item);
+	bedrock_free(item);
 }
