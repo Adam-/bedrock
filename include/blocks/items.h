@@ -1,3 +1,6 @@
+#ifndef BEDROCK_BLOCKS_ITEMS_H
+#define BEDROCK_BLOCKS_ITEMS_H
+
 #include <stdint.h>
 
 typedef enum
@@ -158,14 +161,15 @@ enum bedrock_item_flags
 	ITEM_FLAG_PICKAXE      = 1 << 4,
 	ITEM_FLAG_AXE          = 1 << 5,
 	ITEM_FLAG_HOE          = 1 << 6,
-	ITEM_FLAG_WOOD         = 1 << 7,
-	ITEM_FLAG_STONE        = 1 << 8,
-	ITEM_FLAG_IRON         = 1 << 9,
-	ITEM_FLAG_DIAMOND      = 1 << 10,
-	ITEM_FLAG_GOLD         = 1 << 11,
+	ITEM_FLAG_SHEARS       = 1 << 7,
+	ITEM_FLAG_WOOD         = 1 << 8,
+	ITEM_FLAG_STONE        = 1 << 9,
+	ITEM_FLAG_IRON         = 1 << 10,
+	ITEM_FLAG_DIAMOND      = 1 << 11,
+	ITEM_FLAG_GOLD         = 1 << 12,
 
-	TOOL_NAME_MASK         = 0x7C,  // Sword, shovel, pickaxe, axe, hoe
-	TOOL_TYPE_MASK         = 0xF80, // Wood, stone, iron, gold, diamond
+	TOOL_NAME_MASK         = 0xFC,  // Sword, shovel, pickaxe, axe, hoe, shears
+	TOOL_TYPE_MASK         = 0x1F00, // Wood, stone, iron, gold, diamond
 
 	TOOL_TYPE_MASK_WOOD    = ITEM_FLAG_WOOD,
 	TOOL_TYPE_MASK_STONE   = ITEM_FLAG_STONE   | TOOL_TYPE_MASK_WOOD,
@@ -201,3 +205,5 @@ extern struct bedrock_item bedrock_items[];
 
 extern struct bedrock_item *item_find(item_type id);
 extern struct bedrock_item *item_find_or_create(item_type id);
+
+#endif // BEDROCK_BLOCKS_ITEMS_H

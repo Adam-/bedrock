@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "blocks/items.h"
 
 void packet_send_destroy_entity_player(struct bedrock_client *client, struct bedrock_client *c)
 {

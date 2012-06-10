@@ -65,7 +65,7 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_assert(column->players.count == 0, ;);
 
-	column->items.free = column_free_dropped_item;
+	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)

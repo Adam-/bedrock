@@ -6,7 +6,6 @@
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
-#include "blocks/items.h"
 #include "blocks/window.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_column.h"
