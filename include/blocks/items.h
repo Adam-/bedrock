@@ -5,6 +5,7 @@
 
 typedef enum
 {
+	ITEM_NONE,                   /* 0 */
 	ITEM_IRON_SHOVEL = 256,      /* 256 */
 	ITEM_IRON_PICKAXE,           /* 257 */
 	ITEM_IRON_AXE,               /* 258 */

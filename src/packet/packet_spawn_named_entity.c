@@ -19,7 +19,7 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 		item = item_find_or_create(*id);
 	}
 	else
-		item = item_find_or_create(0);
+		item = item_find_or_create(ITEM_NONE);
 
 	abs_x = *client_get_pos_x(c) * 32;
 	abs_y = *client_get_pos_y(c) * 32;

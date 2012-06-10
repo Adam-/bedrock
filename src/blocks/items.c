@@ -2,6 +2,7 @@
 #include "blocks/items.h"
 
 struct bedrock_item bedrock_items[] = {
+	{ITEM_NONE,               "",                   ITEM_FLAG_NONE},
 	{ITEM_IRON_SHOVEL,        "Iron shovel",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
 	{ITEM_IRON_PICKAXE,       "Iron pickaxe",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
 	{ITEM_IRON_AXE,           "Iron axe",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},

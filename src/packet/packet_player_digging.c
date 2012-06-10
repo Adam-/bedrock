@@ -34,8 +34,14 @@ static uint8_t *get_block_from_chunk(struct bedrock_chunk *chunk, int32_t x, uin
 static struct bedrock_item *get_weilded_item(struct bedrock_client *client)
 {
 	nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
-	uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id");
-	return item_find_or_create(*id);
+	if (tag != NULL)
+	{
+		uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id");
+		if (id != NULL)
+			return item_find_or_create(*id);
+	}
+
+	return item_find_or_create(ITEM_NONE);
 }
 
 static double modulus(double x, double y)

@@ -1,7 +1,7 @@
 /* Until I have a real config reader */
 
 #define BEDROCK_WORLD_NAME "world"
-#define BEDROCK_WORLD_BASE "/home/adam/world-original"
+#define BEDROCK_WORLD_BASE "/home/adam/ZusServ4"
 
 #define BEDROCK_DESCRIPTION "Adam's custom server"
 #define BEDROCK_MAX_USERS 8
