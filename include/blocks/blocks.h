@@ -16,7 +16,7 @@ typedef enum
 	BLOCK_WATER,                 /* 8 */
 	BLOCK_STATIONARY_WATER,      /* 9 */
 	BLOCK_LAVA,                  /* 10 */
-	BLOCK_STSATIONARY_LAVA,      /* 11 */
+	BLOCK_STATIONARY_LAVA,      /* 11 */
 	BLOCK_SAND,                  /* 12 */
 	BLOCK_GRAVEL,                /* 13 */
 	BLOCK_GOLD_ORE,              /* 14 */
@@ -97,7 +97,7 @@ typedef enum
 	BLOCK_GLOWSTONE_BLOCK,       /* 89 */
 	BLOCK_PORTAL,                /* 90 */
 	BLOCK_JACK_O_LANTERN,        /* 91 */
-	BLOCK_CAKE_BLOCK,            /* 92 */
+	BLOCK_CAKE,                  /* 92 */
 	BLOCK_REDSTONE_REPEATER_OFF, /* 93 */
 	BLOCK_REDSTONE_REPEATER_ON,  /* 94 */
 	BLOCK_LOCKED_CHEST,          /* 95 */
