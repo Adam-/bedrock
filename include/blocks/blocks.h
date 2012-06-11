@@ -17,7 +17,7 @@ typedef enum
 	BLOCK_WATER,                 /* 8 */
 	BLOCK_STATIONARY_WATER,      /* 9 */
 	BLOCK_LAVA,                  /* 10 */
-	BLOCK_STATIONARY_LAVA,      /* 11 */
+	BLOCK_STATIONARY_LAVA,       /* 11 */
 	BLOCK_SAND,                  /* 12 */
 	BLOCK_GRAVEL,                /* 13 */
 	BLOCK_GOLD_ORE,              /* 14 */

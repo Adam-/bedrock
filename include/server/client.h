@@ -45,6 +45,7 @@ struct bedrock_client
 
 	nbt_tag *data;                        /* player's .dat file */
 	struct bedrock_world *world;          /* world this player is in */
+	struct bedrock_column *column;        /* column this player is in */
 
 	bedrock_list columns;                 /* columns this player knows about */
 	bedrock_list players;                 /* players this player knows about */

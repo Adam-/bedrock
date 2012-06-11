@@ -8,6 +8,7 @@
 #include "nbt/nbt.h"
 #include "blocks/window.h"
 #include "packet/packet_chat_message.h"
+#include "packet/packet_collect_item.h"
 #include "packet/packet_column.h"
 #include "packet/packet_column_allocation.h"
 #include "packet/packet_destroy_entity.h"
@@ -457,7 +458,7 @@ void client_update_chunks(struct bedrock_client *client)
 	region = find_region_which_contains(client->world, x, z);
 	bedrock_assert(region != NULL, return);
 
-	c = find_column_which_contains(region, x, z);
+	client->column = c = find_column_which_contains(region, x, z);
 
 	if (c != NULL)
 		if (bedrock_list_has_data(&client->columns, c) == false)
@@ -620,7 +621,7 @@ void client_update_players(struct bedrock_client *client)
 	}
 }
 
-/* Called after a player moves, to inform other players about it */
+/* Called to update a players position */
 void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground)
 {
 	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
@@ -631,16 +632,16 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	double old_column_x = old_x / BEDROCK_BLOCKS_PER_CHUNK, old_column_z = old_z / BEDROCK_BLOCKS_PER_CHUNK,
 			new_column_x = x / BEDROCK_BLOCKS_PER_CHUNK, new_column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 
-	old_column_x = (int) (old_column_x >= 0 ? ceil(old_column_x) : floor(old_column_x));
-	old_column_z = (int) (old_column_z >= 0 ? ceil(old_column_z) : floor(old_column_z));
-	new_column_x = (int) (new_column_x >= 0 ? ceil(new_column_x) : floor(new_column_x));
-	new_column_z = (int) (new_column_z >= 0 ? ceil(new_column_z) : floor(new_column_z));
-
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
 	bool update_loc, update_rot, update_chunk;
 
-	bedrock_node *node;
+	bedrock_node *node, *node2;
+
+	old_column_x = (int) (old_column_x >= 0 ? ceil(old_column_x) : floor(old_column_x));
+	old_column_z = (int) (old_column_z >= 0 ? ceil(old_column_z) : floor(old_column_z));
+	new_column_x = (int) (new_column_x >= 0 ? ceil(new_column_x) : floor(new_column_x));
+	new_column_z = (int) (new_column_z >= 0 ? ceil(new_column_z) : floor(new_column_z));
 
 	if (old_x == x && old_y == y && old_z == z && old_yaw == yaw && old_pitch == pitch && old_stance == stance && old_on_ground == on_ground)
 		return;
@@ -687,6 +688,23 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	if (update_chunk)
 		client_update_chunks(client);
+
+	/* Check if this player should pick up any dropped items near them */
+	LIST_FOREACH_SAFE(&client->column->items, node, node2)
+	{
+		struct bedrock_dropped_item *di = node->data;
+
+		if ((int) x == (int) di->x && (int) y == (int) di->y && (int) z == (int) di->z)
+		{
+			bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
+
+			packet_send_collect_item(client, di);
+
+			// XXX INVENTORY
+
+			column_free_dropped_item(di);
+		}
+	}
 }
 
 /* Starts the login sequence. This is split up in to two parts because client_update_chunks

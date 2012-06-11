@@ -1,7 +1,10 @@
 #include "server/column.h"
+#include "server/client.h"
 #include "nbt/nbt.h"
 #include "util/memory.h"
 #include "compression/compression.h"
+#include "packet/packet_spawn_dropped_item.h"
+#include "packet/packet_destroy_entity.h"
 
 #include <math.h>
 
@@ -129,7 +132,17 @@ void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item 
 
 void column_free_dropped_item(struct bedrock_dropped_item *item)
 {
+	bedrock_node *node;
+
 	bedrock_log(LEVEL_DEBUG, "column: Freeing dropped item %s at %f,%f,%f", item->item->name, item->x, item->y, item->z);
+
+	/* Delete this item from nearby players */
+	LIST_FOREACH(&item->column->players, node)
+	{
+		struct bedrock_client *client = node->data;
+
+		packet_send_destroy_entity_dropped_item(client, item);
+	}
 
 	bedrock_list_del(&item->column->items, item);
 	bedrock_free(item);
