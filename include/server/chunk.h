@@ -1,3 +1,6 @@
+#ifndef BEDROCK_SERVER_CHUNK_H
+#define BEDROCK_SERVER_CHUNK_H
+
 #include "server/bedrock.h"
 #include "util/buffer.h"
 
@@ -27,3 +30,5 @@ extern void chunk_free(struct bedrock_chunk *chunk);
 extern void chunk_decompress(struct bedrock_chunk *chunk);
 extern void chunk_compress(struct bedrock_chunk *chunk);
 extern struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int32_t x, uint8_t y, int32_t z);
+
+#endif // BEDROCK_SERVER_CHUNK_H

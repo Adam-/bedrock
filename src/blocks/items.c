@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "blocks/items.h"
+#include "blocks/blocks.h"
 
 struct bedrock_item bedrock_items[] = {
 	{ITEM_NONE,               "",                   ITEM_FLAG_NONE},
@@ -67,7 +68,24 @@ typedef int (*compare_func)(const void *, const void *);
 
 struct bedrock_item *item_find(item_type id)
 {
-	return bsearch(&id, bedrock_items, sizeof(bedrock_items) / sizeof(struct bedrock_item), sizeof(struct bedrock_item), (compare_func) item_compare);
+	static struct bedrock_item i;
+	struct bedrock_item *item = bsearch(&id, bedrock_items, sizeof(bedrock_items) / sizeof(struct bedrock_item), sizeof(struct bedrock_item), (compare_func) item_compare);
+
+	if (item == NULL)
+	{
+		struct bedrock_block *block = block_find(id);
+
+		if (block != NULL)
+		{
+			i.id = id;
+			i.name = block->name;
+			i.flags = ITEM_FLAG_BLOCK;
+
+			item = &i;
+		}
+	}
+
+	return item;
 }
 
 struct bedrock_item *item_find_or_create(item_type id)

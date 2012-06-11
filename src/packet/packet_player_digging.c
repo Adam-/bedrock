@@ -228,6 +228,7 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 			return offset;
 		}
 
+		block = block_find_or_create(*block_id);
 		*block_id = BLOCK_AIR;
 		chunk->modified = true;
 
@@ -239,9 +240,8 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 			packet_send_block_change(c, x, y, z, BLOCK_AIR, 0);
 		}
 
-		block = block_find_or_create(*block_id);
 		if (block->on_harvest != NULL && can_harvest(block, item))
-			block->on_harvest(client, block);
+			block->on_harvest(client, chunk, x, y, z, block);
 
 		// If the chunk is all air delete it;
 		for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)

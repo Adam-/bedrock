@@ -1,8 +1,18 @@
 #include "server/bedrock.h"
 #include "blocks/blocks.h"
+#include "server/column.h"
 
-static void simple_drop(struct bedrock_client *client, struct bedrock_block *block)
+static void simple_drop(struct bedrock_client *client, struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z, struct bedrock_block *block)
 {
+	struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+	di->item = item_find_or_create(block->id);
+	di->count = 1;
+	di->data = 0;
+	di->x = x;
+	di->y = y;
+	di->z = z;
+
+	column_add_item(chunk->column, di);
 }
 
 struct bedrock_block bedrock_blocks[] = {

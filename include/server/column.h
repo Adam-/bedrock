@@ -25,6 +25,22 @@ struct bedrock_column
 	bedrock_list items;
 };
 
+/* An item dropped on the map somewhere */
+struct bedrock_dropped_item
+{
+	/* Entity id */
+	uint32_t eid;
+	/* Column this item is in */
+	struct bedrock_column *column;
+	/* This item */
+	struct bedrock_item *item;
+	uint8_t count;
+	uint16_t data;
+	double x;
+	double y;
+	double z;
+};
+
 extern struct bedrock_memory_pool column_pool;
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
@@ -32,6 +48,6 @@ extern void column_free(struct bedrock_column *column);
 /* Finds the column which contains the point x and z */
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
 
-/* Allocate a dropped item and place it in this column */
-extern struct bedrock_dropped_item *column_create_dropped_item(struct bedrock_column *column, struct bedrock_item *item);
+/* Place a dropped item in the column */
+extern void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di);
 extern void column_free_dropped_item(struct bedrock_dropped_item *column);

@@ -106,17 +106,25 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	return column;
 }
 
-struct bedrock_dropped_item *column_create_dropped_item(struct bedrock_column *column, struct bedrock_item *item)
+void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)
 {
-	struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+	bedrock_node *node;
 
-	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s in %d,%d", item->name, column->x, column->z);
+	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s in at %f,%f,%f", di->item->name, di->x, di->y, di->z);
 
+	bedrock_assert(di->eid == 0, ;);
 	di->eid = ++entity_id;
 	di->column = column;
-	di->item = item;
+
 	bedrock_list_add(&column->items, di);
-	return di;
+
+	/* Send out this item to nearby players */
+	LIST_FOREACH(&column->players, node)
+	{
+		struct bedrock_client *client = node->data;
+
+		packet_send_spawn_dropped_item(client, di);
+	}
 }
 
 void column_free_dropped_item(struct bedrock_dropped_item *item)

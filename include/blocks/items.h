@@ -155,22 +155,26 @@ typedef enum
 enum bedrock_item_flags
 {
 	ITEM_FLAG_NONE,
+	/* Is damagable (pickaxe, axe, most tools) */
 	ITEM_FLAG_DAMAGABLE    = 1 << 0,
 	ITEM_FLAG_ENCHANTABLE  = 1 << 1,
-	ITEM_FLAG_SWORD        = 1 << 2,
-	ITEM_FLAG_SHOVEL       = 1 << 3,
-	ITEM_FLAG_PICKAXE      = 1 << 4,
-	ITEM_FLAG_AXE          = 1 << 5,
-	ITEM_FLAG_HOE          = 1 << 6,
-	ITEM_FLAG_SHEARS       = 1 << 7,
-	ITEM_FLAG_WOOD         = 1 << 8,
-	ITEM_FLAG_STONE        = 1 << 9,
-	ITEM_FLAG_IRON         = 1 << 10,
-	ITEM_FLAG_DIAMOND      = 1 << 11,
-	ITEM_FLAG_GOLD         = 1 << 12,
+	/* Set if this item is a block. Eg, it is placeable on the map. */
+	ITEM_FLAG_BLOCK        = 1 << 2,
 
-	TOOL_NAME_MASK         = 0xFC,  // Sword, shovel, pickaxe, axe, hoe, shears
-	TOOL_TYPE_MASK         = 0x1F00, // Wood, stone, iron, gold, diamond
+	ITEM_FLAG_SWORD        = 1 << 3,
+	ITEM_FLAG_SHOVEL       = 1 << 4,
+	ITEM_FLAG_PICKAXE      = 1 << 5,
+	ITEM_FLAG_AXE          = 1 << 6,
+	ITEM_FLAG_HOE          = 1 << 7,
+	ITEM_FLAG_SHEARS       = 1 << 8,
+	ITEM_FLAG_WOOD         = 1 << 9,
+	ITEM_FLAG_STONE        = 1 << 10,
+	ITEM_FLAG_IRON         = 1 << 11,
+	ITEM_FLAG_DIAMOND      = 1 << 12,
+	ITEM_FLAG_GOLD         = 1 << 13,
+
+	TOOL_NAME_MASK         = ITEM_FLAG_SWORD | ITEM_FLAG_SHOVEL | ITEM_FLAG_PICKAXE | ITEM_FLAG_AXE     | ITEM_FLAG_HOE | ITEM_FLAG_SHEARS,
+	TOOL_TYPE_MASK         = ITEM_FLAG_WOOD  | ITEM_FLAG_STONE  | ITEM_FLAG_IRON    | ITEM_FLAG_DIAMOND | ITEM_FLAG_GOLD,
 
 	TOOL_TYPE_MASK_WOOD    = ITEM_FLAG_WOOD,
 	TOOL_TYPE_MASK_STONE   = ITEM_FLAG_STONE   | TOOL_TYPE_MASK_WOOD,
@@ -184,22 +188,6 @@ struct bedrock_item
 	uint16_t id;
 	const char *name;
 	enum bedrock_item_flags flags;
-};
-
-/* An item dropped on the map somewhere */
-struct bedrock_dropped_item
-{
-	/* Entity id */
-	uint32_t eid;
-	/* Column this item is in */
-	struct bedrock_column *column;
-	/* This item */
-	struct bedrock_item *item;
-	uint8_t count;
-	uint16_t data;
-	double x;
-	double y;
-	double z;
 };
 
 extern struct bedrock_item bedrock_items[];
