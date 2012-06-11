@@ -6,7 +6,6 @@
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
-#include "blocks/window.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
 #include "packet/packet_column.h"
@@ -442,6 +441,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	bedrock_node *node;
 	int i = -1;
 	nbt_tag *c, *item_tag;
+	uint8_t pos;
 
 	LIST_FOREACH(list, node)
 	{
@@ -456,10 +456,11 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		{
 			++(*count);
 
-			uint8_t slot2 = *slot;
-			if (slot2 >= 0 && slot2 <= 8)
-				slot2 += 36; // XXX
-			packet_send_set_slot(client, WINDOW_INVENTORY, slot2, item, *count, 0);
+			pos = *slot;
+			if (pos >= 0 && pos <= 8)
+				pos += 36;
+			packet_send_set_slot(client, WINDOW_INVENTORY, pos, item, *count, 0);
+
 			return;
 		}
 		else if (i != *slot)
@@ -468,6 +469,11 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 
 	if (i == 36) // Number of inventory slots
 		return;
+
+	pos = i;
+	if (pos >= 0 && pos <= 8)
+		pos += 36;
+	packet_send_set_slot(client, WINDOW_INVENTORY, pos, item, 1, 0);
 
 	item_tag = bedrock_malloc(sizeof(nbt_tag));
 	item_tag->owner = nbt_get(client->data, TAG_LIST, 1, "Inventory");
@@ -490,7 +496,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		if (*slot > i)
 		{
 			// Insert before c
-			bedrock_list_add_node_before(list, bedrock_malloc_pool(list->pool, sizeof(bedrock_node)), c, item_tag);
+			bedrock_list_add_node_before(list, bedrock_malloc_pool(list->pool, sizeof(bedrock_node)), node, item_tag);
 			return;
 		}
 	}

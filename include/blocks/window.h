@@ -1,5 +1,0 @@
-
-enum
-{
-	WINDOW_INVENTORY
-};

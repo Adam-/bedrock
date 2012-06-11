@@ -352,8 +352,11 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 	c = bedrock_malloc(sizeof(nbt_tag));
 	c->name = bedrock_strdup(name);
 	c->owner = tag;
+	c->type = type;
 
 	memcpy(&c->payload, src, src_size);
+
+	bedrock_list_add(&tag->payload.tag_list, c);
 
 	return c;
 }
