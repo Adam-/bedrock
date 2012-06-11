@@ -61,7 +61,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			struct nbt_tag_byte_array *tba = &tag->payload.tag_byte_array;
 
 			CHECK_RETURN(read_bytes(&tba->length, sizeof(tba->length), data, size, true), error);
-			tba->data = bedrock_malloc_pool(tag->pool, tba->length);
+			tba->data = bedrock_malloc(tba->length);
 			CHECK_RETURN(read_bytes(tba->data, tba->length, data, size, false), error);
 			break;
 		}
@@ -71,7 +71,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 
 			CHECK_RETURN(read_bytes(&str_len, sizeof(str_len), data, size, true), error);
 
-			tag->payload.tag_string = bedrock_malloc_pool(tag->pool, str_len + 1);
+			tag->payload.tag_string = bedrock_malloc(str_len + 1);
 			CHECK_RETURN(read_bytes(tag->payload.tag_string, str_len, data, size, false), error);
 			tag->payload.tag_string[str_len] = 0;
 
@@ -89,9 +89,8 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 
 			for (i = 0; i < tag_length; ++i)
 			{
-				nbt_tag *nested_tag = bedrock_malloc_pool(tag->pool, sizeof(nbt_tag));
+				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
 
-				nested_tag->pool = tag->pool;
 				nested_tag->type = tag_type;
 				nested_tag->owner = tag;
 				nested_tag = read_unnamed_tag(nested_tag, data, size);
@@ -105,9 +104,8 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 		{
 			while (true)
 			{
-				nbt_tag *nested_tag = bedrock_malloc_pool(tag->pool, sizeof(nbt_tag));
+				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
 
-				nested_tag->pool = tag->pool;
 				nested_tag->owner = tag;
 				nested_tag = read_named_tag(nested_tag, data, size);
 
@@ -127,7 +125,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			int32_t i;
 
 			CHECK_RETURN(read_bytes(&tia->length, sizeof(tia->length), data, size, true), error);
-			tia->data = bedrock_malloc_pool(tag->pool, sizeof(int32_t) * tia->length);
+			tia->data = bedrock_malloc(sizeof(int32_t) * tia->length);
 			CHECK_RETURN(read_bytes(tia->data, sizeof(int32_t) * tia->length, data, size, false), error);
 
 			for (i = 0; i < tia->length; ++i)
@@ -162,7 +160,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 
 	CHECK_RETURN(read_bytes(&name_length, sizeof(name_length), data, size, true), error);
 
-	tag->name = bedrock_malloc_pool(tag->pool, name_length + 1);
+	tag->name = bedrock_malloc(name_length + 1);
 	CHECK_RETURN(read_bytes(tag->name, name_length, data, size, false), error);
 	tag->name[name_length] = 0;
 
@@ -176,10 +174,9 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	return NULL;
 }
 
-nbt_tag *nbt_parse(struct bedrock_memory_pool *pool, const unsigned char *data, size_t size)
+nbt_tag *nbt_parse(const unsigned char *data, size_t size)
 {
-	nbt_tag *tag = bedrock_malloc_pool(pool, sizeof(nbt_tag));
-	tag->pool = pool;
+	nbt_tag *tag = bedrock_malloc(sizeof(nbt_tag));
 	return read_named_tag(tag, &data, &size);
 }
 
@@ -194,15 +191,15 @@ void nbt_free(nbt_tag *tag)
 		bedrock_list_del(&tag->owner->payload.tag_list, tag);
 	}
 
-	bedrock_free_pool(tag->pool, tag->name);
+	bedrock_free(tag->name);
 
 	switch (tag->type)
 	{
 		case TAG_BYTE_ARRAY:
-			bedrock_free_pool(tag->pool, tag->payload.tag_byte_array.data);
+			bedrock_free(tag->payload.tag_byte_array.data);
 			break;
 		case TAG_STRING:
-			bedrock_free_pool(tag->pool, tag->payload.tag_string);
+			bedrock_free(tag->payload.tag_string);
 			break;
 		case TAG_LIST:
 			tag->payload.tag_list.free = (bedrock_free_func) nbt_free;
@@ -213,13 +210,13 @@ void nbt_free(nbt_tag *tag)
 			bedrock_list_clear(&tag->payload.tag_compound);
 			break;
 		case TAG_INT_ARRAY:
-			bedrock_free_pool(tag->pool, tag->payload.tag_int_array.data);
+			bedrock_free(tag->payload.tag_int_array.data);
 			break;
 		default:
 			break;
 	}
 
-	bedrock_free_pool(tag->pool, tag);
+	bedrock_free(tag);
 }
 
 static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
@@ -344,6 +341,21 @@ void nbt_set(nbt_tag *tag, nbt_tag_type type, const void *src, size_t src_size, 
 	bedrock_assert(tag != NULL && tag->type == type, return);
 
 	memcpy(&tag->payload, src, src_size);
+}
+
+nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *src, size_t src_size)
+{
+	nbt_tag *c;
+
+	bedrock_assert(tag != NULL && (tag->type == TAG_LIST || tag->type == TAG_COMPOUND), return NULL);
+
+	c = bedrock_malloc(sizeof(nbt_tag));
+	c->name = bedrock_strdup(name);
+	c->owner = tag;
+
+	memcpy(&c->payload, src, src_size);
+
+	return c;
 }
 
 static void recursive_dump_tag(nbt_tag *t, int level)

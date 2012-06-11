@@ -110,7 +110,7 @@ bool client_load(struct bedrock_client *client)
 		return false;
 	}
 
-	tag = nbt_parse(&client_pool, cb->buffer->data, cb->buffer->length);
+	tag = nbt_parse(cb->buffer->data, cb->buffer->length);
 	compression_decompress_end(cb);
 	if (tag == NULL)
 	{
@@ -413,6 +413,92 @@ nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot)
 	return NULL;
 }
 
+bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
+{
+	bedrock_node *node;
+	int i = -1;
+
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	{
+		nbt_tag *c = node->data;
+		uint16_t *id = nbt_read(c, TAG_SHORT, 1, "id");
+		uint8_t *count = nbt_read(c, TAG_BYTE, 1, "Count");
+		uint8_t *slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+
+		if (*id == item->id && *count < BEDROCK_MAX_ITEMS_PER_STACK)
+			return true;
+		else if (++i != *slot)
+			return true;
+	}
+
+	if (i == 36) // Number of inventory slots
+		return false;
+	return true;
+}
+
+void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
+{
+	bedrock_list *list = &nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list;
+	bedrock_node *node;
+	int i = -1;
+	nbt_tag *c, *item_tag;
+
+	LIST_FOREACH(list, node)
+	{
+		c = node->data;
+		uint16_t *id = nbt_read(c, TAG_SHORT, 1, "id");
+		uint8_t *count = nbt_read(c, TAG_BYTE, 1, "Count");
+		uint8_t *slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+
+		++i;
+
+		if (*id == item->id && *count < BEDROCK_MAX_ITEMS_PER_STACK)
+		{
+			++(*count);
+
+			uint8_t slot2 = *slot;
+			if (slot2 >= 0 && slot2 <= 8)
+				slot2 += 36; // XXX
+			packet_send_set_slot(client, WINDOW_INVENTORY, slot2, item, *count, 0);
+			return;
+		}
+		else if (i != *slot)
+			break;
+	}
+
+	if (i == 36) // Number of inventory slots
+		return;
+
+	item_tag = bedrock_malloc(sizeof(nbt_tag));
+	item_tag->owner = nbt_get(client->data, TAG_LIST, 1, "Inventory");
+	item_tag->type = TAG_COMPOUND;
+
+	nbt_add(item_tag, TAG_SHORT, "id", &item->id, sizeof(item->id));
+	uint16_t d = 0; // XXX
+	nbt_add(item_tag, TAG_SHORT, "Damage", &d, sizeof(d));
+	uint8_t b = 1;
+	nbt_add(item_tag, TAG_BYTE, "Count", &b, sizeof(b));
+	b = i;
+	nbt_add(item_tag, TAG_BYTE, "Slot", &b, sizeof(b));
+
+	// Insert slot i
+	LIST_FOREACH(list, node)
+	{
+		c = node->data;
+		uint8_t *slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+
+		if (*slot > i)
+		{
+			// Insert before c
+			bedrock_list_add_node_before(list, bedrock_malloc_pool(list->pool, sizeof(bedrock_node)), c, item_tag);
+			return;
+		}
+	}
+
+	// Insert at the end
+	bedrock_list_add(list, item_tag);
+}
+
 void client_update_chunks(struct bedrock_client *client)
 {
 	/* Update the chunks around the player. Used for when the player moves to a new chunk.
@@ -694,13 +780,13 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	{
 		struct bedrock_dropped_item *di = node->data;
 
-		if ((int) x == (int) di->x && (int) y == (int) di->y && (int) z == (int) di->z)
+		if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
 		{
 			bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
 
 			packet_send_collect_item(client, di);
 
-			// XXX INVENTORY
+			client_add_inventory_item(client, di->item);
 
 			column_free_dropped_item(di);
 		}

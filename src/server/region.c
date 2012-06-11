@@ -102,7 +102,7 @@ static void region_load(struct bedrock_region *region)
 			continue;
 		}
 
-		tag = nbt_parse(&column_pool, cb->buffer->data, cb->buffer->length);
+		tag = nbt_parse(cb->buffer->data, cb->buffer->length);
 		compression_decompress_reset(cb);
 		if (tag == NULL)
 		{

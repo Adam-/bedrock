@@ -34,6 +34,9 @@
 /* The maximum string length allowed, including the trailing \0 */
 #define BEDROCK_MAX_STRING_LENGTH 120
 
+/* The maximum number of items per stack */
+#define BEDROCK_MAX_ITEMS_PER_STACK 64
+
 /* Number of blocks on one side of a chunk. Cube to get the number of blocks actually in a chunk */
 #define BEDROCK_BLOCKS_PER_CHUNK   16
 /* The number of chunks per column */

@@ -7,6 +7,7 @@
 #include "util/memory.h"
 #include "server/config.h"
 #include "server/world.h"
+#include "blocks/items.h"
 
 typedef enum
 {
@@ -99,7 +100,10 @@ extern double *client_get_pos_z(struct bedrock_client *client);
 extern float *client_get_yaw(struct bedrock_client *client);
 extern float *client_get_pitch(struct bedrock_client *client);
 extern uint8_t *client_get_on_ground(struct bedrock_client *client);
+
 extern nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot);
+extern bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
+extern void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
 
 extern void client_update_chunks(struct bedrock_client *client);
 extern void client_update_players(struct bedrock_client *client);
