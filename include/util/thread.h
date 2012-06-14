@@ -14,7 +14,7 @@ typedef struct
 {
 	pthread_t handle;
 	sem_t exit;
-	bedrock_pipe *notify_pipe;
+	bedrock_pipe notify_pipe;
 	bedrock_thread_entry entry;
 	bedrock_thread_exit at_exit;
 	void *data;

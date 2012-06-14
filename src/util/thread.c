@@ -21,7 +21,7 @@ static void do_join_thread(void *data)
 		thread->at_exit(thread->data);
 
 	sem_destroy(&thread->exit);
-	bedrock_pipe_close(thread->notify_pipe);
+	bedrock_pipe_close(&thread->notify_pipe);
 	bedrock_free(thread);
 
 	bedrock_list_del(&thread_list, data);
@@ -47,7 +47,7 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 		return;
 	}
 
-	thread->notify_pipe = bedrock_pipe_open("thread exit pipe", do_join_thread, thread);
+	bedrock_pipe_open(&thread->notify_pipe, "thread exit pipe", do_join_thread, thread);
 	thread->entry = entry;
 	thread->at_exit = at_exit;
 	thread->data = data;
@@ -75,7 +75,7 @@ bool bedrock_thread_want_exit(bedrock_thread *thread)
 void bedrock_thread_set_exit(bedrock_thread *thread)
 {
 	bedrock_assert(sem_post(&thread->exit) == 0, ;);
-	bedrock_pipe_notify(thread->notify_pipe);
+	bedrock_pipe_notify(&thread->notify_pipe);
 }
 
 void bedrock_thread_exit_all()
