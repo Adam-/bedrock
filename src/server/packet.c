@@ -24,23 +24,38 @@ static struct c2s_packet_handler
 	uint8_t len;
 	uint8_t permission;
 	uint8_t flags;
-	int (*handler)(struct bedrock_client *, const unsigned char *buffer, size_t len);
+	int (*handler)(struct bedrock_client *, const bedrock_packet *);
 } packet_handlers[] = {
-	{KEEP_ALIVE,       5,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_keep_alive},
-	{LOGIN_REQUEST,   20,  STATE_HANDSHAKING,                      SOFT_SIZE, packet_login_request},
-	{HANDSHAKE,        3,  STATE_UNAUTHENTICATED,                  SOFT_SIZE, packet_handshake},
-	{CHAT_MESSAGE,     3,  STATE_AUTHENTICATED,                    SOFT_SIZE, packet_chat_message},
-	{PLAYER,           2,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_player},
-	{PLAYER_POS,      34,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_position},
-	{PLAYER_LOOK,     10,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_player_look},
-	{PLAYER_POS_LOOK, 42,  STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE, packet_position_and_look},
-	{PLAYER_DIGGING,  12,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_player_digging},
-	{HELD_ITEM_CHANGE, 3,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_held_item_change},
-	{ENTITY_ANIMATION, 6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_animation},
-	{ENTITY_ACTION,    6,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_entity_action},
-	{CLOSE_WINDOW,     2,  STATE_AUTHENTICATED,                    HARD_SIZE, packet_close_window},
-	{LIST_PING,        1,  STATE_UNAUTHENTICATED,                  HARD_SIZE, packet_list_ping},
-	{DISCONNECT,       3,  STATE_ANY,                              SOFT_SIZE, packet_disconnect},
+	{KEEP_ALIVE,             5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
+	{LOGIN_REQUEST,         20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
+	{HANDSHAKE,              3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
+	{CHAT_MESSAGE,           3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
+	{TIME,                   9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_EQUIPMENT,      11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{SPAWN_POINT,           13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{PLAYER,                 2, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_player},
+	{PLAYER_POS,            34, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position},
+	{PLAYER_LOOK,           10, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_look},
+	{PLAYER_POS_LOOK,       42, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position_and_look},
+	{PLAYER_DIGGING,        12, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_digging},
+	{HELD_ITEM_CHANGE,       3, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_held_item_change},
+	{ENTITY_ANIMATION,       6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_animation},
+	{ENTITY_ACTION,          6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_action},
+	{SPAWN_NAMED_ENTITY,    23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{SPAWN_DROPPED_ITEM,    25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{COLLECT_ITEM,           9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{DESTROY_ENTITY,         5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_TELEPORT,       19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_HEAD_LOOK,       6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_METADATA,        5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{MAP_COLUMN_ALLOCATION, 10, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{MAP_COLUMN,            22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{BLOCK_CHANGE,          12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{CLOSE_WINDOW,           2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
+	{SET_SLOT,               4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},               
+	{PLAYER_LIST,            6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{LIST_PING,              1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
+	{DISCONNECT,             3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
 static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *handler)
@@ -54,15 +69,37 @@ static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *ha
 
 typedef int (*compare_func)(const void *, const void *);
 
+static struct c2s_packet_handler *packet_find(uint8_t id)
+{
+	return bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), (compare_func) packet_compare);
+}
+
+void packet_init(bedrock_packet *packet, uint8_t id)
+{
+	struct c2s_packet_handler *handler = packet_find(id);
+	
+	bedrock_assert(packet != NULL && handler != NULL, return);
+
+	packet->pool = NULL;
+	packet->data = bedrock_malloc(handler->len);
+	packet->length = 0;
+	packet->capacity = handler->len;
+}
+
+void packet_free(bedrock_packet *packet)
+{
+	bedrock_free(packet->data);
+}
+
 /** Parse a packet. Returns -1 if the packet is invalid or unexpected, 0 if there is not
  * enough data yet, or the amount of data read from buffer.
  */
-int packet_parse(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
 {
-	uint8_t id = *buffer;
+	uint8_t id = *packet->data;
 	int i;
 
-	struct c2s_packet_handler *handler = bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), (compare_func) packet_compare);
+	struct c2s_packet_handler *handler = packet_find(id);
 	if (handler == NULL)
 	{
 		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s", id, client_get_ip(client));
@@ -70,7 +107,14 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 		return -1;
 	}
 
-	if (len < handler->len)
+	if (handler->flags & SERVER_ONLY)
+	{
+		bedrock_log(LEVEL_WARN, "packet: Unexpected server only packet 0x%02x from client %s - dropping client", id, client_get_ip(client));
+		client_exit(client);
+		return -1;
+	}
+
+	if (packet->length < handler->len)
 		return 0;
 
 	if ((handler->permission & client->authenticated) == 0)
@@ -82,7 +126,7 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 
 	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Got packet 0x%02x from %s (%s)", id, *client->name ? client->name : "(unknown)", client_get_ip(client));
 
-	i = handler->handler(client, buffer, len);
+	i = handler->handler(client, packet);
 
 	if (i <= 0)
 	{
@@ -123,35 +167,35 @@ int packet_parse(struct bedrock_client *client, const unsigned char *buffer, siz
 	return i;
 }
 
-void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size)
+void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)
 {
 	if (*offset <= ERROR_UNKNOWN)
 		return;
-	else if (*offset + dest_size > buffer_size)
+	else if (*offset + dest_size > packet->length)
 	{
 		*offset = ERROR_EAGAIN;
 		return;
 	}
 
-	memcpy(dest, buffer + *offset, dest_size);
+	memcpy(dest, packet->data + *offset, dest_size);
 	convert_endianness(dest, dest_size);
 	*offset += dest_size;
 }
 
-void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t *offset, char *dest, size_t dest_size)
+void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size)
 {
 	uint16_t length, i, j;
 
 	bedrock_assert(dest != NULL && dest_size > 0, goto error);
 
-	packet_read_int(buffer, buffer_size, offset, &length, sizeof(length));
+	packet_read_int(packet, offset, &length, sizeof(length));
 
 	*dest = 0;
 
 	if (*offset <= ERROR_UNKNOWN)
 		return;
 	/* Remember, this length is length in CHARACTERS */
-	else if (*offset + (length * 2) > buffer_size)
+	else if (*offset + (length * 2) > packet->length)
 	{
 		*offset = ERROR_EAGAIN;
 		return;
@@ -171,7 +215,7 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
 	bedrock_assert(length < dest_size, goto error);
 
 	for (i = 0, j = 1; i < length; ++i, j += 2)
-		dest[i] = *(buffer + *offset + j);
+		dest[i] = *(packet->data + *offset + j);
 	dest[length] = 0;
 
 	*offset += length * 2;
@@ -180,3 +224,47 @@ void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t 
  error:
 	*offset = ERROR_UNKNOWN;
 }
+
+void packet_pack_header(bedrock_packet *packet, uint8_t header)
+{
+	packet_pack_int(packet, &header, sizeof(header));
+}
+
+void packet_pack(bedrock_packet *packet, const void *data, size_t size)
+{
+	bedrock_assert(packet != NULL && data != NULL, return);
+
+	bedrock_buffer_append(packet, data, size);
+}
+
+void packet_pack_int(bedrock_packet *packet, const void *data, size_t size)
+{
+	size_t old_len;
+
+	bedrock_assert(packet != NULL && data != NULL, return);
+
+	old_len = packet->length;
+	packet_pack(packet, data, size);
+	if (old_len + size == packet->length)
+		convert_endianness(packet->data + old_len, size);
+}
+
+void packet_pack_string(bedrock_packet *packet, const char *string)
+{
+	uint16_t len, i;
+
+	bedrock_assert(packet != NULL && string != NULL, return);
+
+	len = strlen(string);
+
+	packet_pack_int(packet, &len, sizeof(len));
+
+	bedrock_buffer_ensure_capacity(packet, len * 2);
+
+	for (i = 0; i < len; ++i)
+	{
+		packet->data[packet->length++] = 0;
+		packet->data[packet->length++] = *string++;
+	}
+}
+

@@ -4,12 +4,24 @@
 
 void packet_send_destroy_entity_player(struct bedrock_client *client, struct bedrock_client *c)
 {
-	client_send_header(client, DESTROY_ENTITY);
-	client_send_int(client, &c->id, sizeof(c->id));
+	bedrock_packet packet;
+
+	packet_init(&packet, DESTROY_ENTITY);
+
+	packet_pack_header(&packet, DESTROY_ENTITY);
+	packet_pack_int(&packet, &c->id, sizeof(c->id));
+
+	client_send_packet(client, &packet);
 }
 
 void packet_send_destroy_entity_dropped_item(struct bedrock_client *client, struct bedrock_dropped_item *di)
 {
-	client_send_header(client, DESTROY_ENTITY);
-	client_send_int(client, &di->eid, sizeof(di->eid));
+	bedrock_packet packet;
+
+	packet_init(&packet, DESTROY_ENTITY);
+
+	packet_pack_header(&packet, DESTROY_ENTITY);
+	packet_pack_int(&packet, &di->eid, sizeof(di->eid));
+
+	client_send_packet(client, &packet);
 }

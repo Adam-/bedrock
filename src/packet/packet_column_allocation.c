@@ -5,11 +5,16 @@
 
 void packet_send_column_allocation(struct bedrock_client *client, struct bedrock_column *column, bool allocate)
 {
+	bedrock_packet packet;
 	uint8_t b;
 
-	client_send_header(client, MAP_COLUMN_ALLOCATION);
-	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	client_send_int(client, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
+	packet_init(&packet, MAP_COLUMN_ALLOCATION);
+
+	packet_pack_header(&packet, MAP_COLUMN_ALLOCATION);
+	packet_pack_int(&packet, &column->x, sizeof(column->x));
+	packet_pack_int(&packet, &column->z, sizeof(column->z));
 	b = allocate;
-	client_send_int(client, &b, sizeof(b));
+	packet_pack_int(&packet, &b, sizeof(b));
+
+	client_send_packet(client, &packet);
 }

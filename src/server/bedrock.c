@@ -50,7 +50,6 @@ void bedrock_update_time()
 		}
 
 		bedrock_timer_process();
-		bedrock_thread_process();
 	}
 }
 
@@ -120,6 +119,7 @@ int main(int argc, char **argv)
 	world_free(world);
 
 	bedrock_assert(bedrock_memory.size == 0, ;);
+	bedrock_assert(fdlist.count == 0, ;);
 
 	return 0;
 }

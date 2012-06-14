@@ -4,13 +4,13 @@
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 
-int packet_chat_message(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char message[BEDROCK_MAX_STRING_LENGTH], final_message[1 + BEDROCK_USERNAME_MAX + 2 + BEDROCK_MAX_STRING_LENGTH];
 	bedrock_node *node;
 
-	packet_read_string(buffer, len, &offset, message, sizeof(message));
+	packet_read_string(p, &offset, message, sizeof(message));
 
 	if (offset <= ERROR_UNKNOWN || !*message)
 		return offset;
@@ -44,6 +44,7 @@ int packet_chat_message(struct bedrock_client *client, const unsigned char *buff
 
 void packet_send_chat_message(struct bedrock_client *client, const char *buf, ...)
 {
+	bedrock_packet packet;
 	va_list args;
 	char message[BEDROCK_MAX_STRING_LENGTH];
 
@@ -51,6 +52,10 @@ void packet_send_chat_message(struct bedrock_client *client, const char *buf, ..
 	vsnprintf(message, sizeof(message), buf, args);
 	va_end(args);
 
-	client_send_header(client, CHAT_MESSAGE);
-	client_send_string(client, message);
+	packet_init(&packet, CHAT_MESSAGE);
+
+	packet_pack_header(&packet, CHAT_MESSAGE);
+	packet_pack_string(&packet, message);
+
+	client_send_packet(client, &packet);
 }

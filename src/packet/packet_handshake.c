@@ -2,23 +2,24 @@
 #include "server/packet.h"
 #include "packet/packet_disconnect.h"
 
-int packet_handshake(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	struct bedrock_world *world;
 	char username[BEDROCK_USERNAME_MAX + 1 + 64 + 1 + 5];
-	char *p;
+	char *s;
+	bedrock_packet packet;
 
-	packet_read_string(buffer, len, &offset, username, sizeof(username));
+	packet_read_string(p, &offset, username, sizeof(username));
 
 	if (offset <= ERROR_UNKNOWN)
 		return offset;
 
-	p = strchr(username, ';');
-	if (p == NULL)
+	s = strchr(username, ';');
+	if (s == NULL)
 		return ERROR_INVALID_FORMAT;
 
-	*p = 0;
+	*s = 0;
 
 	if (client_valid_username(username) == false)
 		return ERROR_INVALID_FORMAT;
@@ -42,8 +43,12 @@ int packet_handshake(struct bedrock_client *client, const unsigned char *buffer,
 		return offset;
 	}
 
-	client_send_header(client, HANDSHAKE);
-	client_send_string(client, "-");
+	packet_init(&packet, HANDSHAKE);
+
+	packet_pack_header(&packet, HANDSHAKE);
+	packet_pack_string(&packet, "-");
+
+	client_send_packet(client, &packet);
 
 	return offset;
 }

@@ -34,26 +34,16 @@ void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 	{
 		size_t old = buffer->capacity;
 
-		buffer->capacity *= 2;
+		if (buffer->capacity != 0)
+			buffer->capacity *= 2;
+		else
+			buffer->capacity = size;
 		buffer->data = bedrock_realloc_pool(buffer->pool, buffer->data, buffer->capacity);
 
 		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %p from %ld to %ld", buffer, old, buffer->capacity);
 	}
 
 	bedrock_assert(buffer->capacity - buffer->length >= size, return);
-}
-
-void bedrock_buffer_check_capacity(bedrock_buffer *buffer, size_t min)
-{
-	if (buffer->length <= buffer->capacity / 2 && buffer->capacity / 2 >= min)
-	{
-		size_t old = buffer->capacity;
-
-		buffer->capacity /= 2;
-		buffer->data = bedrock_realloc_pool(buffer->pool, buffer->data, buffer->capacity);
-
-		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %p from %ld to %ld", buffer, old, buffer->capacity);
-	}
 }
 
 void bedrock_buffer_append(bedrock_buffer *buffer, const void *data, size_t length)

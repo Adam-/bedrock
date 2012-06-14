@@ -42,9 +42,7 @@ struct bedrock_client *client_create()
 	struct bedrock_client *client = bedrock_malloc_pool(&client_pool, sizeof(struct bedrock_client));
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
-	client->out_buffer = bedrock_buffer_create(&client_pool, NULL, 0, BEDROCK_CLIENT_SEND_SIZE);
-	client->columns.pool = &client_pool;
-	client->players.pool = &client_pool;
+	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -178,7 +176,7 @@ static void client_free(struct bedrock_client *client)
 
 	if (client->data != NULL)
 		nbt_free(client->data);
-	bedrock_buffer_free(client->out_buffer);
+	bedrock_list_clear(&client->out_buffer);
 	bedrock_free_pool(&client_pool, client);
 }
 
@@ -208,6 +206,7 @@ void client_process_exits()
 void client_event_read(bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
+	bedrock_packet packet;
 
 	if (client->in_buffer_len == sizeof(client->in_buffer))
 	{
@@ -229,11 +228,16 @@ void client_event_read(bedrock_fd *fd, void *data)
 
 	client->in_buffer_len += i;
 
-	while (io_has(fd, OP_READ) && (i = packet_parse(client, client->in_buffer, client->in_buffer_len)) > 0)
+	packet.pool = NULL;
+	packet.data = client->in_buffer;
+	packet.length = client->in_buffer_len;
+	packet.capacity = sizeof(client->in_buffer);
+
+	while (io_has(fd, OP_READ) && (i = packet_parse(client, &packet)) > 0)
 	{
 		bedrock_assert((size_t) i <= client->in_buffer_len, break);
 
-		client->in_buffer_len -= i;
+		packet.length = client->in_buffer_len -= i;
 
 		if (client->in_buffer_len > 0)
 			memmove(client->in_buffer, client->in_buffer + i, client->in_buffer_len);
@@ -243,9 +247,11 @@ void client_event_read(bedrock_fd *fd, void *data)
 void client_event_write(bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
+	bedrock_node *node;
+	bedrock_packet *packet;
 	int i;
 
-	if (client->out_buffer->length == 0)
+	if (client->out_buffer.count == 0)
 	{
 		io_set(&client->fd, 0, OP_WRITE);
 		if (client->fd.ops == 0)
@@ -253,7 +259,10 @@ void client_event_write(bedrock_fd *fd, void *data)
 		return;
 	}
 
-	i = send(fd->fd, client->out_buffer->data, client->out_buffer->length, 0);
+	node = client->out_buffer.head;
+	packet = node->data;
+
+	i = send(fd->fd, packet->data, packet->length, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -263,23 +272,50 @@ void client_event_write(bedrock_fd *fd, void *data)
 		return;
 	}
 
-	client->out_buffer->length -= i;
-	if (client->out_buffer->length > 0)
+	packet->length -= i;
+	if (packet->length > 0)
 	{
-		memmove(client->out_buffer->data, client->out_buffer->data + i, client->out_buffer->length);
+		memmove(packet->data, packet->data + i, packet->length);
 	}
 	else
 	{
-		io_set(&client->fd, 0, OP_WRITE);
+		bedrock_list_del_node(&client->out_buffer, node);
+		bedrock_free(node);
 
-		if (client->fd.ops == 0)
+		if (client->out_buffer.count == 0)
 		{
-			client_exit(client);
-			return;
+			io_set(&client->fd, 0, OP_WRITE);
+
+			if (client->fd.ops == 0)
+				client_exit(client);
 		}
 	}
+}
 
-	bedrock_buffer_check_capacity(client->out_buffer, BEDROCK_CLIENT_SEND_SIZE);
+void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
+{
+	bedrock_packet *p;
+
+	bedrock_assert(client != NULL && packet != NULL && packet->length > 0, return);
+
+	p = bedrock_malloc(sizeof(bedrock_packet));
+
+	p->pool = packet->pool;
+	p->data = packet->data;
+	p->length = packet->length;
+	p->capacity = packet->capacity;
+
+	packet->pool = NULL;
+	packet->data = NULL;
+	packet->length = 0;
+	packet->capacity = 0;
+
+	packet = p;
+
+	bedrock_list_add(&client->out_buffer, packet);
+
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", packet->data[0], *client->name ? client->name : "(unknown)", client_get_ip(client));
+	io_set(&client->fd, OP_WRITE, 0);
 }
 
 const char *client_get_ip(struct bedrock_client *client)
@@ -300,52 +336,6 @@ const char *client_get_ip(struct bedrock_client *client)
 	}
 
 	return "(unknown)";
-}
-
-void client_send_header(struct bedrock_client *client, uint8_t header)
-{
-	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%x for %s (%s)", header, *client->name ? client->name : "(unknown)", client_get_ip(client));
-	client_send_int(client, &header, sizeof(header));
-}
-
-void client_send(struct bedrock_client *client, const void *data, size_t size)
-{
-	bedrock_assert(client != NULL && data != NULL, return);
-
-	bedrock_buffer_append(client->out_buffer, data, size);
-
-	io_set(&client->fd, OP_WRITE, 0);
-}
-
-void client_send_int(struct bedrock_client *client, const void *data, size_t size)
-{
-	size_t old_len;
-
-	bedrock_assert(client != NULL && data != NULL, return);
-
-	old_len = client->out_buffer->length;
-	client_send(client, data, size);
-	if (old_len + size == client->out_buffer->length)
-		convert_endianness(client->out_buffer->data + old_len, size);
-}
-
-void client_send_string(struct bedrock_client *client, const char *string)
-{
-	uint16_t len, i;
-
-	bedrock_assert(client != NULL && string != NULL, return);
-
-	len = strlen(string);
-
-	client_send_int(client, &len, sizeof(len));
-
-	bedrock_buffer_ensure_capacity(client->out_buffer, len * 2);
-
-	for (i = 0; i < len; ++i)
-	{
-		client->out_buffer->data[client->out_buffer->length++] = 0;
-		client->out_buffer->data[client->out_buffer->length++] = *string++;
-	}
 }
 
 bool client_valid_username(const char *name)
@@ -459,7 +449,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 			++(*count);
 
 			pos = *slot;
-			if (pos >= 0 && pos <= 8)
+			if (pos <= 8)
 				pos += 36;
 			packet_send_set_slot(client, WINDOW_INVENTORY, pos, item, *count, 0);
 
@@ -473,7 +463,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		return;
 
 	pos = i;
-	if (pos >= 0 && pos <= 8)
+	if (pos <= 8)
 		pos += 36;
 	packet_send_set_slot(client, WINDOW_INVENTORY, pos, item, 1, 0);
 
@@ -498,7 +488,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		if (*slot > i)
 		{
 			// Insert before c
-			bedrock_list_add_node_before(list, bedrock_malloc_pool(list->pool, sizeof(bedrock_node)), node, item_tag);
+			bedrock_list_add_node_before(list, bedrock_malloc(sizeof(bedrock_node)), node, item_tag);
 			return;
 		}
 	}
@@ -532,7 +522,7 @@ void client_update_chunks(struct bedrock_client *client)
 		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
 			bedrock_list_del_node(&client->columns, node);
-			bedrock_free_pool(client->columns.pool, node);
+			bedrock_free(node);
 
 			bedrock_list_del(&c->players, client);
 
@@ -783,22 +773,23 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (update_chunk)
 		client_update_chunks(client);
 
-	/* Check if this player should pick up any dropped items near them */
-	LIST_FOREACH_SAFE(&client->column->items, node, node2)
-	{
-		struct bedrock_dropped_item *di = node->data;
-
-		if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
+	if (client->column != NULL)
+		/* Check if this player should pick up any dropped items near them */
+		LIST_FOREACH_SAFE(&client->column->items, node, node2)
 		{
-			bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
+			struct bedrock_dropped_item *di = node->data;
 
-			packet_send_collect_item(client, di);
+			if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
+			{
+				bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
 
-			client_add_inventory_item(client, di->item);
+				packet_send_collect_item(client, di);
 
-			column_free_dropped_item(di);
+				client_add_inventory_item(client, di->item);
+
+				column_free_dropped_item(di);
+			}
 		}
-	}
 }
 
 /* Starts the login sequence. This is split up in to two parts because client_update_chunks

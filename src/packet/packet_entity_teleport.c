@@ -3,6 +3,7 @@
 
 void packet_send_entity_teleport(struct bedrock_client *client, struct bedrock_client *targ)
 {
+	bedrock_packet packet;
 	double x = *client_get_pos_x(targ), y = *client_get_pos_y(targ), z = *client_get_pos_z(targ);
 	float yaw = *client_get_yaw(targ), pitch = *client_get_pitch(targ);
 	int32_t a_x, a_y, a_z;
@@ -15,11 +16,15 @@ void packet_send_entity_teleport(struct bedrock_client *client, struct bedrock_c
 	new_y = (yaw / 360.0) * 256;
 	new_p = (pitch / 360.0) * 256;
 
-	client_send_header(client, ENTITY_TELEPORT);
-	client_send_int(client, &targ->id, sizeof(targ->id));
-	client_send_int(client, &a_x, sizeof(a_x));
-	client_send_int(client, &a_y, sizeof(a_y));
-	client_send_int(client, &a_z, sizeof(a_z));
-	client_send_int(client, &new_y, sizeof(new_y));
-	client_send_int(client, &new_p, sizeof(new_p));
+	packet_init(&packet, ENTITY_TELEPORT);
+
+	packet_pack_header(&packet, ENTITY_TELEPORT);
+	packet_pack_int(&packet, &targ->id, sizeof(targ->id));
+	packet_pack_int(&packet, &a_x, sizeof(a_x));
+	packet_pack_int(&packet, &a_y, sizeof(a_y));
+	packet_pack_int(&packet, &a_z, sizeof(a_z));
+	packet_pack_int(&packet, &new_y, sizeof(new_y));
+	packet_pack_int(&packet, &new_p, sizeof(new_p));
+
+	client_send_packet(client, &packet);
 }

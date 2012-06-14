@@ -13,14 +13,13 @@ typedef void (*bedrock_free_func)(void *);
 
 typedef struct
 {
-	struct bedrock_memory_pool *pool;
 	bedrock_node *head, *tail;
 	size_t count;
 	bool (*compare)(const void *data1, const void *data2);
 	bedrock_free_func free;
 } bedrock_list;
 
-#define LIST_INIT { NULL, NULL, NULL, 0, NULL, NULL }
+#define LIST_INIT { NULL, NULL, 0, NULL, NULL }
 #define LIST_FOREACH(list, var) for (var = (list)->head; var; var = var->next)
 #define LIST_FOREACH_SAFE(list, var1, var2) for (var1 = (list)->head, var2 = var1 ? var1->next : NULL; var1; var1 = var2, var2 = var1 ? var1->next : NULL)
 

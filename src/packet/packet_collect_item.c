@@ -10,8 +10,14 @@ void packet_send_collect_item(struct bedrock_client *client, struct bedrock_drop
 	{
 		struct bedrock_client *c = node->data;
 
-		client_send_header(c, COLLECT_ITEM);
-		client_send_int(c, &di->eid, sizeof(di->eid));
-		client_send_int(c, &client->id, sizeof(client->id));
+		bedrock_packet packet;
+
+		packet_init(&packet, COLLECT_ITEM);
+
+		packet_pack_header(&packet, COLLECT_ITEM);
+		packet_pack_int(&packet, &di->eid, sizeof(di->eid));
+		packet_pack_int(&packet, &client->id, sizeof(client->id));
+
+		client_send_packet(c, &packet);
 	}
 }
