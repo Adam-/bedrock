@@ -1,5 +1,4 @@
 #include "server/bedrock.h"
-#include "util/pipe.h"
 #include "io/io.h"
 #include "util/memory.h"
 
@@ -12,7 +11,7 @@ static void pipe_reader(bedrock_fd *fd, void *data)
 	bedrock_pipe *p = data;
 	char buf[32];
 
-	while (recv(fd->fd, buf, sizeof(buf), 0) == sizeof(buf));
+	while (read(fd->fd, buf, sizeof(buf)) == sizeof(buf));
 
 	p->on_notify(p->data);
 }
@@ -56,10 +55,11 @@ void bedrock_pipe_close(bedrock_pipe *p)
 	io_set(&p->read_fd, 0, ~0);
 	bedrock_fd_close(&p->read_fd);
 	bedrock_fd_close(&p->write_fd);
+	bedrock_free(p);
 }
 
 void bedrock_pipe_notify(bedrock_pipe *p)
 {
 	char dummy = '*';
-	send(p->write_fd.fd, &dummy, 1, 0);
+	bedrock_assert(write(p->write_fd.fd, &dummy, 1) == 1, ;);
 }

@@ -50,7 +50,6 @@ void bedrock_update_time()
 		}
 
 		bedrock_timer_process();
-		bedrock_thread_process();
 	}
 }
 
