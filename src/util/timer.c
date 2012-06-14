@@ -61,7 +61,7 @@ void bedrock_timer_cancel_all_for(timer_callback callback)
 		{
 			bedrock_list_del_node(&timer_list, node);
 			bedrock_free(t);
-			bedrock_free_pool(timer_list.pool, node);
+			bedrock_free(node);
 		}
 	}
 }
@@ -85,7 +85,7 @@ void bedrock_timer_process()
 
 		bedrock_list_del_node(&timer_list, node);
 		bedrock_free(t);
-		bedrock_free_pool(timer_list.pool, node);
+		bedrock_free(node);
 	}
 }
 

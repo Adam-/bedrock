@@ -149,7 +149,6 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
 
 	bedrock_mutex_init(&region->column_mutex, "region column mutex");
-	region->columns.pool = &region_pool;
 	region->columns.free = (bedrock_free_func) column_free;
 
 	bedrock_list_add(&world->regions, region);

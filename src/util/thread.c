@@ -77,7 +77,7 @@ void bedrock_thread_process()
 			bedrock_free(thread);
 
 			bedrock_list_del_node(&thread_list, node);
-			bedrock_free_pool(thread_list.pool, node);
+			bedrock_free(node);
 		}
 	}
 }
@@ -104,7 +104,7 @@ void bedrock_thread_exit_all()
 		bedrock_free(thread);
 
 		bedrock_list_del_node(&thread_list, node);
-		bedrock_free_pool(thread_list.pool, node);
+		bedrock_free(node);
 	}
 }
 

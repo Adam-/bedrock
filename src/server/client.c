@@ -43,8 +43,6 @@ struct bedrock_client *client_create()
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
-	client->columns.pool = &client_pool;
-	client->players.pool = &client_pool;
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -282,7 +280,7 @@ void client_event_write(bedrock_fd *fd, void *data)
 	else
 	{
 		bedrock_list_del_node(&client->out_buffer, node);
-		bedrock_free_pool(client->out_buffer.pool, node);
+		bedrock_free(node);
 
 		if (client->out_buffer.count == 0)
 		{
@@ -488,7 +486,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		if (*slot > i)
 		{
 			// Insert before c
-			bedrock_list_add_node_before(list, bedrock_malloc_pool(list->pool, sizeof(bedrock_node)), node, item_tag);
+			bedrock_list_add_node_before(list, bedrock_malloc(sizeof(bedrock_node)), node, item_tag);
 			return;
 		}
 	}
@@ -522,7 +520,7 @@ void client_update_chunks(struct bedrock_client *client)
 		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
 		{
 			bedrock_list_del_node(&client->columns, node);
-			bedrock_free_pool(client->columns.pool, node);
+			bedrock_free(node);
 
 			bedrock_list_del(&c->players, client);
 
