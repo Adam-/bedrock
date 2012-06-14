@@ -239,8 +239,7 @@ void client_event_read(bedrock_fd *fd, void *data)
 	{
 		bedrock_assert((size_t) i <= client->in_buffer_len, break);
 
-		client->in_buffer_len -= i;
-		packet.length -= i;
+		packet.length = client->in_buffer_len -= i;
 
 		if (client->in_buffer_len > 0)
 			memmove(client->in_buffer, client->in_buffer + i, client->in_buffer_len);
