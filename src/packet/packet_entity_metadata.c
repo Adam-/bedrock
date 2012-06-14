@@ -6,15 +6,19 @@ void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_
 {
 	uint8_t header = index | type << 5, footer = 127;
 	bedrock_node *node;
+	bedrock_packet packet;
 
 	LIST_FOREACH(&client->players, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		client_send_header(c, ENTITY_METADATA);
-		client_send_int(c, &client->id, sizeof(client->id));
-		client_send_int(c, &header, sizeof(header));
-		client_send(c, data, size);
-		client_send_int(c, &footer, sizeof(footer));
+		packet_init(&packet, ENTITY_METADATA);
+
+		packet_pack_header(&packet, ENTITY_METADATA);
+		packet_pack_int(&packet, &header, sizeof(header));
+		packet_pack(&packet, data, size);
+		packet_pack_int(&packet, &footer, sizeof(footer));
+
+		client_send_packet(c, &packet);
 	}
 }

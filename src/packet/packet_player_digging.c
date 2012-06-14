@@ -119,7 +119,7 @@ static double calculate_block_time(struct bedrock_client *client, struct bedrock
 	return delay;
 }
 
-int packet_player_digging(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t status;
@@ -128,11 +128,11 @@ int packet_player_digging(struct bedrock_client *client, const unsigned char *bu
 	int32_t z;
 	uint8_t face;
 
-	packet_read_int(buffer, len, &offset, &status, sizeof(status));
-	packet_read_int(buffer, len, &offset, &x, sizeof(x));
-	packet_read_int(buffer, len, &offset, &y, sizeof(y));
-	packet_read_int(buffer, len, &offset, &z, sizeof(z));
-	packet_read_int(buffer, len, &offset, &face, sizeof(face));
+	packet_read_int(p, &offset, &status, sizeof(status));
+	packet_read_int(p, &offset, &x, sizeof(x));
+	packet_read_int(p, &offset, &y, sizeof(y));
+	packet_read_int(p, &offset, &z, sizeof(z));
+	packet_read_int(p, &offset, &face, sizeof(face));
 
 	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
 		return ERROR_NOT_ALLOWED;

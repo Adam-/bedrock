@@ -1,3 +1,10 @@
+#ifndef BEDROCK_SERVER_PACKET_H
+#define BEDROCK_SERVER_PACKET_H
+
+#include "util/buffer.h"
+
+typedef bedrock_buffer bedrock_packet;
+
 #include "server/client.h"
 
 enum
@@ -21,8 +28,6 @@ enum
 	SPAWN_DROPPED_ITEM            = 0x15,
 	COLLECT_ITEM                  = 0x16,
 	DESTROY_ENTITY                = 0x1D,
-	ENTITY_RELATIVE_MOVE          = 0x1F,
-	ENTITY_LOOK_AND_RELATIVE_MOVE = 0x21,
 	ENTITY_TELEPORT               = 0x22,
 	ENTITY_HEAD_LOOK              = 0x23,
 	ENTITY_METADATA               = 0x28,
@@ -38,8 +43,9 @@ enum
 
 enum
 {
-	SOFT_SIZE = 1 << 0,
-	HARD_SIZE = 1 << 1
+	SOFT_SIZE   = 1 << 0,
+	HARD_SIZE   = 1 << 1,
+	SERVER_ONLY = 1 << 2
 };
 
 enum
@@ -53,7 +59,19 @@ enum
 
 #define PACKET_HEADER_LENGTH 1
 
-extern int packet_parse(struct bedrock_client *client, const unsigned char *buffer, size_t len);
+struct bedrock_client;
 
-extern void packet_read_int(const unsigned char *buffer, size_t buffer_size, size_t *offset, void *dest, size_t dest_size);
-extern void packet_read_string(const unsigned char *buffer, size_t buffer_size, size_t *offset, char *dest, size_t dest_size);
+extern void packet_init(bedrock_packet *packet, uint8_t id);
+extern void packet_free(bedrock_packet *packet);
+
+extern int packet_parse(struct bedrock_client *client, const bedrock_packet *packet);
+
+extern void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
+extern void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size);
+
+extern void packet_pack_header(bedrock_packet *packet, uint8_t header);
+extern void packet_pack(bedrock_packet *packet, const void *data, size_t size);
+extern void packet_pack_int(bedrock_packet *packet, const void *data, size_t size);
+extern void packet_pack_string(bedrock_packet *packet, const char *string);
+
+#endif // BEDROCK_SERVER_PACKET_H

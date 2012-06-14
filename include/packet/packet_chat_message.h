@@ -31,5 +31,5 @@ enum
 	STYLE_PLAIN         = 0x72  // r
 };
 
-extern int packet_chat_message(struct bedrock_client *client, const unsigned char *buffer, size_t len);
+extern int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p);
 extern void packet_send_chat_message(struct bedrock_client *client, const char *buf, ...);

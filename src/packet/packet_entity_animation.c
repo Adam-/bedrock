@@ -13,15 +13,15 @@ enum
 	ANIMATION_UNCROUCH = 105
 };
 
-int packet_entity_animation(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_entity_animation(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint32_t id;
 	uint8_t anim;
 	bedrock_node *node;
 
-	packet_read_int(buffer, len, &offset, &id, sizeof(id));
-	packet_read_int(buffer, len, &offset, &anim, sizeof(anim));
+	packet_read_int(p, &offset, &id, sizeof(id));
+	packet_read_int(p, &offset, &anim, sizeof(anim));
 
 	if (id != client->id)
 		return ERROR_UNEXPECTED;
@@ -40,7 +40,13 @@ int packet_entity_animation(struct bedrock_client *client, const unsigned char *
 
 void packet_send_entity_animation(struct bedrock_client *client, struct bedrock_client *target, uint8_t anim)
 {
-	client_send_header(client, ENTITY_ANIMATION);
-	client_send_int(client, &target->id, sizeof(target->id));
-	client_send_int(client, &anim, sizeof(anim));
+	bedrock_packet packet;
+
+	packet_init(&packet, LOGIN_REQUEST);
+
+	packet_pack_header(&packet, ENTITY_ANIMATION);
+	packet_pack_int(&packet, &target->id, sizeof(target->id));
+	packet_pack_int(&packet, &anim, sizeof(anim));
+
+	client_send_packet(client, &packet);
 }

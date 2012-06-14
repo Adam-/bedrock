@@ -4,7 +4,7 @@
 #include "nbt/nbt.h"
 #include "util/list.h"
 
-int packet_held_item_change(struct bedrock_client *client, const unsigned char *buffer, size_t len)
+int packet_held_item_change(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	bedrock_node *node;
@@ -12,7 +12,7 @@ int packet_held_item_change(struct bedrock_client *client, const unsigned char *
 	struct bedrock_item *item;
 	uint16_t *damage;
 
-	packet_read_int(buffer, len, &offset, &client->selected_slot, sizeof(client->selected_slot));
+	packet_read_int(p, &offset, &client->selected_slot, sizeof(client->selected_slot));
 
 	tag = client_get_inventory_tag(client, client->selected_slot);
 	if (tag != NULL)

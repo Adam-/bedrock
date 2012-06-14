@@ -6,6 +6,7 @@
 
 void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedrock_client *c)
 {
+	bedrock_packet packet;
 	uint32_t abs_x, abs_y, abs_z;
 	float yaw, pitch;
 	int8_t y, p;
@@ -31,15 +32,19 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	y = (yaw / 360.0) * 256;
 	p = (pitch / 360.0) * 256;
 
-	client_send_header(client, SPAWN_NAMED_ENTITY);
-	client_send_int(client, &c->id, sizeof(c->id));
-	client_send_string(client, c->name);
-	client_send_int(client, &abs_x, sizeof(abs_x));
-	client_send_int(client, &abs_y, sizeof(abs_y));
-	client_send_int(client, &abs_z, sizeof(abs_z));
-	client_send_int(client, &y, sizeof(y));
-	client_send_int(client, &p, sizeof(p));
-	client_send_int(client, &item->id, sizeof(item->id));
+	packet_init(&packet, SPAWN_NAMED_ENTITY);
+
+	packet_pack_header(&packet, SPAWN_NAMED_ENTITY);
+	packet_pack_int(&packet, &c->id, sizeof(c->id));
+	packet_pack_string(&packet, c->name);
+	packet_pack_int(&packet, &abs_x, sizeof(abs_x));
+	packet_pack_int(&packet, &abs_y, sizeof(abs_y));
+	packet_pack_int(&packet, &abs_z, sizeof(abs_z));
+	packet_pack_int(&packet, &y, sizeof(y));
+	packet_pack_int(&packet, &p, sizeof(p));
+	packet_pack_int(&packet, &item->id, sizeof(item->id));
+
+	client_send_packet(client, &packet);
 
 	packet_send_entity_head_look(client, c);
 }

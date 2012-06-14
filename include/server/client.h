@@ -7,6 +7,7 @@
 #include "util/memory.h"
 #include "server/config.h"
 #include "server/world.h"
+#include "server/packet.h"
 #include "blocks/items.h"
 
 typedef enum
@@ -14,7 +15,7 @@ typedef enum
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
 	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
 	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
-	STATE_BURSTING        = 1 << 3,      /* Successfully authenticated but not in the game yet */
+	STATE_BURSTING        = 1 << 3,     /* Successfully authenticated but not in the game yet */
 	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
@@ -39,7 +40,7 @@ struct bedrock_client
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
-	bedrock_buffer *out_buffer;
+	bedrock_list out_buffer;              /* list of packets to send */
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
@@ -85,12 +86,9 @@ extern void client_process_exits();
 extern void client_event_read(bedrock_fd *fd, void *data);
 extern void client_event_write(bedrock_fd *fd, void *data);
 
-extern const char *client_get_ip(struct bedrock_client *client);
+extern void client_send_packet(struct bedrock_client *client, bedrock_packet *packet);
 
-extern void client_send_header(struct bedrock_client *client, uint8_t header);
-extern void client_send(struct bedrock_client *client, const void *data, size_t size);
-extern void client_send_int(struct bedrock_client *client, const void *data, size_t size);
-extern void client_send_string(struct bedrock_client *client, const char *string);
+extern const char *client_get_ip(struct bedrock_client *client);
 
 extern bool client_valid_username(const char *name);
 
