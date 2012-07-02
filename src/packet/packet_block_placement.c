@@ -27,7 +27,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	int16_t metadata = 0;
 
 	nbt_tag *weilded_item;
-	struct bedrock_block *block;
+	struct bedrock_item *item;
 
 	struct bedrock_chunk *target_chunk, *real_chunk;
 
@@ -86,7 +86,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			// This special packet indicates that the currently held item for the player should have its state
 			// updated such as eating food, shooting bows, using buckets, etc.
 			return offset;
-		default: // Unknwn direction
+		default: // Unknown direction
 			return ERROR_NOT_ALLOWED;
 	}
 
@@ -103,15 +103,14 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		int16_t *weilded_id = nbt_read(weilded_item, TAG_SHORT, 1, "id");
 		uint8_t *weilded_count = nbt_read(weilded_item, TAG_BYTE, 1, "Count");
 
+
 		// At this point the client has already removed one
 		*weilded_count -= 1;
 
-		block = block_find(*weilded_id);
-		if (block == NULL)
+		item = item_find(*weilded_id);
+		if (item == NULL || (item->flags & ITEM_FLAG_BLOCK) == 0)
 		{
-			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown block %d at %d,%d,%d, direction %d", client->name, *weilded_id, x, y, z, d);
-			client_add_inventory_item(client, item_find_or_create(*weilded_id));
-			packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
+			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, *weilded_id, x, y, z, d);
 
 			if (*weilded_count == 0)
 				nbt_free(weilded_item);
@@ -119,7 +118,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			return offset;
 		}
 
-		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, block->name, x, y, z, d);
+		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
 
 		if (*weilded_count == 0)
 			nbt_free(weilded_item);
@@ -143,7 +142,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			return ERROR_NOT_ALLOWED;
 		else if (*placed_on == BLOCK_AIR)
 		{
-			client_add_inventory_item(client, item_find_or_create(block->id));
+			client_add_inventory_item(client, item);
 			packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
 			return offset;
 		}
@@ -175,7 +174,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		if (being_placed == NULL || *being_placed != BLOCK_AIR)
 		{
-			client_add_inventory_item(client, item_find_or_create(block->id));
+			client_add_inventory_item(client, item);
 			packet_send_block_change(client, real_x, real_y, real_z, being_placed != NULL ? *being_placed : BLOCK_AIR, 0);
 			return offset;
 		}
