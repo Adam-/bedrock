@@ -45,8 +45,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		packet_read_int(p, &offset, &metadata, sizeof(metadata));
 	}
 
-	printf("%d %d %d %d %d %d %d\n", x, y, z, d, id, count, metadata);
-
 	real_x = x;
 	real_y = y;
 	real_z = z;
