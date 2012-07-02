@@ -110,7 +110,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		if (block == NULL)
 		{
 			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown block %d at %d,%d,%d, direction %d", client->name, *weilded_id, x, y, z, d);
-			client_add_inventory_item(client, item_find_or_create(block->id));
+			client_add_inventory_item(client, item_find_or_create(*weilded_id));
 			packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
 
 			if (*weilded_count == 0)
