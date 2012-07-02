@@ -12,7 +12,8 @@ enum
 	DOWN_Z,
 	UP_Z,
 	DOWN_X,
-	UP_X
+	UP_X,
+	UPDATE = 0xFF
 };
 
 int packet_block_placement(struct bedrock_client *client, const bedrock_packet *p)
@@ -43,6 +44,8 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		packet_read_int(p, &offset, &count, sizeof(count));
 		packet_read_int(p, &offset, &metadata, sizeof(metadata));
 	}
+
+	printf("%d %d %d %d %d %d %d\n", x, y, z, d, id, count, metadata);
 
 	real_x = x;
 	real_y = y;
@@ -80,6 +83,11 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 				return ERROR_NOT_ALLOWED;
 			++real_x;
 			break;
+		case UPDATE:
+			// This packet has a special case where X, Y, Z, and Direction are all -1.
+			// This special packet indicates that the currently held item for the player should have its state
+			// updated such as eating food, shooting bows, using buckets, etc.
+			return offset;
 		default: // Unknwn direction
 			return ERROR_NOT_ALLOWED;
 	}
@@ -96,7 +104,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	{
 		int16_t *weilded_id = nbt_read(weilded_item, TAG_SHORT, 1, "id");
 		uint8_t *weilded_count = nbt_read(weilded_item, TAG_BYTE, 1, "Count");
-		int16_t *weilded_metadata = nbt_read(weilded_item, TAG_SHORT, 1, "Damage");
 
 		// At this point the client has already removed one
 		*weilded_count -= 1;
@@ -115,10 +122,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		}
 
 		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, block->name, x, y, z, d);
-
-		printf("%d %d\n", count, *weilded_count);
-	//	if (id != *weilded_id || count != *weilded_count || metadata != *weilded_metadata)
-		//	return ERROR_UNEXPECTED;
 
 		if (*weilded_count == 0)
 			nbt_free(weilded_item);
