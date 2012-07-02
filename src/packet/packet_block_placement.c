@@ -57,7 +57,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			--real_y;
 			break;
 		case UP_Y:
-			if (real_y == ~0)
+			if (real_y == (uint8_t) ~0)
 				return ERROR_NOT_ALLOWED;
 			++real_y;
 			break;
