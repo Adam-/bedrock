@@ -2,69 +2,23 @@ cmake_minimum_required(VERSION 2.8)
 
 include_directories(include)
 
-set(BEDROCK_SOURCES
-./src/packet/packet_entity_action.c
-./src/packet/packet_keep_alive.c
-./src/packet/packet_player_look.c
-./src/packet/packet_column_allocation.c
-./src/packet/packet_entity_head_look.c
-./src/packet/packet_login_request.c
-./src/packet/packet_entity_animation.c
-./src/packet/packet_chat_message.c
-./src/packet/packet_held_item_change.c
-./src/packet/packet_collect_item.c
-./src/packet/packet_block_change.c
-./src/packet/packet_list_ping.c
-./src/packet/packet_player_digging.c
-./src/packet/packet_entity_equipment.c
-./src/packet/packet_disconnect.c
-./src/packet/packet_spawn_named_entity.c
-./src/packet/packet_set_slot.c
-./src/packet/packet_position_and_look.c
-./src/packet/packet_column.c
-./src/packet/packet_spawn_dropped_item.c
-./src/packet/packet_handshake.c
-./src/packet/packet_position.c
-./src/packet/packet_time.c
-./src/packet/packet_entity_metadata.c
-./src/packet/packet_player_list_item.c
-./src/packet/packet_player.c
-./src/packet/packet_destroy_entity.c
-./src/packet/packet_entity_teleport.c
-./src/packet/packet_close_window.c
-./src/packet/packet_spawn_point.c
-./src/nbt/nbt.c
-./src/util/endian.c
-./src/util/string.c
-./src/util/timer.c
-./src/util/thread.c
-./src/util/memory.c
-./src/util/pipe.c
-./src/util/list.c
-./src/util/buffer.c
-./src/util/fd.c
-./src/server/packet.c
-./src/server/region.c
-./src/server/column.c
-./src/server/listener.c
-./src/server/world.c
-./src/server/chunk.c
-./src/server/command.c
-./src/server/bedrock.c
-./src/server/client.c
-./src/compression/compression.c
-./src/io/epoll.c
-./src/blocks/blocks.c
-./src/blocks/items.c
-./src/command/command_stats.c
-./src/command/command_memory.c
-./src/command/command_version.c
-./src/command/command_uptime.c
-./src/command/command_players.c
-./src/command/command_help.c
-./src/command/command_fdlist.c
-./src/command/command_shutdown.c
-)
+# Get a list of folders from src/ and remove any CMake crap
+file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*")
+list(REMOVE_ITEM SOURCE_FOLDERS "src/CMakeFiles")
+
+# Set an empty list for later
+set(BEDROCK_SOURCES)
+
+# Get the source files and append them to a list
+foreach(SOURCE_FOLDER ${SOURCE_FOLDERS})
+  if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
+    file(GLOB SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SOURCE_FOLDER}/*.c")
+    list(APPEND BEDROCK_SOURCES ${SOURCE_FILES})
+  endif(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
+endforeach(SOURCE_FOLDER ${SOURCE_FOLDERS})
+
+# Sort the sources
+list(SORT BEDROCK_SOURCES)
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
