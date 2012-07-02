@@ -15,6 +15,7 @@ void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_
 		packet_init(&packet, ENTITY_METADATA);
 
 		packet_pack_header(&packet, ENTITY_METADATA);
+		packet_pack_int(&packet, &client->id, sizeof(client->id));
 		packet_pack_int(&packet, &header, sizeof(header));
 		packet_pack(&packet, data, size);
 		packet_pack_int(&packet, &footer, sizeof(footer));
