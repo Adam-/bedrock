@@ -106,30 +106,21 @@ uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int3
 void chunk_free(struct bedrock_chunk *chunk)
 {
 	int i;
-	bool others;
 
 	if (!chunk)
 		return;
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing chunk %d in column %d,%d", chunk->y, chunk->column->x, chunk->column->z);
 
-	others = false;
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
-	{
 		if (chunk->column->chunks[i] == chunk)
 			chunk->column->chunks[i] = NULL;
-		else if (chunk->column->chunks[i] != NULL)
-			others = true;
-	}
 
 	chunk_compress(chunk);
 
 	bedrock_buffer_free(chunk->compressed_data);
 
 	bedrock_free_pool(&chunk_pool, chunk);
-
-	if (others == false)
-		column_free(chunk->column);
 }
 
 void chunk_decompress(struct bedrock_chunk *chunk)
