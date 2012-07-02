@@ -100,8 +100,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		// At this point the client has already removed one
 		*weilded_count -= 1;
-		if (*weilded_count == 0)
-			nbt_free(weilded_item);
 
 		block = block_find(*weilded_id);
 		if (block == NULL)
@@ -109,14 +107,21 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown block %d at %d,%d,%d, direction %d", client->name, *weilded_id, x, y, z, d);
 			client_add_inventory_item(client, item_find_or_create(block->id));
 			packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
+
+			if (*weilded_count == 0)
+				nbt_free(weilded_item);
+
 			return offset;
 		}
 
 		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, block->name, x, y, z, d);
 
-		// The count is the count from the client after the block is placed down apparently?
-		if (id != *weilded_id || count != *weilded_count || metadata != *weilded_metadata)
-			return ERROR_UNEXPECTED;
+		printf("%d %d\n", count, *weilded_count);
+	//	if (id != *weilded_id || count != *weilded_count || metadata != *weilded_metadata)
+		//	return ERROR_UNEXPECTED;
+
+		if (*weilded_count == 0)
+			nbt_free(weilded_item);
 	}
 
 	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
@@ -165,7 +170,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		chunk_decompress(real_chunk);
 
-		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_y);
+		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
 
 		if (being_placed == NULL || *being_placed != BLOCK_AIR)
 		{
@@ -181,7 +186,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		chunk_decompress(real_chunk);
 
-		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_y);
+		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
 		bedrock_assert(being_placed != NULL, return offset);
 
 		*being_placed = id;
