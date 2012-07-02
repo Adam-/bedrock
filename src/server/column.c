@@ -35,7 +35,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 
 		bedrock_assert(column->chunks[y] == NULL, continue);
 
-		column->chunks[y] = chunk_create(column, y, chunk_tag);
+		chunk_load(column, y, chunk_tag);
 	}
 	nbt_free(tag);
 
@@ -85,6 +85,9 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 	struct bedrock_column *column = NULL;
+
+	if (region == NULL)
+		return NULL;
 
 	column_x = floor(column_x);
 	column_z = floor(column_z);

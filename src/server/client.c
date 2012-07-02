@@ -433,7 +433,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	nbt_tag *c, *item_tag;
 	uint8_t pos;
 
-	bedrock_log(LEVLE_DEBUG, "client: Adding item %s to %s's inventory", item->name, client->name);
+	bedrock_log(LEVEL_DEBUG, "client: Adding item %s to %s's inventory", item->name, client->name);
 
 	LIST_FOREACH(list, node)
 	{

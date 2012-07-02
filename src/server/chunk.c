@@ -10,11 +10,43 @@
 
 struct bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT("chunk memory pool");
 
-struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y, nbt_tag *chunk_tag)
+struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
+{
+	struct bedrock_chunk *chunk;
+	compression_buffer *buffer;
+	unsigned char empty_chunk[BEDROCK_BLOCK_LENGTH + BEDROCK_DATA_LENGTH + BEDROCK_DATA_LENGTH + BEDROCK_DATA_LENGTH];
+
+	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
+
+	chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
+	chunk->column = column;
+	chunk->y = y;
+
+	buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+
+	memset(&empty_chunk, 0, sizeof(empty_chunk));
+	compression_compress_deflate(buffer, empty_chunk, sizeof(empty_chunk));
+
+	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
+	chunk->compressed_data = buffer->buffer;
+	buffer->buffer = NULL;
+
+	compression_compress_end(buffer);
+
+	column->chunks[y] = chunk;
+
+	return chunk;
+}
+
+struct bedrock_chunk *chunk_load(struct bedrock_column *column, uint8_t y, nbt_tag *chunk_tag)
 {
 	struct bedrock_chunk *chunk;
 	compression_buffer *buffer;
 	struct nbt_tag_byte_array *byte_array;
+
+	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
 
 	chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
 	chunk->column = column;
@@ -44,27 +76,60 @@ struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y, nbt
 
 	compression_compress_end(buffer);
 
+	column->chunks[y] = chunk;
+
 	return chunk;
+}
+
+uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z)
+{
+	uint16_t block_index;
+
+	bedrock_assert(chunk->blocks != NULL, return NULL);
+
+	x %= BEDROCK_BLOCKS_PER_CHUNK;
+	y %= BEDROCK_BLOCKS_PER_CHUNK;
+	z %= BEDROCK_BLOCKS_PER_CHUNK;
+
+	if (x < 0)
+		x = BEDROCK_BLOCKS_PER_CHUNK - abs(x);
+	if (z < 0)
+		z = BEDROCK_BLOCKS_PER_CHUNK - abs(z);
+
+	block_index = (y * BEDROCK_BLOCKS_PER_CHUNK + z) * BEDROCK_BLOCKS_PER_CHUNK + x;
+
+	bedrock_assert(block_index < BEDROCK_BLOCK_LENGTH, return NULL);
+
+	return &chunk->blocks[block_index];
 }
 
 void chunk_free(struct bedrock_chunk *chunk)
 {
 	int i;
+	bool others;
 
 	if (!chunk)
 		return;
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing chunk %d in column %d,%d", chunk->y, chunk->column->x, chunk->column->z);
 
+	others = false;
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+	{
 		if (chunk->column->chunks[i] == chunk)
 			chunk->column->chunks[i] = NULL;
+		else if (chunk->column->chunks[i] != NULL)
+			others = true;
+	}
 
 	chunk_compress(chunk);
 
 	bedrock_buffer_free(chunk->compressed_data);
 
 	bedrock_free_pool(&chunk_pool, chunk);
+
+	if (others == false)
+		column_free(chunk->column);
 }
 
 void chunk_decompress(struct bedrock_chunk *chunk)

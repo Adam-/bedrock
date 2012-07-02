@@ -11,6 +11,7 @@
 #include "packet/packet_player_look.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_digging.h"
+#include "packet/packet_block_placement.h"
 #include "packet/packet_held_item_change.h"
 #include "packet/packet_entity_animation.h"
 #include "packet/packet_entity_action.h"
@@ -26,36 +27,37 @@ static struct c2s_packet_handler
 	uint8_t flags;
 	int (*handler)(struct bedrock_client *, const bedrock_packet *);
 } packet_handlers[] = {
-	{KEEP_ALIVE,             5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
-	{LOGIN_REQUEST,         20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
-	{HANDSHAKE,              3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
-	{CHAT_MESSAGE,           3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
-	{TIME,                   9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_EQUIPMENT,      11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{SPAWN_POINT,           13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{PLAYER,                 2, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_player},
-	{PLAYER_POS,            34, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position},
-	{PLAYER_LOOK,           10, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_look},
-	{PLAYER_POS_LOOK,       42, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position_and_look},
-	{PLAYER_DIGGING,        12, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_digging},
-	{HELD_ITEM_CHANGE,       3, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_held_item_change},
-	{ENTITY_ANIMATION,       6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_animation},
-	{ENTITY_ACTION,          6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_action},
-	{SPAWN_NAMED_ENTITY,    23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{SPAWN_DROPPED_ITEM,    25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{COLLECT_ITEM,           9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{DESTROY_ENTITY,         5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_TELEPORT,       19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_HEAD_LOOK,       6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_METADATA,        5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{MAP_COLUMN_ALLOCATION, 10, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{MAP_COLUMN,            22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{BLOCK_CHANGE,          12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{CLOSE_WINDOW,           2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
-	{SET_SLOT,               4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},               
-	{PLAYER_LIST,            6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{LIST_PING,              1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
-	{DISCONNECT,             3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
+	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
+	{LOGIN_REQUEST,          20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
+	{HANDSHAKE,               3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
+	{CHAT_MESSAGE,            3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
+	{TIME,                    9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_EQUIPMENT,       11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{SPAWN_POINT,            13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{PLAYER,                  2, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_player},
+	{PLAYER_POS,             34, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position},
+	{PLAYER_LOOK,            10, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_look},
+	{PLAYER_POS_LOOK,        42, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position_and_look},
+	{PLAYER_DIGGING,         12, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_digging},
+	{PLAYER_BLOCK_PLACEMENT, 11, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_block_placement},
+	{HELD_ITEM_CHANGE,        3, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_held_item_change},
+	{ENTITY_ANIMATION,        6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_animation},
+	{ENTITY_ACTION,           6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_action},
+	{SPAWN_NAMED_ENTITY,     23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{SPAWN_DROPPED_ITEM,     25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{COLLECT_ITEM,            9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{DESTROY_ENTITY,          5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_TELEPORT,        19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_HEAD_LOOK,        6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_METADATA,         5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{MAP_COLUMN_ALLOCATION,  10, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{MAP_COLUMN,             22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{BLOCK_CHANGE,           12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{CLOSE_WINDOW,            2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
+	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
+	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
 static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *handler)

@@ -11,26 +11,6 @@ enum
 	FINISHED_DIGGING = 2
 };
 
-static uint8_t *get_block_from_chunk(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z)
-{
-	uint16_t block_index;
-
-	x %= BEDROCK_BLOCKS_PER_CHUNK;
-	y %= BEDROCK_BLOCKS_PER_CHUNK;
-	z %= BEDROCK_BLOCKS_PER_CHUNK;
-
-	if (x < 0)
-		x = BEDROCK_BLOCKS_PER_CHUNK - abs(x);
-	if (z < 0)
-		z = BEDROCK_BLOCKS_PER_CHUNK - abs(z);
-
-	block_index = (y * BEDROCK_BLOCKS_PER_CHUNK + z) * BEDROCK_BLOCKS_PER_CHUNK + x;
-
-	bedrock_assert(block_index < BEDROCK_BLOCK_LENGTH, return NULL);
-
-	return &chunk->blocks[block_index];
-}
-
 static struct bedrock_item *get_weilded_item(struct bedrock_client *client)
 {
 	nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
@@ -153,7 +133,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 
 		chunk_decompress(chunk);
 
-		block_id = get_block_from_chunk(chunk, x, y, z);
+		block_id = chunk_get_block(chunk, x, y, z);
 		if (block_id == NULL)
 		{
 			chunk_compress(chunk);
@@ -203,7 +183,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 
 		chunk_decompress(chunk);
 
-		block_id = get_block_from_chunk(chunk, x, y, z);
+		block_id = chunk_get_block(chunk, x, y, z);
 		if (block_id == NULL)
 		{
 			chunk_compress(chunk);

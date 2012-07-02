@@ -21,6 +21,7 @@ enum
 	PLAYER_LOOK                   = 0x0C,
 	PLAYER_POS_LOOK               = 0x0D,
 	PLAYER_DIGGING                = 0x0E,
+	PLAYER_BLOCK_PLACEMENT        = 0x0F,
 	HELD_ITEM_CHANGE              = 0x10,
 	ENTITY_ANIMATION              = 0x12,
 	ENTITY_ACTION                 = 0x13,
