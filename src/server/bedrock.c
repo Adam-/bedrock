@@ -9,6 +9,8 @@
 
 #include <time.h>
 #include <errno.h>
+#include <unistd.h>
+#include <getopt.h>
 
 bool bedrock_running = true;
 time_t bedrock_start;
@@ -83,11 +85,49 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 }
 
+static void parse_cli_args(int argc, char **argv)
+{
+	int c;
+
+	struct option options[] = {
+		{"help", no_argument, NULL, 'h'},
+		{"version", no_argument, NULL, 'v'},
+		{NULL, 0, NULL, 0}
+	};
+
+	while ((c = getopt_long(argc, argv, "hv", options, NULL)) != -1)
+	{
+		switch (c)
+		{
+			case 'h':
+				fprintf(stdout, "Bedrock %d.%d%s, built on (%s %s)\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
+				fprintf(stdout, "usage:\n");
+				fprintf(stdout, " -h         shows this help\n");
+				fprintf(stdout, " -v         shows version\n");
+				fprintf(stdout, "\n");
+				exit(0);
+				break;
+			case 'v':
+				fprintf(stdout, "Bedrock %d.%d%s, built on (%s %s)\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
+				exit(0);
+				break;
+			case '?':
+				exit(1);
+		}
+	}
+}
+
 #include <signal.h> // XXX
 int main(int argc, char **argv)
 {
 	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
+
+	parse_cli_args(argc, argv);
+
+	fprintf(stdout, "Bedrock %d.%d%s starting up\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
+	fprintf(stdout, "Listening on %s:%d with %d max players - %s\n", BEDROCK_LISTEN_IP, BEDROCK_LISTEN_PORT, BEDROCK_MAX_USERS, BEDROCK_DESCRIPTION);
+	fprintf(stdout, "Using world \"%s\" at %s\n", BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
 
 	bedrock_start = time(NULL);
 	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
