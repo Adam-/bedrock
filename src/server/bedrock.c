@@ -100,7 +100,7 @@ static void parse_cli_args(int argc, char **argv)
 		switch (c)
 		{
 			case 'h':
-				fprintf(stdout, "Bedrock %d.%d%s, built on (%s %s)\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
+				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
 				fprintf(stdout, "usage:\n");
 				fprintf(stdout, " -h         shows this help\n");
 				fprintf(stdout, " -v         shows version\n");
@@ -108,7 +108,7 @@ static void parse_cli_args(int argc, char **argv)
 				exit(0);
 				break;
 			case 'v':
-				fprintf(stdout, "Bedrock %d.%d%s, built on (%s %s)\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
+				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
 				exit(0);
 				break;
 			case '?':
