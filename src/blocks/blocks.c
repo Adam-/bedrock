@@ -2,7 +2,7 @@
 #include "blocks/blocks.h"
 #include "server/column.h"
 
-static void simple_drop(struct bedrock_client *client, struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z, struct bedrock_block *block)
+static void simple_drop(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z, struct bedrock_block *block)
 {
 	struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
 	di->item = item_find_or_create(block->id);

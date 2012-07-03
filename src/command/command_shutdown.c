@@ -3,7 +3,7 @@
 #include "io/io.h"
 #include "packet/packet_disconnect.h"
 
-void command_shutdown(struct bedrock_client *client, int argc, const char **argv)
+void command_shutdown(struct bedrock_client bedrock_attribute_unused *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	const char *reason = "Server is shutting down";

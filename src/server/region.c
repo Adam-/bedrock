@@ -124,7 +124,7 @@ static void region_load(struct bedrock_region *region)
 	munmap(file_base, file_info.st_size);
 }
 
-static void region_exit(struct bedrock_region *region)
+static void region_exit(struct bedrock_region bedrock_attribute_unused *region)
 {
 	bedrock_node *node;
 

@@ -25,7 +25,7 @@ struct bedrock_command commands[] = {
 
 int command_count = sizeof(commands) / sizeof(struct bedrock_command);
 
-bool command_anyone(struct bedrock_client *client)
+bool command_anyone(struct bedrock_client bedrock_attribute_unused *client)
 {
 	return true;
 }

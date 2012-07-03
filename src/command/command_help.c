@@ -1,6 +1,6 @@
 #include "server/command.h"
 
-void command_help(struct bedrock_client *client, int argc, const char **argv)
+void command_help(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	int i, count;
 

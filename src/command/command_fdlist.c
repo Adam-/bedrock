@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-void command_fdlist(struct bedrock_client *client, int argc, const char **argv)
+void command_fdlist(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	int engines = 0, files = 0, sockets = 0, pipes = 0, total = 0;

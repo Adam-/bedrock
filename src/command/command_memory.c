@@ -62,7 +62,7 @@ static void show_other_memory(struct bedrock_client *client)
 	command_reply(client, "Other: %0.2Lf%s (%0.2Lf%%)", memory, unit, percent);
 }
 
-void command_memory(struct bedrock_client *client, int argc, const char **argv)
+void command_memory(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	long double memory;
 

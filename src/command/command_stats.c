@@ -2,7 +2,7 @@
 #include "server/command.h"
 #include "server/column.h"
 
-void command_stats(struct bedrock_client *client, int argc, const char **argv)
+void command_stats(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node, *node2, *node3;
 	int i;

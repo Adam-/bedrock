@@ -25,4 +25,11 @@ typedef enum bool_ { false, true } bool;
 		abort(); \
 	}
 
+// Ignore gcc warnings about unused variables
+#if defined(__GNUC__) || defined(__clang__) || defined(__ICC)
+# define bedrock_attribute_unused __attribute__((unused))
+#else
+# define bedrock_attribute_unused
+#endif
+
 #endif // BEDROCK_UTIL_H

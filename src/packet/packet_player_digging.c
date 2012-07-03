@@ -62,7 +62,7 @@ static bool can_harvest(struct bedrock_block *block, struct bedrock_item *item)
 /* Calculate how long a block should take to mine using the given item.
  * See: http://www.minecraftwiki.net/wiki/Digging
  */
-static double calculate_block_time(struct bedrock_client *client, struct bedrock_block *block, struct bedrock_item *item)
+static double calculate_block_time(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_block *block, struct bedrock_item *item)
 {
 	// Start with the time, in seconds, it takes to mine the block for no harvest
 	double delay = block->no_harvest_time;
