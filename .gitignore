@@ -1,0 +1,8 @@
+CMakeCache.txt
+CMakeFiles
+Makefile
+bedrock
+cmake_install.cmake
+src/config/lexer.c
+src/config/parser.c
+src/config/parser.h
