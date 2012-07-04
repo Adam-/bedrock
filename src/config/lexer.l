@@ -5,6 +5,8 @@ int config_line_num = 1;
 %}
 
 %option noyywrap
+%option nounput
+%option noinput
 
 %%
 world		{ return WORLD; }
