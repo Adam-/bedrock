@@ -10,6 +10,8 @@ struct bedrock_chunk
 	struct bedrock_column *column;
 	/* Y coordinate */
 	uint8_t y;
+
+	/* True if this chunk is modified in memory */
 	bool modified;
 
 	/* A buffer of the compressed data use to fill below */

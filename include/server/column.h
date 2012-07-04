@@ -6,6 +6,12 @@
 struct bedrock_column
 {
 	struct bedrock_region *region;
+
+	/* Offset into region file */
+	uint32_t offset;
+	/* True if this column is being saved */
+	bool saving;
+
 	int32_t x;
 	int32_t z;
 
@@ -42,11 +48,14 @@ struct bedrock_dropped_item
 };
 
 extern struct bedrock_memory_pool column_pool;
+extern bedrock_list dirty_columns;
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
 /* Finds the column which contains the point x and z */
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
+/* Mark a column as dirty and add it to the dirty_columns list */
+extern void column_dirty(struct bedrock_column *column);
 
 /* Place a dropped item in the column */
 extern void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di);

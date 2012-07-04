@@ -11,6 +11,7 @@
 #define DATA_CHUNK_SIZE 2048
 
 struct bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT("column memory pool");
+bedrock_list dirty_columns = LIST_INIT;
 
 struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
 {
@@ -68,6 +69,20 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_assert(column->players.count == 0, ;);
 
+	if (column->saving)
+	{
+		/* We can't free this now because it's being written to disk.
+		 * Instead detach it from the region, and it will be deleted
+		 * later once the write is complete.
+		 */
+		column->region = NULL;
+		return;
+	}
+
+	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
+
+	bedrock_list_del(&dirty_columns, column);
+
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);
 
@@ -110,6 +125,14 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	bedrock_mutex_unlock(&region->column_mutex);
 
 	return column;
+}
+
+void column_dirty(struct bedrock_column *column)
+{
+	if (column == NULL || bedrock_list_has_data(&dirty_columns, column))
+		return;
+
+	bedrock_list_add(&dirty_columns, column);
 }
 
 void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)

@@ -191,6 +191,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		*being_placed = id;
 		real_chunk->modified = true;
+		column_dirty(real_chunk->column);
 
 		// Notify clients who can see this column of the change
 		LIST_FOREACH(&real_chunk->column->players, node)

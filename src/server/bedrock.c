@@ -64,7 +64,7 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 	va_end(args);
 
-	if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && level != LEVEL_COLUMN && level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
+	if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && /*level != LEVEL_COLUMN && */level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
 		fprintf(stdout, "%s\n", buffer);
 }
 
@@ -83,6 +83,13 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	while (++id == 0);
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
+}
+
+static void save_databases(void __attribute__((__unused__)) *notused)
+{
+	region_save();
+
+	bedrock_timer_schedule(6000, save_databases, NULL);
 }
 
 static void parse_cli_args(int argc, char **argv)
@@ -151,6 +158,7 @@ int main(int argc, char **argv)
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, region_free_queue, NULL);
+	bedrock_timer_schedule(6000, save_databases, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{

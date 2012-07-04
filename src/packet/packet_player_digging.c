@@ -211,6 +211,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		block = block_find_or_create(*block_id);
 		*block_id = BLOCK_AIR;
 		chunk->modified = true;
+		column_dirty(chunk->column);
 
 		// Notify players in render distance of the column to remove the block
 		LIST_FOREACH(&chunk->column->players, node)

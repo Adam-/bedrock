@@ -64,6 +64,7 @@ static void region_load(struct bedrock_region *region)
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
 	{
 		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
+		uint8_t sectors;
 		uint32_t offset;
 		uint32_t length;
 		nbt_tag *tag;
@@ -79,6 +80,7 @@ static void region_load(struct bedrock_region *region)
 		 * The other 3 bytes contain the offset to the chunk-sector.
 		 * - http://wiki.vg/User:Sprenger120
 		 */
+		sectors = offset & 0xFF;
 		offset >>= 8;
 
 		/* When you've got the offset from the header, you have to move the file pointer to offset * 4096.
@@ -112,11 +114,13 @@ static void region_load(struct bedrock_region *region)
 
 		column = column_create(region, tag);
 
+		column->offset = offset;
+
 		bedrock_mutex_lock(&region->column_mutex);
 		bedrock_list_add(&region->columns, column);
 		bedrock_mutex_unlock(&region->column_mutex);
 
-		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d from %s", column->x, column->z, region->path);
+		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d at offset %d using %d sectors from %s", column->x, column->z, offset, sectors, region->path);
 	}
 
 	compression_decompress_end(cb);
@@ -176,7 +180,7 @@ void region_queue_free(struct bedrock_region *region)
 {
 	if (bedrock_list_has_data(&empty_regions, region) == false)
 	{
-		bedrock_log(LEVEL_COLUMN, "region: Queueing region %d, %d for free", region->x, region->z);
+		bedrock_log(LEVEL_COLUMN, "region: Queuing region %d, %d for free", region->x, region->z);
 		bedrock_list_add(&empty_regions, region);
 	}
 }
@@ -229,3 +233,37 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 	return region;
 }
 
+static void region_save_column_entry(struct bedrock_column *column)
+{
+
+}
+
+static void region_save_column_exit(struct bedrock_column *column)
+{
+	column->saving = false;
+
+	bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d", column->x, column->z);
+
+	/* This column may need to be deleted now */
+	if (column->region == NULL)
+		column_free(column);
+}
+
+void region_save()
+{
+	bedrock_node *node, *node2;
+
+	LIST_FOREACH_SAFE(&dirty_columns, node, node2)
+	{
+		struct bedrock_column *column = node->data;
+
+		bedrock_log(LEVEL_COLUMN, "region: Starting save for column %d,%d", column->x, column->z);
+
+		column->saving = true;
+
+		bedrock_thread_start((bedrock_thread_entry) region_save_column_entry, (bedrock_thread_exit) region_save_column_exit, column);
+
+		bedrock_list_del_node(&dirty_columns, node);
+		bedrock_free(node);
+	}
+}
