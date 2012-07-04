@@ -69,9 +69,10 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_assert(column->players.count == 0, ;);
 
-	if (column->saving)
+	if (column->saving || bedrock_list_has_data(&dirty_columns, column))
 	{
-		/* We can't free this now because it's being written to disk.
+		/* We can't free this now because it's being written to disk *or*
+		 * has pending changes needing disk write.
 		 * Instead detach it from the region, and it will be deleted
 		 * later once the write is complete.
 		 */
@@ -80,8 +81,6 @@ void column_free(struct bedrock_column *column)
 	}
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
-
-	bedrock_list_del(&dirty_columns, column);
 
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);

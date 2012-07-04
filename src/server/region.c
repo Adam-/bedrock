@@ -64,7 +64,6 @@ static void region_load(struct bedrock_region *region)
 	for (i = 0; i < REGION_HEADER_SIZE; ++i)
 	{
 		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
-		uint8_t sectors;
 		uint32_t offset;
 		uint32_t length;
 		nbt_tag *tag;
@@ -80,7 +79,6 @@ static void region_load(struct bedrock_region *region)
 		 * The other 3 bytes contain the offset to the chunk-sector.
 		 * - http://wiki.vg/User:Sprenger120
 		 */
-		sectors = offset & 0xFF;
 		offset >>= 8;
 
 		/* When you've got the offset from the header, you have to move the file pointer to offset * 4096.
