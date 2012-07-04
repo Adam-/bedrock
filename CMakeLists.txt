@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 2.8)
 
+project(bedrock C)
+
 include_directories(include)
+
+find_package(FLEX)
+find_package(BISON)
+
+FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l
+${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.c)
+BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y
+${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.c)
+ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
 
 # Get a list of folders from src/ and remove any CMake crap
 file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*")
@@ -22,6 +33,6 @@ list(SORT BEDROCK_SOURCES)
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
-add_executable(bedrock ${BEDROCK_SOURCES})
+add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
 target_link_libraries(bedrock z m rt pthread)
 

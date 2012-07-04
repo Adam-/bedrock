@@ -1,8 +1,8 @@
 %{
-#include "lexer.h"
 #include "server/world.h"
 #include "config/config.h"
 
+extern int yylex();
 extern void yyerror(const char *s);
 
 static struct bedrock_world *world;

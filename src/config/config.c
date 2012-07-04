@@ -1,7 +1,6 @@
 #include "server/bedrock.h"
 #include "config/hard.h"
 
-#include "lexer.h"
 #include <errno.h>
 
 char server_desc[BEDROCK_MAX_STRING_LENGTH];
@@ -9,6 +8,7 @@ int server_maxusers;
 char server_ip[64];
 int server_port;
 
+extern FILE *yyin;
 extern int yyparse();
 extern int config_line_num;
 

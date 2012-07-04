@@ -1,5 +1,5 @@
 %{
-#include "parser.tab.h"
+#include "parser.h"
 
 int config_line_num = 1;
 %}
