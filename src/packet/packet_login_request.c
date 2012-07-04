@@ -2,6 +2,7 @@
 #include "server/packet.h"
 #include "nbt/nbt.h"
 #include "packet/packet_disconnect.h"
+#include "config/config.h"
 
 int packet_login_request(struct bedrock_client *client, const bedrock_packet *p)
 {
@@ -33,7 +34,7 @@ int packet_login_request(struct bedrock_client *client, const bedrock_packet *p)
 		packet_send_disconnect(client, "Username mismatch");
 		return offset;
 	}
-	else if (authenticated_client_count >= BEDROCK_MAX_USERS)
+	else if (authenticated_client_count >= server_maxusers)
 	{
 		packet_send_disconnect(client, "Server is full");
 		return offset;
@@ -50,7 +51,7 @@ int packet_login_request(struct bedrock_client *client, const bedrock_packet *p)
 	packet_pack_int(&packet, nbt_read(client->world->data, TAG_BYTE, 2, "Data", "hardcore"), sizeof(uint8_t)); /* hardcore */
 	b = 0;
 	packet_pack_int(&packet, &b, sizeof(b)); /* Not used */
-	b = BEDROCK_MAX_USERS;
+	b = server_maxusers;
 	packet_pack_int(&packet, &b, sizeof(b)); /* Max players */
 
 	client_send_packet(client, &packet);

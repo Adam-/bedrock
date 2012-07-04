@@ -28,8 +28,13 @@ int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
 		packet_send_disconnect(client, "Your account is already logged in");
 		return offset;
 	}
+	else if (world_list.count == 0)
+	{
+		packet_send_disconnect(client, "Server misconfiguration - no default world");
+		return offset;
+	}
 
-	world = world_find(BEDROCK_WORLD_NAME);
+	world = world_list.head->data;
 	bedrock_assert(world != NULL, return ERROR_UNKNOWN);
 
 	strncpy(client->name, username, sizeof(client->name));

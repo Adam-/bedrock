@@ -5,7 +5,7 @@
 #include "util/list.h"
 #include "util/buffer.h"
 #include "util/memory.h"
-#include "server/config.h"
+#include "config/hard.h"
 #include "server/world.h"
 #include "server/packet.h"
 #include "blocks/items.h"

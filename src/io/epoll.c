@@ -1,6 +1,5 @@
 #include "server/bedrock.h"
 #include "io/io.h"
-#include "server/config.h"
 
 #include <sys/epoll.h>
 #include <errno.h>

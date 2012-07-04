@@ -1,7 +1,7 @@
 #include "util/timer.h"
 #include "util/list.h"
 #include "util/memory.h"
-#include "server/config.h"
+#include "config/hard.h"
 #include "server/bedrock.h"
 
 static bedrock_list timer_list;

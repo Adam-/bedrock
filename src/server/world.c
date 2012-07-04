@@ -4,7 +4,6 @@
 #include "compression/compression.h"
 #include "server/world.h"
 #include "nbt/nbt.h"
-#include "server/config.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

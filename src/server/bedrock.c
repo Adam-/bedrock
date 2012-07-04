@@ -1,11 +1,11 @@
 #include "server/bedrock.h"
-#include "server/config.h"
 #include "server/listener.h"
 #include "server/client.h"
 #include "server/region.h"
 #include "io/io.h"
 #include "util/timer.h"
 #include "packet/packet_keep_alive.h"
+#include "config/config.h"
 
 #include <time.h>
 #include <errno.h>
@@ -126,14 +126,23 @@ int main(int argc, char **argv)
 	parse_cli_args(argc, argv);
 
 	fprintf(stdout, "Bedrock %d.%d%s starting up\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
-	fprintf(stdout, "Listening on %s:%d with %d max players - %s\n", BEDROCK_LISTEN_IP, BEDROCK_LISTEN_PORT, BEDROCK_MAX_USERS, BEDROCK_DESCRIPTION);
-	fprintf(stdout, "Using world \"%s\" at %s\n", BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
+
+	if (config_parse("server.config"))
+		exit(1);
+
+	fprintf(stdout, "Listening on %s:%d with %d max players - %s\n", server_ip, server_port, server_maxusers, server_desc);
+
+	if (world_list.count == 0)
+		exit(1);
+	
+	world = world_list.head->data;
+
+	fprintf(stdout, "Using world \"%s\" at %s\n", world->name, world->path);
 
 	bedrock_start = time(NULL);
 	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
 	last_tick = bedrock_time;
 
-	world = world_create(BEDROCK_WORLD_NAME, BEDROCK_WORLD_BASE);
 	if (world_load(world) == false)
 		exit(1);
 

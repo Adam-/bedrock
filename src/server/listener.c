@@ -1,8 +1,8 @@
 #include "server/bedrock.h"
-#include "server/config.h"
 #include "io/io.h"
 #include "server/client.h"
 #include "util/fd.h"
+#include "config/config.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -69,14 +69,14 @@ void listener_init()
 
 	setsockopt(fd.fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-	if (inet_pton(AF_INET, BEDROCK_LISTEN_IP, &fd.addr.in4.sin_addr) != 1)
+	if (inet_pton(AF_INET, server_ip, &fd.addr.in4.sin_addr) != 1)
 	{
 		bedrock_log(LEVEL_CRIT, "Unable to call inet_pton - %s", strerror(errno));
 		abort();
 	}
 
 	fd.addr.in4.sin_family = AF_INET;
-	fd.addr.in4.sin_port = htons(BEDROCK_LISTEN_PORT);
+	fd.addr.in4.sin_port = htons(server_port);
 	if (bind(fd.fd, &fd.addr.in, sizeof(fd.addr.in4)) < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Unable to bind - %s", strerror(errno));

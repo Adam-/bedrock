@@ -2,7 +2,7 @@
 #include "util/util.h"
 #include "compression/compression.h"
 #include "util/memory.h"
-#include "server/config.h"
+#include "config/hard.h"
 #include "nbt/nbt.h"
 
 #define BLOCK_CHUNK_SIZE 8192

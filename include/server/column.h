@@ -1,6 +1,6 @@
 #include "server/region.h"
 #include "server/chunk.h"
-#include "server/config.h"
+#include "config/hard.h"
 #include "blocks/items.h"
 
 struct bedrock_column

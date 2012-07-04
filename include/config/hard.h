@@ -1,13 +1,4 @@
-/* Until I have a real config reader */
-
-#define BEDROCK_WORLD_NAME "world"
-#define BEDROCK_WORLD_BASE "/home/adam/world-original"
-
-#define BEDROCK_DESCRIPTION "Adam's custom server"
-#define BEDROCK_MAX_USERS 8
-
-#define BEDROCK_LISTEN_IP "0.0.0.0"
-#define BEDROCK_LISTEN_PORT 25565
+/* Hard configuration for stuff that probably shouldn't change */
 
 /* Tick length in milliseconds */
 #define BEDROCK_TICK_LENGTH 50
