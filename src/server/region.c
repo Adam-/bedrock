@@ -118,7 +118,7 @@ static void region_load(struct bedrock_region *region)
 		bedrock_list_add(&region->columns, column);
 		bedrock_mutex_unlock(&region->column_mutex);
 
-		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d at offset %d using %d sectors from %s", column->x, column->z, offset, sectors, region->path);
+		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d at offset %d sectors from %s", column->x, column->z, offset, region->path);
 	}
 
 	compression_decompress_end(cb);
