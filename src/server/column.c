@@ -163,7 +163,7 @@ static void column_save_entry(struct dirty_column *dc)
 	i = open(dc->region_path, O_RDONLY);
 	if (i == -1)
 	{
-		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
+		bedrock_log(LEVEL_WARN, "column: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
 		return;
 	}
 
@@ -193,7 +193,7 @@ static void column_save_exit(struct dirty_column *dc)
 
 	column->saving = false;
 
-	bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d", column->x, column->z);
+	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d", column->x, column->z);
 
 	/* This column may need to be deleted now */
 	if (column->region == NULL)
