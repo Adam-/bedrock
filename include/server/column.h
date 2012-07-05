@@ -7,6 +7,8 @@ struct bedrock_column
 {
 	struct bedrock_region *region;
 
+	/* True if this column is dirty */
+	bool dirty;
 	/* True if this column is being saved */
 	bool saving;
 
@@ -46,7 +48,6 @@ struct bedrock_dropped_item
 };
 
 extern struct bedrock_memory_pool column_pool;
-extern bedrock_list dirty_columns;
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
@@ -54,6 +55,7 @@ extern void column_free(struct bedrock_column *column);
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
 /* Mark a column as dirty and add it to the dirty_columns list */
 extern void column_dirty(struct bedrock_column *column);
+extern void column_save();
 
 /* Place a dropped item in the column */
 extern void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di);

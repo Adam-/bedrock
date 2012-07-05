@@ -87,7 +87,7 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 
 static void save_databases(void __attribute__((__unused__)) *notused)
 {
-	region_save();
+	column_save();
 
 	bedrock_timer_schedule(6000, save_databases, NULL);
 }

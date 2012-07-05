@@ -7,11 +7,21 @@
 #include "packet/packet_destroy_entity.h"
 
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #define DATA_CHUNK_SIZE 2048
 
 struct bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT("column memory pool");
-bedrock_list dirty_columns = LIST_INIT;
+static bedrock_list dirty_columns = LIST_INIT;
+
+struct dirty_column
+{
+	struct bedrock_column *column;
+	char region_path[PATH_MAX];
+};
 
 struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
 {
@@ -69,7 +79,7 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_assert(column->players.count == 0, ;);
 
-	if (column->saving || bedrock_list_has_data(&dirty_columns, column))
+	if (column->saving || column->dirty)
 	{
 		/* We can't free this now because it's being written to disk *or*
 		 * has pending changes needing disk write.
@@ -128,10 +138,89 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 void column_dirty(struct bedrock_column *column)
 {
-	if (column == NULL || bedrock_list_has_data(&dirty_columns, column))
+	struct dirty_column *dc;
+
+	if (column == NULL || column->dirty == true)
 		return;
 
-	bedrock_list_add(&dirty_columns, column);
+	dc = bedrock_malloc(sizeof(struct dirty_column));
+
+	dc->column = column;
+	strncpy(dc->region_path, column->region->path, sizeof(dc->region_path));
+
+	bedrock_list_add(&dirty_columns, dc);
+}
+
+static void column_save_entry(struct dirty_column *dc)
+{
+	struct bedrock_column *column = dc->column;
+	int i;
+	int32_t column_x, column_z;
+	int offset;
+	nbt_tag *tag;
+	compression_buffer *cb;
+
+	i = open(dc->region_path, O_RDONLY);
+	if (i == -1)
+	{
+		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
+		return;
+	}
+
+	close(i);
+
+	column_x = column->x;
+	if (column_x < 0)
+		column_x = BEDROCK_COLUMNS_PER_REGION - abs(column_x);
+
+	column_z = column->z;
+	if (column_z < 0)
+		column_z = BEDROCK_COLUMNS_PER_REGION - abs(column_z);
+
+	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
+
+	/* Build the tag */
+	//tag = nbt_create();
+
+	cb = compression_compress_init(&region_pool, DATA_CHUNK_SIZE);
+
+	compression_decompress_end(cb);
+}
+
+static void column_save_exit(struct dirty_column *dc)
+{
+	struct bedrock_column *column = dc->column;
+
+	column->saving = false;
+
+	bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d", column->x, column->z);
+
+	/* This column may need to be deleted now */
+	if (column->region == NULL)
+		column_free(column);
+
+	bedrock_free(dc);
+}
+
+void column_save()
+{
+	bedrock_node *node, *node2;
+
+	LIST_FOREACH_SAFE(&dirty_columns, node, node2)
+	{
+		struct dirty_column *dc = node->data;
+		struct bedrock_column *column = dc->column;
+
+		bedrock_log(LEVEL_COLUMN, "column: Starting save for column %d,%d", column->x, column->z);
+
+		column->dirty = false;
+		column->saving = true;
+
+		bedrock_thread_start((bedrock_thread_entry) column_save_entry, (bedrock_thread_exit) column_save_exit, dc);
+
+		bedrock_list_del_node(&dirty_columns, node);
+		bedrock_free(node);
+	}
 }
 
 void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)
