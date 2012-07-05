@@ -26,7 +26,7 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 	column->data = data;
 
 	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
-	LIST_FOREACH(&tag->payload.tag_list, node)
+	LIST_FOREACH(&tag->payload.tag_list.list, node)
 	{
 		nbt_tag *chunk_tag = node->data;
 		uint8_t y;

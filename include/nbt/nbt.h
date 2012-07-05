@@ -1,6 +1,8 @@
 #include "nbt/tag.h"
+#include "util/buffer.h"
 
 extern nbt_tag *nbt_parse(const unsigned char *data, size_t size);
+extern bedrock_buffer *nbt_write(nbt_tag *tag);
 extern void nbt_free(nbt_tag *tag);
 
 extern nbt_tag *nbt_get(nbt_tag *tag, nbt_tag_type type, size_t size, ...);

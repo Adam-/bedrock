@@ -81,22 +81,22 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 		}
 		case TAG_LIST:
 		{
-			int8_t tag_type;
-			int32_t tag_length, i;
+			struct nbt_tag_list *tl = &tag->payload.tag_list;
+			int32_t i;
 
-			CHECK_RETURN(read_bytes(&tag_type, sizeof(tag_type), data, size, true), error);
-			CHECK_RETURN(read_bytes(&tag_length, sizeof(tag_length), data, size, true), error);
+			CHECK_RETURN(read_bytes(&tl->type, sizeof(tl->type), data, size, true), error);
+			CHECK_RETURN(read_bytes(&tl->length, sizeof(tl->length), data, size, true), error);
 
-			for (i = 0; i < tag_length; ++i)
+			for (i = 0; i < tl->length; ++i)
 			{
 				nbt_tag *nested_tag = bedrock_malloc(sizeof(nbt_tag));
 
-				nested_tag->type = tag_type;
+				nested_tag->type = tl->type;
 				nested_tag->owner = tag;
 				nested_tag = read_unnamed_tag(nested_tag, data, size);
 
 				if (nested_tag != NULL)
-					bedrock_list_add(&tag->payload.tag_list, nested_tag);
+					bedrock_list_add(&tl->list, nested_tag);
 			}
 			break;
 		}
@@ -180,6 +180,131 @@ nbt_tag *nbt_parse(const unsigned char *data, size_t size)
 	return read_named_tag(tag, &data, &size);
 }
 
+static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
+{
+	switch (tag->type)
+	{
+		case TAG_BYTE:
+		{
+			int8_t b = tag->payload.tag_byte;
+			bedrock_buffer_append(buffer, &b, sizeof(b));
+			break;
+		}
+		case TAG_SHORT:
+		{
+			int16_t s = tag->payload.tag_short;
+			convert_endianness((unsigned char *) &s, sizeof(s));
+			bedrock_buffer_append(buffer, &s, sizeof(s));
+			break;
+		}
+		case TAG_INT:
+		{
+			int32_t i = tag->payload.tag_int;
+			convert_endianness((unsigned char *) &i, sizeof(i));
+			bedrock_buffer_append(buffer, &i, sizeof(i));
+			break;
+		}
+		case TAG_LONG:
+		{
+			int64_t l = tag->payload.tag_long;
+			convert_endianness((unsigned char *) &l, sizeof(l));
+			bedrock_buffer_append(buffer, &l, sizeof(l));
+			break;
+		}
+		case TAG_FLOAT:
+		{
+			float f = tag->payload.tag_float;
+			convert_endianness((unsigned char *) &f, sizeof(f));
+			bedrock_buffer_append(buffer, &f, sizeof(f));
+			break;
+		}
+		case TAG_DOUBLE:
+		{
+			double d = tag->payload.tag_double;
+			convert_endianness((unsigned char *) &d, sizeof(d));
+			bedrock_buffer_append(buffer, &d, sizeof(d));
+			break;
+		}
+		case TAG_BYTE_ARRAY:
+		{
+			struct nbt_tag_byte_array *tba = &tag->payload.tag_byte_array;
+			int32_t len = tba->length;
+
+			convert_endianness((unsigned char *) &len, sizeof(len));
+			bedrock_buffer_append(buffer, &len, sizeof(len));
+
+			bedrock_buffer_append(buffer, tba->data, tba->length);
+			break;
+		}
+		case TAG_STRING:
+		{
+			uint16_t str_len = strlen(tag->payload.tag_string);
+
+			convert_endianness((unsigned char *) &str_len, sizeof(str_len));
+			bedrock_buffer_append(buffer, (const unsigned char *) &str_len, sizeof(str_len));
+
+			bedrock_buffer_append(buffer, tag->payload.tag_string, strlen(tag->payload.tag_string));
+			break;
+		}
+		case TAG_LIST:
+		{
+			struct nbt_tag_list *tl = &tag->payload.tag_list;
+			int32_t len = tl->length;
+			bedrock_node *node;
+
+			bedrock_buffer_append(buffer, (const unsigned char *) &tl->type, sizeof(tl->type));
+
+			convert_endianness((unsigned char *) &len, sizeof(len));
+			bedrock_buffer_append(buffer, &len, sizeof(len));
+
+			LIST_FOREACH(&tl->list, node)
+			{
+				nbt_tag *nested_tag = node->data;
+
+				write_unnamed_tag(buffer, nested_tag);
+			}
+			break;
+		}
+		case TAG_COMPOUND:
+		{
+			bedrock_node *node;
+
+			LIST_FOREACH(&tag->payload.tag_compound, node)
+			{
+				nbt_tag *nested_tag = node->data;
+
+				write_unnamed_tag(buffer, nested_tag);
+			}
+			break;
+		}
+		case TAG_INT_ARRAY:
+		{
+			struct nbt_tag_int_array *tia = &tag->payload.tag_int_array;
+			int32_t i, len = tia->length;
+			int32_t *b;
+
+			convert_endianness((unsigned char *) &len, sizeof(len));
+			bedrock_buffer_append(buffer, &len, sizeof(len));
+
+			b = (int32_t *) buffer->data;
+			bedrock_buffer_append(buffer, tia->data, sizeof(int32_t) * tia->length);
+
+			for (i = 0; i < tia->length; ++i)
+				convert_endianness((unsigned char *) b + i, sizeof(int32_t));
+			break;
+		}
+		default:
+			bedrock_log(LEVEL_CRIT, "nbt: Unknown tag type - %d", tag->type);
+	}
+}
+
+bedrock_buffer *nbt_write(nbt_tag *tag)
+{
+	bedrock_buffer *buffer = bedrock_buffer_create(NULL, NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	write_unnamed_tag(buffer, tag);
+	return buffer;
+}
+
 void nbt_free(nbt_tag *tag)
 {
 	bedrock_assert(tag != NULL, return);
@@ -188,7 +313,10 @@ void nbt_free(nbt_tag *tag)
 	if (tag->owner != NULL)
 	{
 		bedrock_assert(tag->owner->type == TAG_LIST || tag->owner->type == TAG_COMPOUND, ;);
-		bedrock_list_del(&tag->owner->payload.tag_list, tag);
+		if (tag->owner->type == TAG_COMPOUND)
+			bedrock_list_del(&tag->owner->payload.tag_compound, tag);
+		else
+			bedrock_list_del(&tag->owner->payload.tag_list.list, tag);
 	}
 
 	bedrock_free(tag->name);
@@ -202,8 +330,8 @@ void nbt_free(nbt_tag *tag)
 			bedrock_free(tag->payload.tag_string);
 			break;
 		case TAG_LIST:
-			tag->payload.tag_list.free = (bedrock_free_func) nbt_free;
-			bedrock_list_clear(&tag->payload.tag_list);
+			tag->payload.tag_list.list.free = (bedrock_free_func) nbt_free;
+			bedrock_list_clear(&tag->payload.tag_list.list);
 			break;
 		case TAG_COMPOUND:
 			tag->payload.tag_compound.free = (bedrock_free_func) nbt_free;
@@ -238,7 +366,7 @@ static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
 			int pos = va_arg(list, int);
 			int count = 0;
 
-			LIST_FOREACH(&t->payload.tag_list, n)
+			LIST_FOREACH(&t->payload.tag_list.list, n)
 			{
 				nbt_tag *t2 = n->data;
 
@@ -356,7 +484,10 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 
 	memcpy(&c->payload, src, src_size);
 
-	bedrock_list_add(&tag->payload.tag_list, c);
+	if (tag->type == TAG_LIST)
+		bedrock_list_add(&tag->payload.tag_list.list, c);
+	else
+		bedrock_list_add(&tag->payload.tag_compound, c);
 
 	return c;
 }
@@ -404,13 +535,13 @@ static void recursive_dump_tag(nbt_tag *t, int level)
 		}
 		case TAG_LIST:
 		{
-			printf("TAG_List(%s): length %ld\n", name, t->payload.tag_list.count);
+			printf("TAG_List(%s): length %d\n", name, t->payload.tag_list.length);
 			for (r = 0; r < level; ++r)
 				printf("	");
 			printf("{\n");
 
 			bedrock_node *n;
-			LIST_FOREACH(&t->payload.tag_list, n)
+			LIST_FOREACH(&t->payload.tag_list.list, n)
 			{
 				nbt_tag *t2 = n->data;
 				recursive_dump_tag(t2, level + 1);
@@ -423,13 +554,13 @@ static void recursive_dump_tag(nbt_tag *t, int level)
 		}
 		case TAG_COMPOUND:
 		{
-			printf("TAG_Compound(%s): length %ld\n", name, t->payload.tag_list.count);
+			printf("TAG_Compound(%s): length %ld\n", name, t->payload.tag_compound.count);
 			for (r = 0; r < level; ++r)
 				printf("	");
 			printf("{\n");
 
 			bedrock_node *n;
-			LIST_FOREACH(&t->payload.tag_list, n)
+			LIST_FOREACH(&t->payload.tag_compound, n)
 			{
 				nbt_tag *t2 = n->data;
 				recursive_dump_tag(t2, level + 1);

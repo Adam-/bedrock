@@ -7,8 +7,6 @@ struct bedrock_column
 {
 	struct bedrock_region *region;
 
-	/* Offset into region file */
-	uint32_t offset;
 	/* True if this column is being saved */
 	bool saving;
 

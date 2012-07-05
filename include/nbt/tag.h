@@ -44,7 +44,14 @@ typedef struct _nbt_tag
 		} tag_byte_array;
 
 		char *tag_string;
-		bedrock_list tag_list;
+
+		struct nbt_tag_list
+		{
+			uint8_t type;
+			int32_t length;
+			bedrock_list list;
+		} tag_list;
+
 		bedrock_list tag_compound;
 
 		struct nbt_tag_int_array

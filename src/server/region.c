@@ -112,13 +112,11 @@ static void region_load(struct bedrock_region *region)
 
 		column = column_create(region, tag);
 
-		column->offset = offset;
-
 		bedrock_mutex_lock(&region->column_mutex);
 		bedrock_list_add(&region->columns, column);
 		bedrock_mutex_unlock(&region->column_mutex);
 
-		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d at offset %d from %s", column->x, column->z, offset, region->path);
+		bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d at index %d from offset %d from %s", column->x, column->z, i, offset, region->path);
 	}
 
 	compression_decompress_end(cb);
@@ -233,7 +231,54 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 
 static void region_save_column_entry(struct bedrock_column *column)
 {
+	int i;
+	int32_t column_x, column_z;
+	int offset;
+	nbt_tag *tag;
+	compression_buffer *cb;
+#if 0
 
+	i = open(region->path, O_RDONLY);
+	if (i == -1)
+	{
+		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s for saving - %s", region->path, strerror(errno));
+		return;
+	}
+
+	if (fstat(i, &file_info) != 0)
+	{
+		bedrock_log(LEVEL_WARN, "region: Unable to stat region file %s - %s", region->path, strerror(errno));
+		close(i);
+		return;
+	}
+
+	file_base = mmap(NULL, file_info.st_size, PROT_READ, MAP_SHARED, i, 0);
+	if (file_base == MAP_FAILED)
+	{
+		bedrock_log(LEVEL_WARN, "region: Unable to map region file %s - %s", region->path, strerror(errno));
+		close(i);
+		return;
+	}
+
+	close(i);
+#endif
+
+	column_x = column->x;
+	if (column_x < 0)
+		column_x = BEDROCK_COLUMNS_PER_REGION - abs(column_x);
+
+	column_z = column->z;
+	if (column_z < 0)
+		column_z = BEDROCK_COLUMNS_PER_REGION - abs(column_z);
+
+	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
+
+	/* Build the tag */
+	//tag = nbt_create();
+
+	cb = compression_compress_init(&region_pool, REGION_BUFFER_SIZE);
+
+	compression_decompress_end(cb);
 }
 
 static void region_save_column_exit(struct bedrock_column *column)

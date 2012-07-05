@@ -390,7 +390,7 @@ nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot)
 {
 	bedrock_node *node;
 
-	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list, node)
 	{
 		nbt_tag *c = node->data;
 		uint8_t *s = nbt_read(c, TAG_BYTE, 1, "Slot");
@@ -407,7 +407,7 @@ bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock
 	bedrock_node *node;
 	int i = -1;
 
-	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list, node)
 	{
 		nbt_tag *c = node->data;
 		uint16_t *id = nbt_read(c, TAG_SHORT, 1, "id");
@@ -822,7 +822,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	client->authenticated = STATE_AUTHENTICATED;
 
 	/* Send inventory */
-	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list, node)
+	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list, node)
 	{
 		nbt_tag *c = node->data;
 		int16_t *id = nbt_read(c, TAG_SHORT, 1, "id"),
