@@ -17,14 +17,6 @@ typedef enum bool_ { false, true } bool;
 		what; \
 	}
 
-#define bedrock_assert_fatal(var, what) \
-	if (!(var)) \
-	{ \
-		printf("Debug assertion failed: %s:%d\n", __FILE__, __LINE__); \
-		assert(var); \
-		abort(); \
-	}
-
 // Ignore gcc warnings about unused variables
 #if defined(__GNUC__) || defined(__clang__) || defined(__ICC)
 # define bedrock_attribute_unused __attribute__((unused))

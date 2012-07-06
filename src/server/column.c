@@ -375,7 +375,7 @@ void column_save()
 
 				chunk_decompress(chunk);
 
-				chunk_tag = nbt_add(sections, TAG_COMPOUND, NULL, NULL, 0);
+				chunk_tag = nbt_add(sections, TAG_COMPOUND, "", NULL, 0);
 
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Data", chunk->data, BEDROCK_DATA_LENGTH);
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "SkyLight", chunk->skylight, BEDROCK_DATA_LENGTH);
