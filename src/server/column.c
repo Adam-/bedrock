@@ -2,6 +2,7 @@
 #include "server/client.h"
 #include "nbt/nbt.h"
 #include "util/memory.h"
+#include "util/endian.h"
 #include "compression/compression.h"
 #include "packet/packet_spawn_dropped_item.h"
 #include "packet/packet_destroy_entity.h"
@@ -200,7 +201,7 @@ static void column_save_entry(struct dirty_column *dc)
 	convert_endianness((unsigned char *) &structure_start, sizeof(structure_start));
 
 	sectors = structure_start & 0xFF;
-	structure_start >> 8;
+	structure_start >>= 8;
 
 	cb = compression_compress_init(&region_pool, DATA_CHUNK_SIZE);
 	/* Compress structure */
@@ -258,7 +259,7 @@ static void column_save_entry(struct dirty_column *dc)
 		}
 
 		bedrock_assert(pos % BEDROCK_REGION_SECTOR_SIZE == 0, ;);
-		bedrock_assert(required_sectors & ~0xFF == 0, ;);
+		bedrock_assert((required_sectors & ~0xFF) == 0, ;);
 
 		offset_buffer = pos / BEDROCK_REGION_SECTOR_SIZE;
 		offset_buffer <<= 8;
@@ -323,7 +324,6 @@ static void column_save_entry(struct dirty_column *dc)
 static void column_save_exit(struct dirty_column *dc)
 {
 	struct bedrock_column *column = dc->column;
-	nbt_tag *tag;
 
 	column->saving = false;
 
