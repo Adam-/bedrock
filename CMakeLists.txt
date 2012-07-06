@@ -2,11 +2,28 @@ cmake_minimum_required(VERSION 2.8)
 
 project(bedrock C)
 
-include_directories(include)
+# include cmake stuff for checking various system specific defines
+include(CheckTypeSize)
 
-find_package(FLEX)
-find_package(BISON)
+# Check type sizes since we need them
+check_type_size(int8_t INT8_T)
+check_type_size(uint8_t UINT8_T)
+check_type_size(int16_t INT16_T)
+check_type_size(uint16_t UINT16_T)
+check_type_size(int32_t INT32_T)
+check_type_size(uint32_t UINT32_T)
+check_type_size(int64_t INT64_T)
+check_type_size(uint64_t UINT64_T)
 
+# required packages for compile
+find_package(ZLIB REQUIRED)
+find_package(FLEX REQUIRED)
+find_package(BISON REQUIRED)
+
+# include the crap we need
+include_directories(include ${ZLIB_INCLUDE_DIRS})
+
+# Generate the files for compile
 FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l
 ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.c)
 BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y
@@ -34,5 +51,5 @@ list(SORT BEDROCK_SOURCES)
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock z m rt pthread)
+target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES})
 
