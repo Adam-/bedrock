@@ -16,9 +16,6 @@
 #include <errno.h>
 #include <math.h>
 
-#define REGION_HEADER_SIZE 1024
-#define REGION_SECTOR_SIZE 4096
-
 #define REGION_BUFFER_SIZE 65536
 
 static bedrock_list empty_regions;
@@ -61,7 +58,7 @@ static void region_load(struct bedrock_region *region)
 	cb = compression_decompress_init(&region_pool, REGION_BUFFER_SIZE);
 
 	/* Header appears to consist of REGION_HEADER_SIZE unsigned big endian integers */
-	for (i = 0; i < REGION_HEADER_SIZE; ++i)
+	for (i = 0; i < BEDROCK_REGION_HEADER_SIZE; ++i)
 	{
 		unsigned char *f = file_base + (i * sizeof(uint32_t)), *f_offset;
 		uint32_t offset;
@@ -86,7 +83,7 @@ static void region_load(struct bedrock_region *region)
 		 * integer) and a byte, which shows you the kind of data compression.
 		 * - http://wiki.vg/User:Sprenger120
 		 */
-		f_offset = file_base + (offset * REGION_SECTOR_SIZE);
+		f_offset = file_base + (offset * BEDROCK_REGION_SECTOR_SIZE);
 
 		memcpy(&length, f_offset, sizeof(length));
 		convert_endianness((unsigned char *) &length, sizeof(length));

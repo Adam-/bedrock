@@ -493,6 +493,45 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 			memcpy(&c->payload, src, src_size);
 			break;
 		case TAG_BYTE_ARRAY:
+		{
+			struct nbt_tag_byte_array *tba = &c->payload.tag_byte_array;
+
+			tba->data = bedrock_malloc(src_size);
+			memcpy(tba->data, src, src_size);
+			tba->length = src_size;
+			break;
+		}
+		case TAG_STRING:
+		{
+			c->payload.tag_string = bedrock_malloc(src_size + 1);
+			strncpy(c->payload.tag_string, src, src_size);
+			c->payload.tag_string[src_size] = 0;
+			break;
+		}
+		case TAG_LIST:
+		{
+			struct nbt_tag_list *tl = &c->payload.tag_list;
+
+			++tl->length;
+			bedrock_list_add(&tl->list, src);
+			break;
+		}
+		case TAG_COMPOUND:
+		{
+			bedrock_list_add(&c->payload.tag_compound, src);
+			break;
+		}
+		case TAG_INT_ARRAY:
+		{
+			struct nbt_tag_int_array *tia = &c->payload.tag_int_array;
+
+			tia->data = bedrock_malloc(src_size);
+			memcpy(tia->data, src, src_size);
+			tia->length = src_size;
+			break;
+		}
+		case TAG_END:
+			break;
 	}
 
 	if (tag->type == TAG_LIST)

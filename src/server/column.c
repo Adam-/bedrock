@@ -20,6 +20,7 @@ static bedrock_list dirty_columns = LIST_INIT;
 struct dirty_column
 {
 	struct bedrock_column *column;
+	bedrock_buffer *nbt_out;
 	char region_path[PATH_MAX];
 };
 
@@ -157,9 +158,11 @@ static void column_save_entry(struct dirty_column *dc)
 	int i;
 	int32_t column_x, column_z;
 	int offset;
-	nbt_tag *tag;
-	bedrock_buffer *buf;
+	uint8_t sectors;
+	uint32_t structure_start;
 	compression_buffer *cb;
+	int required_sectors;
+	unsigned char header[5];
 
 	i = open(dc->region_path, O_RDONLY);
 	if (i == -1)
@@ -167,8 +170,6 @@ static void column_save_entry(struct dirty_column *dc)
 		bedrock_log(LEVEL_WARN, "column: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
 		return;
 	}
-
-	close(i);
 
 	column_x = column->x;
 	if (column_x < 0)
@@ -180,22 +181,87 @@ static void column_save_entry(struct dirty_column *dc)
 
 	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
 
+	// Move to the offset, which contains the offset into the file of where this column starts
+	if (lseek(i, offset, SEEK_SET) == -1)
+	{
+		bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to get offset - %s", dc->region_path, strerror(errno));
+		close(i);
+		return;
+	}
 
-	/* Convert NBT structure to buffer */
-	bedrock_mutex_lock(&column->data_mutex);
-	buf = nbt_write(column->data);
-	bedrock_mutex_unlock(&column->data_mutex);
+	if (read(i, &structure_start, sizeof(structure_start)) != sizeof(structure_start))
+	{
+		bedrock_log(LEVEL_WARN, "column: Unable to read column structure offset in file %s to get file offset - %s", dc->region_path, strerror(errno));
+		close(i);
+		return;
+	}
+
+	convert_endianness((unsigned char *) &structure_start, sizeof(structure_start));
+
+	sectors = structure_start & 0xFF;
+	structure_start >> 8;
 
 	cb = compression_compress_init(&region_pool, DATA_CHUNK_SIZE);
-
 	/* Compress structure */
-	compression_compress_deflate_finish(cb, buf->data, buf->length);
+	compression_compress_deflate_finish(cb, dc->nbt_out->data, dc->nbt_out->length);
 
-	/* Write.. */
+	// Remember, this data will have a 5 byte header!
+	required_sectors = (cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE;
+	if (required_sectors)
+		++required_sectors;
+
+	if (required_sectors <= sectors)
+	{
+		if (lseek(i, structure_start * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)
+		{
+			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to write structure - %s", dc->region_path, strerror(errno));
+			close(i);
+			return;
+		}
+	}
+	else
+	{
+		off_t pos = lseek(i, 0, SEEK_END);
+		if (pos == -1)
+		{
+			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", dc->region_path, strerror(errno));
+			close(i);
+			return;
+		}
+		else if (pos % BEDROCK_REGION_SECTOR_SIZE)
+		{
+			int j;
+
+			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %d more bytes", dc->region_path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
+
+			j = BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE);
+			for (; j > 0; --j)
+				write(i, j, 1);
+		}
+	}
+
+	// Set up header
+	memcpy(&header, cb->buffer->length, 4);
+	convert_endianness((unsigned char *) &header, 4);
+	// Compression type
+	header[4] = 2;
+
+	if (write(i, header, sizeof(header)) != sizeof(header))
+	{
+		bedrock_log(LEVEL_WARN, "column: Unable to write column header for region file %s - %s", dc->region_path, strerror(errno));
+		close(i);
+		return;
+	}
+
+	if (write(i, cb->buffer->data, cb->buffer->length) != cb->buffer->length)
+	{
+		bedrock_log(LEVEL_WARN, "column: Unable to write column structure for region file %s - %s", dc->region_path, strerror(errno));
+		close(i);
+		return;
+	}
 
 	compression_decompress_end(cb);
-
-	bedrock_buffer_free(buf);
+	close(i);
 }
 
 static void column_save_exit(struct dirty_column *dc)
@@ -207,16 +273,11 @@ static void column_save_exit(struct dirty_column *dc)
 
 	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d", column->x, column->z);
 
-	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
-	nbt_free(tag);
-
-	tag = nbt_get(data, TAG_LIST, 2, "Level", "Biomes");
-	nbt_free(tag);
-
 	/* This column may need to be deleted now */
 	if (column->region == NULL)
 		column_free(column);
 
+	bedrock_buffer_free(dc->nbt_out);
 	bedrock_free(dc);
 }
 
@@ -239,12 +300,12 @@ void column_save()
 
 		{
 			int i;
-			nbt_tag *level, *tag;
+			nbt_tag *level, *sections, *biomes;
 
-			level = nbt_get(client->data, TAG_LIST, 1, "Level");
+			level = nbt_get(column->data, TAG_LIST, 1, "Level");
 			bedrock_assert(level != NULL, ;);
 
-			tag = nbt_add(level, TAG_LIST, "Sections", NULL, 0);
+			sections = nbt_add(level, TAG_LIST, "Sections", NULL, 0);
 
 			for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 			{
@@ -256,26 +317,31 @@ void column_save()
 
 				chunk_decompress(chunk);
 
-				chunk_tag = nbt_add(tag, TAG_COMPOUND, NULL, NULL, 0);
+				chunk_tag = nbt_add(sections, TAG_COMPOUND, NULL, NULL, 0);
 
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Data", chunk->data, BEDROCK_DATA_LENGTH);
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "SkyLight", chunk->skylight, BEDROCK_DATA_LENGTH);
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
-				nbt_add(chunk_tag, TAG_BYTE, "Y", chunk->y, sizeof(chunk->y));
+				nbt_add(chunk_tag, TAG_BYTE, "Y", &chunk->y, sizeof(chunk->y));
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
 
 				chunk_compress(chunk);
 			}
 
-			nbt_add(tag, TAG_END, NULL, NULL, 0);
+			nbt_add(sections, TAG_END, NULL, NULL, 0);
 
 			{
 				compression_buffer *buf = compression_decompress(NULL, BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
 
-				nbt_add(level, TAG_BYTE_ARRAY, "Biomes", buf->buffer->data, buf->buffer->length);
+				biomes = nbt_add(level, TAG_BYTE_ARRAY, "Biomes", buf->buffer->data, buf->buffer->length);
 
-				compression_free(buf);
+				compression_decompress_end(buf);
 			}
+
+			dc->nbt_out = nbt_write(column->data);
+
+			nbt_free(sections);
+			nbt_free(biomes);
 		}
 
 		column->dirty = false;
