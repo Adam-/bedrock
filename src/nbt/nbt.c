@@ -293,6 +293,12 @@ static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
 				convert_endianness((unsigned char *) b + i, sizeof(int32_t));
 			break;
 		}
+		case TAG_END:
+		{
+			uint8_t t = 0;
+			bedrock_buffer_append(buffer, &t, sizeof(t));
+			break;
+		}
 		default:
 			bedrock_log(LEVEL_CRIT, "nbt: Unknown tag type - %d", tag->type);
 	}
@@ -511,6 +517,9 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 		case TAG_LIST:
 		{
 			struct nbt_tag_list *tl = &c->payload.tag_list;
+
+			if (src == NULL)
+				break;
 
 			++tl->length;
 			bedrock_list_add(&tl->list, src);

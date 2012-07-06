@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, region_free_queue, NULL);
-	bedrock_timer_schedule(6000, save_databases, NULL);
+	bedrock_timer_schedule(150/*6000*/, save_databases, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{
