@@ -18,8 +18,6 @@ struct bedrock_column
 	/* Players in render distance of this column */
 	bedrock_list players;
 
-	/* Must be held when reading or writing to data! */
-	bedrock_mutex data_mutex;
 	/* Data for this column. Note that the 'Sections' section is NOT here. We store it below. */
 	nbt_tag *data;
 

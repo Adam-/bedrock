@@ -23,10 +23,8 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	packet_init(&packet, MAP_COLUMN);
 
 	packet_pack_header(&packet, MAP_COLUMN);
-	bedrock_mutex_lock(&column->data_mutex);
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-	bedrock_mutex_unlock(&column->data_mutex);
 	b = 1;
 	packet_pack_int(&packet, &b, sizeof(b)); // Ground up continuous
 
@@ -128,10 +126,8 @@ void packet_send_column_empty(struct bedrock_client *client, struct bedrock_colu
 	packet_init(&packet, SPAWN_DROPPED_ITEM);
 
 	packet_pack_header(&packet, MAP_COLUMN);
-	bedrock_mutex_lock(&column->data_mutex);
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-	bedrock_mutex_unlock(&column->data_mutex);
 	b = 1;
 	packet_pack_int(&packet, &b, sizeof(b)); // Ground up continuous
 

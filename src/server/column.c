@@ -30,8 +30,6 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 	bedrock_node *node;
 	struct nbt_tag_byte_array *byte_array;
 
-	bedrock_mutex_init(&column->data_mutex, "column data mutex");
-
 	column->region = region;
 	nbt_copy(data, TAG_INT, &column->x, sizeof(column->x), 2, "Level", "xPos");
 	nbt_copy(data, TAG_INT, &column->z, sizeof(column->z), 2, "Level", "zPos");
@@ -102,11 +100,7 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_buffer_free(column->biomes);
 
-	bedrock_mutex_lock(&column->data_mutex);
 	nbt_free(column->data);
-	bedrock_mutex_unlock(&column->data_mutex);
-	bedrock_mutex_destroy(&column->data_mutex);
-
 	bedrock_free_pool(&column_pool, column);
 }
 
