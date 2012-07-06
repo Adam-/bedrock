@@ -427,7 +427,7 @@ bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock
 
 void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
 {
-	bedrock_list *list = &nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list;
+	bedrock_list *list = &nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list;
 	bedrock_node *node;
 	int i = -1;
 	nbt_tag *c, *item_tag;
