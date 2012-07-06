@@ -30,6 +30,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	struct bedrock_item *item;
 
 	struct bedrock_chunk *target_chunk, *real_chunk;
+	int32_t *height;
 
 	int32_t real_x, real_z;
 	uint8_t real_y;
@@ -188,6 +189,14 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 
 		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
 		bedrock_assert(being_placed != NULL, return offset);
+
+		// This is the height right *above* the highest block
+		height = column_get_height_for(real_chunk->column, real_x, real_z);
+		if (real_y >= *height)
+		{
+			*height = real_y == 255 ? real_y : real_y + 1;
+			bedrock_log(LEVEL_DEBUG, "player building: Adjusting height map of %d,%d to %d", real_x, real_z, *height);
+		}
 
 		*being_placed = id;
 		real_chunk->modified = true;

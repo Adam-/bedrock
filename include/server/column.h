@@ -51,6 +51,8 @@ extern struct bedrock_memory_pool column_pool;
 
 extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
+extern uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z);
+extern int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z);
 /* Finds the column which contains the point x and z */
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
 /* Mark a column as dirty and add it to the dirty_columns list */

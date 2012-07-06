@@ -69,9 +69,6 @@ struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *dat
 		compression_compress_end(buffer);
 	}
 
-	tag = nbt_get(data, TAG_INT_ARRAY, 2, "Level", "HeightMap");
-	nbt_free(tag);
-
 	return column;
 }
 
@@ -104,6 +101,56 @@ void column_free(struct bedrock_column *column)
 
 	nbt_free(column->data);
 	bedrock_free_pool(&column_pool, column);
+}
+
+uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z)
+{
+	uint8_t chunk = y / BEDROCK_BLOCKS_PER_CHUNK;
+	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
+	struct bedrock_chunk *c;
+	uint8_t *block;
+
+	column_x = floor(column_x);
+	column_z = floor(column_z);
+
+	bedrock_assert(chunk < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	bedrock_assert(column_x == column->x && column_z == column->z, return NULL);
+
+	c = column->chunks[chunk];
+
+	if (c == NULL)
+		return NULL;
+
+	chunk_decompress(c);
+	block = chunk_get_block(c, x, y, z);
+	chunk_compress(c);
+
+	return block;
+}
+
+int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z)
+{
+	struct nbt_tag_int_array *tia = &nbt_get(column->data, TAG_INT_ARRAY, 2, "Level", "HeightMap")->payload.tag_int_array;
+	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
+	uint8_t offset;
+
+	column_x = floor(column_x);
+	column_z = floor(column_z);
+
+	bedrock_assert(tia->length == BEDROCK_HEIGHTMAP_LENGTH, return NULL);
+	bedrock_assert(column_x == column->x && column_z == column->z, return NULL);
+
+	x %= BEDROCK_BLOCKS_PER_CHUNK;
+	z %= BEDROCK_BLOCKS_PER_CHUNK;
+
+	if (x < 0)
+		x = BEDROCK_BLOCKS_PER_CHUNK - abs(x);
+	if (z < 0)
+		z = BEDROCK_BLOCKS_PER_CHUNK - abs(z);
+
+	offset = z + (x * BEDROCK_BLOCKS_PER_CHUNK);
+
+	return &tia->data[offset];
 }
 
 struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z)
@@ -241,6 +288,7 @@ static void column_save_entry(struct dirty_column *dc)
 			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %d more bytes", dc->region_path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
 
 			j = BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE);
+			memset(&padding, 0, j);
 			if (write(i, padding, j) != j)
 			{
 				bedrock_log(LEVEL_WARN, "column: Unable to fix padding in region file %s - %s", dc->region_path, strerror(errno));
@@ -311,6 +359,7 @@ static void column_save_entry(struct dirty_column *dc)
 
 	// Pad the end
 	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
+	memset(&padding, 0, j);
 	if (write(i, padding, j) != j)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to write padding for region file %s - %s", dc->region_path, strerror(errno));
@@ -329,7 +378,7 @@ static void column_save_exit(struct dirty_column *dc)
 
 	column->saving = false;
 
-	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d", column->x, column->z);
+	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d to %s", column->x, column->z, dc->region_path);
 
 	/* This column may need to be deleted now */
 	if (column->region == NULL)

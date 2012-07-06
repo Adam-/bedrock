@@ -174,6 +174,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		struct bedrock_chunk *chunk;
 		uint8_t *block_id;
 		struct bedrock_block *block;
+		int32_t *height;
 		bedrock_node *node;
 		int i;
 
@@ -212,6 +213,21 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		*block_id = BLOCK_AIR;
 		chunk->modified = true;
 		column_dirty(chunk->column);
+
+		// This is the height right *above* the highest block
+		height = column_get_height_for(chunk->column, x, z);
+		if (y == *height - 1)
+		{
+			uint8_t *height_block;
+
+			do
+				height_block = column_get_block(chunk->column, x, --(*height) - 1, z);
+			while (*height && (height_block == NULL || *height_block == BLOCK_AIR));
+
+			bedrock_log(LEVEL_DEBUG, "player digging: Adjusting height map of %d,%d to %d", x, z, *height);
+		}
+		// Make sure the chunk is still decompressed
+		chunk_decompress(chunk);
 
 		// Notify players in render distance of the column to remove the block
 		LIST_FOREACH(&chunk->column->players, node)

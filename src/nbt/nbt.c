@@ -129,7 +129,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 			CHECK_RETURN(read_bytes(tia->data, sizeof(int32_t) * tia->length, data, size, false), error);
 
 			for (i = 0; i < tia->length; ++i)
-				convert_endianness((unsigned char *) tia->data + i, sizeof(int32_t));
+				convert_endianness(tia->data + i, sizeof(int32_t));
 
 			break;
 		}
@@ -282,15 +282,17 @@ static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
 			struct nbt_tag_int_array *tia = &tag->payload.tag_int_array;
 			int32_t i, len = tia->length;
 			int32_t *b;
+			size_t b_len;
 
 			convert_endianness((unsigned char *) &len, sizeof(len));
 			bedrock_buffer_append(buffer, &len, sizeof(len));
 
-			b = (int32_t *) buffer->data;
+			b_len = buffer->length;
 			bedrock_buffer_append(buffer, tia->data, sizeof(int32_t) * tia->length);
 
+			b = buffer->data + b_len;
 			for (i = 0; i < tia->length; ++i)
-				convert_endianness((unsigned char *) b + i, sizeof(int32_t));
+				convert_endianness(b + i, sizeof(int32_t));
 			break;
 		}
 		case TAG_END:

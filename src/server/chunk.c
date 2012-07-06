@@ -86,6 +86,7 @@ uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int3
 	uint16_t block_index;
 
 	bedrock_assert(chunk->blocks != NULL, return NULL);
+	bedrock_assert(chunk->y == y / BEDROCK_BLOCKS_PER_CHUNK, return NULL);
 
 	x %= BEDROCK_BLOCKS_PER_CHUNK;
 	y %= BEDROCK_BLOCKS_PER_CHUNK;
