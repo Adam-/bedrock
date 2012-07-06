@@ -164,6 +164,7 @@ static void column_save_entry(struct dirty_column *dc)
 	int32_t column_x, column_z;
 	int offset;
 	nbt_tag *tag;
+	bedrock_buffer *buf;
 	compression_buffer *cb;
 
 	i = open(dc->region_path, O_RDONLY);
@@ -185,21 +186,38 @@ static void column_save_entry(struct dirty_column *dc)
 
 	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
 
-	/* Build the tag */
-	//tag = nbt_create();
+
+	/* Convert NBT structure to buffer */
+	bedrock_mutex_lock(&column->data_mutex);
+	buf = nbt_write(column->data);
+	bedrock_mutex_unlock(&column->data_mutex);
 
 	cb = compression_compress_init(&region_pool, DATA_CHUNK_SIZE);
 
+	/* Compress structure */
+	compression_compress_deflate_finish(cb, buf->data, buf->length);
+
+	/* Write.. */
+
 	compression_decompress_end(cb);
+
+	bedrock_buffer_free(buf);
 }
 
 static void column_save_exit(struct dirty_column *dc)
 {
 	struct bedrock_column *column = dc->column;
+	nbt_tag *tag;
 
 	column->saving = false;
 
 	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d", column->x, column->z);
+
+	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
+	nbt_free(tag);
+
+	tag = nbt_get(data, TAG_LIST, 2, "Level", "Biomes");
+	nbt_free(tag);
 
 	/* This column may need to be deleted now */
 	if (column->region == NULL)
@@ -217,7 +235,54 @@ void column_save()
 		struct dirty_column *dc = node->data;
 		struct bedrock_column *column = dc->column;
 
+		if (column->saving)
+		{
+			bedrock_log(LEVEL_WARN, "column: Column %d,%d queued for save but a save is already in progress", column->x, column->z);
+			continue;
+		}
+
 		bedrock_log(LEVEL_COLUMN, "column: Starting save for column %d,%d", column->x, column->z);
+
+		{
+			int i;
+			nbt_tag *level, *tag;
+
+			level = nbt_get(client->data, TAG_LIST, 1, "Level");
+			bedrock_assert(level != NULL, ;);
+
+			tag = nbt_add(level, TAG_LIST, "Sections", NULL, 0);
+
+			for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+			{
+				struct bedrock_chunk *chunk = column->chunks[i];
+				nbt_tag *chunk_tag;
+
+				if (chunk == NULL)
+					continue;
+
+				chunk_decompress(chunk);
+
+				chunk_tag = nbt_add(tag, TAG_COMPOUND, NULL, NULL, 0);
+
+				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Data", chunk->data, BEDROCK_DATA_LENGTH);
+				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "SkyLight", chunk->skylight, BEDROCK_DATA_LENGTH);
+				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
+				nbt_add(chunk_tag, TAG_BYTE, "Y", chunk->y, sizeof(chunk->y));
+				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
+
+				chunk_compress(chunk);
+			}
+
+			nbt_add(tag, TAG_END, NULL, NULL, 0);
+
+			{
+				compression_buffer *buf = compression_decompress(NULL, BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
+
+				nbt_add(level, TAG_BYTE_ARRAY, "Biomes", buf->buffer->data, buf->buffer->length);
+
+				compression_free(buf);
+			}
+		}
 
 		column->dirty = false;
 		column->saving = true;

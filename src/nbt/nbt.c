@@ -482,10 +482,27 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 	c->owner = tag;
 	c->type = type;
 
-	memcpy(&c->payload, src, src_size);
+	switch (type)
+	{
+		case TAG_BYTE:
+		case TAG_SHORT:
+		case TAG_INT:
+		case TAG_LONG:
+		case TAG_FLOAT:
+		case TAG_DOUBLE:
+			memcpy(&c->payload, src, src_size);
+			break;
+		case TAG_BYTE_ARRAY:
+	}
 
 	if (tag->type == TAG_LIST)
-		bedrock_list_add(&tag->payload.tag_list.list, c);
+	{
+		struct nbt_tag_list *tl = &tag->payload.tag_list;
+		bedrock_assert(tl->type == TAG_END || tl->type == type, ;);
+		tl->type = type;
+		++tl->length;
+		bedrock_list_add(&tl->list, c);
+	}
 	else
 		bedrock_list_add(&tag->payload.tag_compound, c);
 
