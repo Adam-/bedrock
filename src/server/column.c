@@ -166,7 +166,7 @@ static void column_save_entry(struct dirty_column *dc)
 	unsigned char header[5];
 	char padding[BEDROCK_REGION_SECTOR_SIZE];
 
-	i = open(dc->region_path, O_RDONLY);
+	i = open(dc->region_path, O_RDONLY | O_CREAT);
 	if (i == -1)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
