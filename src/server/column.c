@@ -161,8 +161,9 @@ static void column_save_entry(struct dirty_column *dc)
 	uint8_t sectors;
 	uint32_t structure_start;
 	compression_buffer *cb;
-	int required_sectors;
+	int required_sectors, j;
 	unsigned char header[5];
+	char padding[BEDROCK_REGION_SECTOR_SIZE];
 
 	i = open(dc->region_path, O_RDONLY);
 	if (i == -1)
@@ -215,6 +216,7 @@ static void column_save_entry(struct dirty_column *dc)
 		if (lseek(i, structure_start * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)
 		{
 			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to write structure - %s", dc->region_path, strerror(errno));
+			compression_decompress_end(cb);
 			close(i);
 			return;
 		}
@@ -222,33 +224,76 @@ static void column_save_entry(struct dirty_column *dc)
 	else
 	{
 		off_t pos = lseek(i, 0, SEEK_END);
+		uint32_t offset_buffer;
+
 		if (pos == -1)
 		{
 			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", dc->region_path, strerror(errno));
+			compression_decompress_end(cb);
 			close(i);
 			return;
 		}
 		else if (pos % BEDROCK_REGION_SECTOR_SIZE)
 		{
-			int j;
-
 			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %d more bytes", dc->region_path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
 
 			j = BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE);
-			for (; j > 0; --j)
-				write(i, j, 1);
+			if (write(i, padding, j) != j)
+			{
+				bedrock_log(LEVEL_WARN, "column: Unable to fix padding in region file %s - %s", dc->region_path, strerror(errno));
+				compression_decompress_end(cb);
+				close(i);
+				return;
+			}
+
+			pos += j;
+		}
+
+		if (lseek(i, offset, SEEK_SET) == -1)
+		{
+			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to write offset - %s", dc->region_path, strerror(errno));
+			compression_decompress_end(cb);
+			close(i);
+			return;
+		}
+
+		bedrock_assert(pos % BEDROCK_REGION_SECTOR_SIZE == 0, ;);
+		bedrock_assert(required_sectors & ~0xFF == 0, ;);
+
+		offset_buffer = pos / BEDROCK_REGION_SECTOR_SIZE;
+		offset_buffer <<= 8;
+		offset_buffer |= required_sectors;
+
+		convert_endianness((unsigned char *) &offset_buffer, sizeof(offset_buffer));
+
+		if (write(i, &offset_buffer, sizeof(offset_buffer)) != sizeof(offset_buffer))
+		{
+			bedrock_log(LEVEL_WARN, "column: Unable to write header for new column in region file %s - %s", dc->region_path, strerror(errno));
+			compression_decompress_end(cb);
+			close(i);
+			return;
+		}
+
+		if (lseek(i, 0, SEEK_END) == -1)
+		{
+			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", dc->region_path, strerror(errno));
+			compression_decompress_end(cb);
+			close(i);
+			return;
 		}
 	}
 
 	// Set up header
-	memcpy(&header, cb->buffer->length, 4);
-	convert_endianness((unsigned char *) &header, 4);
+	bedrock_assert(sizeof(cb->buffer->length) == 4, ;);
+	memcpy(&header, &cb->buffer->length, sizeof(cb->buffer->length));
+	convert_endianness((unsigned char *) &header, sizeof(cb->buffer->length));
 	// Compression type
 	header[4] = 2;
 
 	if (write(i, header, sizeof(header)) != sizeof(header))
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to write column header for region file %s - %s", dc->region_path, strerror(errno));
+		compression_decompress_end(cb);
 		close(i);
 		return;
 	}
@@ -256,6 +301,17 @@ static void column_save_entry(struct dirty_column *dc)
 	if (write(i, cb->buffer->data, cb->buffer->length) != cb->buffer->length)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to write column structure for region file %s - %s", dc->region_path, strerror(errno));
+		compression_decompress_end(cb);
+		close(i);
+		return;
+	}
+
+	// Pad the end
+	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
+	if (write(i, padding, j) != j)
+	{
+		bedrock_log(LEVEL_WARN, "column: Unable to write padding for region file %s - %s", dc->region_path, strerror(errno));
+		compression_decompress_end(cb);
 		close(i);
 		return;
 	}
