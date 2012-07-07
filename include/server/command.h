@@ -6,8 +6,8 @@ struct bedrock_command
 	const char *name;
 	const char *syntax;
 	const char *desc;
-	unsigned int min_parameters;
-	unsigned int max_parameters;
+	int min_parameters;
+	int max_parameters;
 	bool (*can_use)(struct bedrock_client *client);
 	void (*handler)(struct bedrock_client *client, int argc, const char **argv);
 };

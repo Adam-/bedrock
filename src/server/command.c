@@ -7,20 +7,22 @@
 #include "command/command_players.h"
 #include "command/command_shutdown.h"
 #include "command/command_stats.h"
+#include "command/command_teleport.h"
 #include "command/command_uptime.h"
 #include "command/command_version.h"
 
 #define MAX_PARAMETERS 15
 
 struct bedrock_command commands[] = {
-	{"FDLIST",  "", "shows file descriptors", 0, 0, command_anyone, command_fdlist},
-	{"HELP",    "", "shows this message",     0, 0, command_anyone, command_help},
-	{"MEMORY",  "", "shows memory usage",     0, 0, command_anyone, command_memory},
-	{"PLAYERS", "", "lists players online",   0, 0, command_anyone, command_players},
-	{"SHUTDOWN", "", "shuts down the server", 0, 0, command_anyone, command_shutdown},
-	{"STATS",   "", "shows statistics",       0, 0, command_anyone, command_stats},
-	{"UPTIME",  "", "shows server uptime",    0, 0, command_anyone, command_uptime},
-	{"VERSION", "", "shows server version",   0, 0, command_anyone, command_version}
+	{"FDLIST",   "",                     "shows file descriptors", 0, 0, command_anyone, command_fdlist},
+	{"HELP",     "",                     "shows this message",     0, 0, command_anyone, command_help},
+	{"MEMORY",   "",                     "shows memory usage",     0, 0, command_anyone, command_memory},
+	{"PLAYERS",  "",                     "lists players online",   0, 0, command_anyone, command_players},
+	{"SHUTDOWN", "",                     "shuts down the server",  0, 0, command_anyone, command_shutdown},
+	{"STATS",    "",                     "shows statistics",       0, 0, command_anyone, command_stats},
+	{"TP",       "<player1> <player2>",  "teleports players",      2, 2, command_anyone, command_teleport},
+	{"UPTIME",   "",                     "shows server uptime",    0, 0, command_anyone, command_uptime},
+	{"VERSION",  "",                     "shows server version",   0, 0, command_anyone, command_version}
 };
 
 int command_count = sizeof(commands) / sizeof(struct bedrock_command);
@@ -47,7 +49,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 	char command_buf[BEDROCK_MAX_STRING_LENGTH];
 	char *front, *end;
 	struct bedrock_command *command;
-	size_t argc = 0;
+	int argc = 0;
 	char *argv[MAX_PARAMETERS];
 
 	strncpy(command_buf, buf, sizeof(command_buf));
@@ -67,7 +69,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 		command->max_parameters = MAX_PARAMETERS;
 	}
 
-	while (front != NULL && argc < command->max_parameters)
+	while (front != NULL && argc - 1 < command->max_parameters)
 	{
 		argv[argc++] = front;
 
