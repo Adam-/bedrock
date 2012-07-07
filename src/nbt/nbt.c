@@ -333,7 +333,7 @@ static void write_named_tag(bedrock_buffer *buffer, nbt_tag *tag)
 
 bedrock_buffer *nbt_write(nbt_tag *tag)
 {
-	bedrock_buffer *buffer = bedrock_buffer_create(NULL, NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	bedrock_buffer *buffer = bedrock_buffer_create(NULL, "nbt write", NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
 	write_named_tag(buffer, tag);
 	return buffer;
 }

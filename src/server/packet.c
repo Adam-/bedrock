@@ -83,6 +83,7 @@ void packet_init(bedrock_packet *packet, uint8_t id)
 	bedrock_assert(packet != NULL && handler != NULL, return);
 
 	packet->pool = NULL;
+	snprintf(packet->name, sizeof(packet->name), "client packet 0x%02x", id);
 	packet->data = bedrock_malloc(handler->len);
 	packet->length = 0;
 	packet->capacity = handler->len;

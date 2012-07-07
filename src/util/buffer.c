@@ -3,7 +3,7 @@
 
 #include <limits.h>
 
-bedrock_buffer *bedrock_buffer_create(struct bedrock_memory_pool *pool, const void *data, size_t length, size_t capacity)
+bedrock_buffer *bedrock_buffer_create(struct bedrock_memory_pool *pool, const char *name, const void *data, size_t length, size_t capacity)
 {
 	bedrock_buffer *buffer;
 
@@ -11,6 +11,7 @@ bedrock_buffer *bedrock_buffer_create(struct bedrock_memory_pool *pool, const vo
 
 	buffer = bedrock_malloc_pool(pool, sizeof(bedrock_buffer));
 	buffer->pool = pool;
+	strncpy(buffer->name, name, sizeof(buffer->name));
 	buffer->data = bedrock_malloc_pool(pool, capacity);
 	buffer->length = 0;
 	buffer->capacity = capacity;
@@ -40,7 +41,7 @@ void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 			buffer->capacity = size;
 		buffer->data = bedrock_realloc_pool(buffer->pool, buffer->data, buffer->capacity);
 
-		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %p from %ld to %ld", buffer, old, buffer->capacity);
+		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %s from %ld to %ld", buffer->name, old, buffer->capacity);
 	}
 
 	bedrock_assert(buffer->capacity - buffer->length >= size, return);

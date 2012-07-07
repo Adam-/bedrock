@@ -301,6 +301,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
 	p->pool = packet->pool;
+	strncpy(p->name, packet->name, sizeof(p->name));
 	p->data = packet->data;
 	p->length = packet->length;
 	p->capacity = packet->capacity;

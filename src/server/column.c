@@ -448,7 +448,6 @@ void column_save()
 				compression_decompress_end(buf);
 			}
 
-			nbt_ascii_dump(column->data);
 			dc->nbt_out = nbt_write(column->data);
 
 			nbt_free(sections);

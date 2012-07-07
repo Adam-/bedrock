@@ -23,7 +23,7 @@ compression_buffer *compression_compress_init(struct bedrock_memory_pool *pool, 
 	}
 
 	buffer->pool = pool;
-	buffer->buffer = bedrock_buffer_create(pool, NULL, 0, buffer->buffer_size);
+	buffer->buffer = bedrock_buffer_create(pool, "compression buffer", NULL, 0, buffer->buffer_size);
 
 	return buffer;
 }
@@ -49,7 +49,7 @@ void compression_compress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(buffer->pool, NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create(buffer->pool, "compression buffer", NULL, 0, buffer->buffer_size);
 }
 
 static void compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len, int type)
@@ -115,7 +115,7 @@ compression_buffer *compression_decompress_init(struct bedrock_memory_pool *pool
 	}
 
 	buffer->pool = pool;
-	buffer->buffer = bedrock_buffer_create(pool, NULL, 0, buffer_size);
+	buffer->buffer = bedrock_buffer_create(pool, "decompression buffer", NULL, 0, buffer_size);
 
 	return buffer;
 }
@@ -141,7 +141,7 @@ void compression_decompress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(buffer->pool, NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create(buffer->pool, "decompression buffer", NULL, 0, buffer->buffer_size);
 }
 
 void compression_decompress_inflate(compression_buffer *buffer, const unsigned char *data, size_t len)
