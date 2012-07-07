@@ -10,6 +10,7 @@ int server_port;
 
 extern FILE *yyin;
 extern int yyparse();
+extern void yylex_destroy();
 extern int config_line_num;
 
 int config_parse(const char *config)
