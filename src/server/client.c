@@ -732,6 +732,11 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	/* Bursting clients try to move themselves during login for some reason. Don't allow it. */
 	else if (client->authenticated == STATE_BURSTING)
 		return;
+	else if (abs(old_x - x) > 100 || abs(old_z - z) > 100)
+	{
+		packet_send_disconnect(client, "Moving too fast");
+		return;
+	}
 
 	if (old_x != x)
 		nbt_set(client->data, TAG_DOUBLE, &x, sizeof(x), 2, "Pos", 0);
