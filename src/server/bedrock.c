@@ -89,7 +89,7 @@ static void save_databases(void __attribute__((__unused__)) *notused)
 {
 	column_save();
 
-	bedrock_timer_schedule(50/*6000*/, save_databases, NULL);
+	bedrock_timer_schedule(6000, save_databases, NULL);
 }
 
 static void parse_cli_args(int argc, char **argv)
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, region_free_queue, NULL);
-	bedrock_timer_schedule(50/*6000*/, save_databases, NULL);
+	bedrock_timer_schedule(6000, save_databases, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{

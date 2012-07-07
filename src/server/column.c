@@ -227,6 +227,7 @@ static void column_save_entry(struct dirty_column *dc)
 		column_z = BEDROCK_COLUMNS_PER_REGION - abs(column_z);
 
 	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
+	offset *= sizeof(int32_t);
 
 	// Move to the offset, which contains the offset into the file of where this column starts
 	if (lseek(i, offset, SEEK_SET) == -1)
@@ -434,6 +435,7 @@ void column_save()
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
 				nbt_add(chunk_tag, TAG_BYTE, "Y", &chunk->y, sizeof(chunk->y));
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
+				nbt_add(chunk_tag, TAG_END, "", NULL, 0);
 
 				chunk_compress(chunk);
 			}
