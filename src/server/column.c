@@ -352,7 +352,7 @@ static void column_save_entry(struct dirty_column *dc)
 		return;
 	}
 
-	if (write(i, cb->buffer->data, cb->buffer->length) != cb->buffer->length)
+	if ((size_t) write(i, cb->buffer->data, cb->buffer->length) != cb->buffer->length)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to write column structure for region file %s - %s", dc->region_path, strerror(errno));
 		compression_compress_end(cb);

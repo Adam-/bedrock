@@ -546,28 +546,9 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 			break;
 		}
 		case TAG_LIST:
-		{
-			struct nbt_tag_list *tl = &c->payload.tag_list;
-
-			if (src == NULL)
-				break;
-
-			bedrock_assert(tl->type == TAG_END || tl->type == type, ;);
-			tl->type = type;
-
-			++tl->length;
-			bedrock_list_add(&tl->list, src);
-
-			bedrock_assert((size_t) tl->length == tl->list.count, ;);
-
-			break;
-		}
 		case TAG_COMPOUND:
 		{
-			if (src == NULL)
-				break;
-
-			bedrock_list_add(&c->payload.tag_compound, src);
+			bedrock_assert(src == NULL, ;);
 			break;
 		}
 		case TAG_INT_ARRAY:
