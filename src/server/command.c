@@ -3,6 +3,7 @@
 #include "packet/packet_chat_message.h"
 #include "command/command_fdlist.h"
 #include "command/command_help.h"
+#include "command/command_me.h"
 #include "command/command_memory.h"
 #include "command/command_players.h"
 #include "command/command_shutdown.h"
@@ -16,6 +17,7 @@
 struct bedrock_command commands[] = {
 	{"FDLIST",   "",                     "shows file descriptors", 0, 0, command_anyone, command_fdlist},
 	{"HELP",     "",                     "shows this message",     0, 0, command_anyone, command_help},
+	{"ME",       "<action>",             "performs an action",     1, 1, command_anyone, command_me},
 	{"MEMORY",   "",                     "shows memory usage",     0, 0, command_anyone, command_memory},
 	{"PLAYERS",  "",                     "lists players online",   0, 0, command_anyone, command_players},
 	{"SHUTDOWN", "",                     "shuts down the server",  0, 0, command_anyone, command_shutdown},
@@ -74,7 +76,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 		argv[argc++] = front;
 
 		front = end;
-		if (front != NULL && argc != command->max_parameters)
+		if (front != NULL && argc < command->max_parameters)
 		{
 			end = strchr(front, ' ');
 			if (end != NULL)
@@ -82,7 +84,7 @@ void command_run(struct bedrock_client *client, const char *buf)
 		}
 	}
 
-	if (argc < command->min_parameters)
+	if (argc - 1 < command->min_parameters)
 	{
 		command_reply(client, "Syntax error, syntax is: %s", command->syntax);
 		return;

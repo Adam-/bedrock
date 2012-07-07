@@ -7,7 +7,7 @@
 int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
-	char message[BEDROCK_MAX_STRING_LENGTH], final_message[1 + BEDROCK_USERNAME_MAX + 2 + BEDROCK_MAX_STRING_LENGTH];
+	char message[BEDROCK_MAX_STRING_LENGTH], final_message[BEDROCK_MAX_STRING_LENGTH];
 	bedrock_node *node;
 
 	packet_read_string(p, &offset, message, sizeof(message));
