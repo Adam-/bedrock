@@ -257,6 +257,8 @@ static void column_save_entry(struct dirty_column *dc)
 	if ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE)
 		++required_sectors;
 
+	bedrock_log(LEVEL_DEBUG, "column: Current offset for %d,%d is %d which takes %d sectors, I need %d sectors", column->x, column->z, structure_start, sectors, required_sectors);
+
 	if (required_sectors <= sectors)
 	{
 		if (lseek(i, structure_start * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)
@@ -266,6 +268,8 @@ static void column_save_entry(struct dirty_column *dc)
 			close(i);
 			return;
 		}
+
+		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are sufficient, moved file offset to %d", structure_start);
 	}
 	else
 	{
@@ -304,6 +308,8 @@ static void column_save_entry(struct dirty_column *dc)
 			return;
 		}
 
+		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header", offset);
+
 		bedrock_assert((pos % BEDROCK_REGION_SECTOR_SIZE) == 0, ;);
 		bedrock_assert((required_sectors & ~0xFF) == 0, ;);
 
@@ -332,8 +338,8 @@ static void column_save_entry(struct dirty_column *dc)
 
 	// Set up header
 	header_len = cb->buffer->length;
+	convert_endianness((unsigned char *) &header_len, sizeof(header_len));
 	memcpy(&header, &header_len, sizeof(header_len));
-	convert_endianness((unsigned char *) &header, sizeof(header_len));
 	// Compression type
 	header[4] = 2;
 
@@ -355,6 +361,7 @@ static void column_save_entry(struct dirty_column *dc)
 
 	// Pad the end
 	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
+	bedrock_log(LEVEL_DEBUG, "column: Finished writing compressed NBT structure, file requires an additional %d bytes of padding", j);
 	memset(&padding, 0, j);
 	if (write(i, padding, j) != j)
 	{
@@ -431,8 +438,6 @@ void column_save()
 				chunk_compress(chunk);
 			}
 
-			nbt_add(sections, TAG_END, NULL, NULL, 0);
-
 			{
 				compression_buffer *buf = compression_decompress(NULL, BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
 
@@ -441,6 +446,7 @@ void column_save()
 				compression_decompress_end(buf);
 			}
 
+			nbt_ascii_dump(column->data);
 			dc->nbt_out = nbt_write(column->data);
 
 			nbt_free(sections);
