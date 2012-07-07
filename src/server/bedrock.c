@@ -166,10 +166,11 @@ int main(int argc, char **argv)
 		client_process_exits();
 	}
 
+	column_save();
+
 	bedrock_thread_exit_all();
 
-	bedrock_timer_cancel_all_for(send_keepalive);
-	bedrock_timer_cancel_all_for(region_free_queue);
+	bedrock_timer_cancel_all_for(NULL);
 
 	listener_shutdown();
 	io_shutdown();

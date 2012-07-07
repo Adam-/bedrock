@@ -57,7 +57,7 @@ void bedrock_timer_cancel_all_for(timer_callback callback)
 	{
 		bedrock_timer *t = node->data;
 
-		if (t->callback == callback)
+		if (callback == NULL || t->callback == callback)
 		{
 			bedrock_list_del_node(&timer_list, node);
 			bedrock_free(t);

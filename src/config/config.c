@@ -28,6 +28,8 @@ int config_parse(const char *config)
 
 	fclose(fd);
 
+	yylex_destroy();
+
 	return ret;
 }
 

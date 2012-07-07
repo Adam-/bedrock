@@ -226,8 +226,6 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 
 			bedrock_log(LEVEL_DEBUG, "player digging: Adjusting height map of %d,%d to %d", x, z, *height);
 		}
-		// Make sure the chunk is still decompressed
-		chunk_decompress(chunk);
 
 		// Notify players in render distance of the column to remove the block
 		LIST_FOREACH(&chunk->column->players, node)

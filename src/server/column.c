@@ -108,7 +108,6 @@ uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, i
 	uint8_t chunk = y / BEDROCK_BLOCKS_PER_CHUNK;
 	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
 	struct bedrock_chunk *c;
-	uint8_t *block;
 
 	column_x = floor(column_x);
 	column_z = floor(column_z);
@@ -122,10 +121,7 @@ uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, i
 		return NULL;
 
 	chunk_decompress(c);
-	block = chunk_get_block(c, x, y, z);
-	chunk_compress(c);
-
-	return block;
+	return chunk_get_block(c, x, y, z);
 }
 
 int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z)
