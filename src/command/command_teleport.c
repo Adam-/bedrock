@@ -3,7 +3,7 @@
 #include "server/command.h"
 #include "packet/packet_entity_teleport.h"
 
-void command_teleport(struct bedrock_client *client, int argc, const char **argv)
+void command_teleport(struct bedrock_client *client, int bedrock_attribute_unused argc, const char **argv)
 {
 	struct bedrock_client *source = client_find(argv[1]), *target = client_find(argv[2]);
 
