@@ -273,6 +273,7 @@ static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
 		case TAG_COMPOUND:
 		{
 			bedrock_node *node;
+			uint8_t t = TAG_END;
 
 			LIST_FOREACH(&tag->payload.tag_compound, node)
 			{
@@ -280,6 +281,9 @@ static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
 
 				write_named_tag(buffer, nested_tag);
 			}
+
+			bedrock_buffer_append(buffer, &t, sizeof(t));
+
 			break;
 		}
 		case TAG_INT_ARRAY:
@@ -298,12 +302,6 @@ static void write_unnamed_tag(bedrock_buffer *buffer, nbt_tag *tag)
 			b = (int32_t *) (buffer->data + b_len);
 			for (i = 0; i < tia->length; ++i)
 				convert_endianness((unsigned char *) (b + i), sizeof(int32_t));
-			break;
-		}
-		case TAG_END:
-		{
-			uint8_t t = 0;
-			bedrock_buffer_append(buffer, &t, sizeof(t));
 			break;
 		}
 		default:
