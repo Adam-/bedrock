@@ -37,8 +37,6 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 {
 	switch (tag->type)
 	{
-		case TAG_END:
-			break;
 		case TAG_BYTE:
 			CHECK_RETURN(read_bytes(&tag->payload.tag_byte, sizeof(tag->payload.tag_byte), data, size, true), error);
 			break;
@@ -314,11 +312,10 @@ static void write_named_tag(bedrock_buffer *buffer, nbt_tag *tag)
 	uint8_t type;
 	uint16_t name_length;
 
+	bedrock_assert(tag->type != TAG_END, ;);
+
 	type = tag->type;
 	bedrock_buffer_append(buffer, &type, sizeof(type));
-
-	if (tag->type == TAG_END)
-		return;
 
 	name_length = strlen(tag->name);
 	convert_endianness((unsigned char *) &name_length, sizeof(name_length));
@@ -331,7 +328,11 @@ static void write_named_tag(bedrock_buffer *buffer, nbt_tag *tag)
 
 bedrock_buffer *nbt_write(nbt_tag *tag)
 {
-	bedrock_buffer *buffer = bedrock_buffer_create(NULL, "nbt write", NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	bedrock_buffer *buffer;
+
+	bedrock_assert(tag->type == TAG_COMPOUND, return NULL);
+
+	buffer = bedrock_buffer_create(NULL, "nbt write", NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
 	write_named_tag(buffer, tag);
 	return buffer;
 }

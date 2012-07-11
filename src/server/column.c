@@ -211,7 +211,7 @@ static void column_save_entry(struct dirty_column *dc)
 	unsigned char header[5];
 	char padding[BEDROCK_REGION_SECTOR_SIZE];
 
-	i = open(dc->region_path, O_RDWR | O_CREAT);
+	i = open(dc->region_path, O_RDWR);
 	if (i == -1)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to open region file %s for saving - %s", dc->region_path, strerror(errno));
@@ -309,14 +309,15 @@ static void column_save_entry(struct dirty_column *dc)
 			return;
 		}
 
-		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header", offset);
-
 		bedrock_assert((pos % BEDROCK_REGION_SECTOR_SIZE) == 0, ;);
+		bedrock_assert(((pos / BEDROCK_REGION_SECTOR_SIZE) & 0xFF000000) == 0, ;);
 		bedrock_assert((required_sectors & ~0xFF) == 0, ;);
 
 		offset_buffer = pos / BEDROCK_REGION_SECTOR_SIZE;
 		offset_buffer <<= 8;
 		offset_buffer |= required_sectors;
+
+		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header of position %d with %d sectors", offset, pos / BEDROCK_REGION_SECTOR_SIZE, required_sectors);
 
 		convert_endianness((unsigned char *) &offset_buffer, sizeof(offset_buffer));
 
@@ -328,13 +329,16 @@ static void column_save_entry(struct dirty_column *dc)
 			return;
 		}
 
-		if (lseek(i, 0, SEEK_END) == -1)
+		pos = lseek(i, 0, SEEK_END);
+		if (pos == -1)
 		{
 			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", dc->region_path, strerror(errno));
 			compression_compress_end(cb);
 			close(i);
 			return;
 		}
+
+		bedrock_assert(pos % BEDROCK_REGION_SECTOR_SIZE == 0, ;);
 	}
 
 	// Set up header
@@ -435,7 +439,6 @@ void column_save()
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
 				nbt_add(chunk_tag, TAG_BYTE, "Y", &chunk->y, sizeof(chunk->y));
 				nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
-				nbt_add(chunk_tag, TAG_END, "", NULL, 0);
 
 				chunk_compress(chunk);
 			}
