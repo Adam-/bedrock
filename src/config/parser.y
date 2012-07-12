@@ -1,4 +1,5 @@
 %{
+#include "server/bedrock.h"
 #include "server/world.h"
 #include "server/oper.h"
 #include "config/config.h"
@@ -33,6 +34,17 @@ static struct bedrock_oper *oper;
 %token MAXUSERS
 %token IP
 %token PORT
+%token LOG_LEVEL
+%token CRIT
+%token WARN
+%token INFO
+%token DEBUG
+%token COLUMN
+%token NBT_DEBUG
+%token THREAD
+%token BUFFER
+%token IO_DEBUG
+%token PACKET_DEBUG
 
 /* Operator */
 %token OPER
@@ -72,7 +84,7 @@ world_path: PATH '=' STRING ';'
 server_entry: SERVER '{' server_items '}';
 
 server_items: | server_item server_items;
-server_item: server_description | server_maxusers | server_ip | server_port;
+server_item: server_description | server_maxusers | server_ip | server_port | server_log_level;
 
 server_description: DESCRIPTION '=' STRING ';'
 {
@@ -93,6 +105,54 @@ server_port: PORT '=' INT ';'
 {
 	server_port = yylval.ival;
 };
+
+server_log_level: LOG_LEVEL '=' server_log_level_items ';'
+{
+};
+
+server_log_level_items: server_log_level_items ',' server_log_level_item | server_log_level_item;
+server_log_level_item:
+CRIT
+{
+	bedrock_conf_log_level |= LEVEL_CRIT;
+}
+| WARN
+{
+	bedrock_conf_log_level |= LEVEL_WARN;
+}
+| INFO
+{
+	bedrock_conf_log_level |= LEVEL_INFO;
+}
+| DEBUG
+{
+	bedrock_conf_log_level |= LEVEL_DEBUG;
+}
+| COLUMN
+{
+	bedrock_conf_log_level |= LEVEL_COLUMN;
+}
+| NBT_DEBUG
+{
+	bedrock_conf_log_level |= LEVEL_NBT_DEBUG;
+}
+| THREAD
+{
+	bedrock_conf_log_level |= LEVEL_THREAD;
+}
+| BUFFER
+{
+	bedrock_conf_log_level |= LEVEL_BUFFER;
+}
+| IO_DEBUG
+{
+	bedrock_conf_log_level |= LEVEL_IO_DEBUG;
+}
+| PACKET_DEBUG
+{
+	bedrock_conf_log_level |= LEVEL_PACKET_DEBUG;
+};
+
 
 /* Operator */
 operator_entry: OPER

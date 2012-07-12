@@ -21,17 +21,19 @@ extern uint32_t entity_id;
 
 typedef enum
 {
-	LEVEL_CRIT,
-	LEVEL_WARN,
-	LEVEL_INFO,
-	LEVEL_DEBUG,
-	LEVEL_COLUMN,
-	LEVEL_NBT_DEBUG,
-	LEVEL_THREAD,
-	LEVEL_BUFFER,
-	LEVEL_IO_DEBUG,
-	LEVEL_PACKET_DEBUG
+	LEVEL_CRIT         = 1 << 1,
+	LEVEL_WARN         = 1 << 2,
+	LEVEL_INFO         = 1 << 3,
+	LEVEL_DEBUG        = 1 << 4,
+	LEVEL_COLUMN       = 1 << 5,
+	LEVEL_NBT_DEBUG    = 1 << 6,
+	LEVEL_THREAD       = 1 << 7,
+	LEVEL_BUFFER       = 1 << 8,
+	LEVEL_IO_DEBUG     = 1 << 9,
+	LEVEL_PACKET_DEBUG = 1 << 10
 } bedrock_log_level;
+
+extern uint16_t bedrock_conf_log_level;
 
 extern void bedrock_update_time();
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);

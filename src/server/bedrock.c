@@ -17,6 +17,8 @@ time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
 uint32_t entity_id = 0;
 
+uint16_t bedrock_conf_log_level = 0;
+
 static struct timespec last_tick;
 
 void bedrock_update_time()
@@ -64,7 +66,7 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 	va_end(args);
 
-	if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && /*level != LEVEL_COLUMN && */level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
+	if (bedrock_conf_log_level & level)
 		fprintf(stdout, "%s\n", buffer);
 }
 

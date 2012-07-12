@@ -21,6 +21,17 @@ description	{ return DESCRIPTION; }
 maxusers	{ return MAXUSERS; }
 ip		{ return IP; }
 port		{ return PORT; }
+log_level       { return LOG_LEVEL; }
+CRIT            { return CRIT; }
+WARN            { return WARN; }
+INFO            { return INFO; }
+DEBUG           { return DEBUG; }
+COLUMN          { return COLUMN; }
+NBT_DEBUG       { return NBT_DEBUG; }
+THREAD          { return THREAD; }
+BUFFER          { return BUFFER; }
+IO_DEBUG        { return IO_DEBUG; }
+PACKET_DEBUG    { return PACKET_DEBUG; }
 
  /* Operator */
 oper            { return OPER; }
