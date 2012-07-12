@@ -56,11 +56,21 @@ struct bedrock_client
 	uint32_t ping_id;                     /* ping id sent */
 	uint16_t ping;                        /* ping in ms */
 
-	int16_t selected_slot;                /* slot the player has selected, 0-8 */
+	int16_t selected_slot;                /* slot the player has selected (weilded item), 0-8 */
 	bedrock_client_entity_action action;  /* action the player is doing */
 
 	double stance;                         /* players's stance */
 
+	// Data kept while a player is dragging items on a Window
+	struct
+	{
+		int16_t id;
+		uint8_t count;
+		int16_t metadata;
+	}
+	window_drag_data;
+
+	// Data kept while a player is digging
 	struct
 	{
 		int32_t x;

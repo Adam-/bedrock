@@ -36,6 +36,7 @@ enum
 	MAP_COLUMN                    = 0x33,
 	BLOCK_CHANGE                  = 0x35,
 	CLOSE_WINDOW                  = 0x65,
+	CLICK_WINDOW                  = 0x66,
 	SET_SLOT                      = 0x67,
 	PLAYER_LIST                   = 0xC9,
 	LIST_PING                     = 0xFE,

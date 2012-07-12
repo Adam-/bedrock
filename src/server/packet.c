@@ -16,6 +16,7 @@
 #include "packet/packet_entity_animation.h"
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
+#include "packet/packet_click_window.h"
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
 
@@ -54,6 +55,7 @@ static struct c2s_packet_handler
 	{MAP_COLUMN,             22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{BLOCK_CHANGE,           12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{CLOSE_WINDOW,            2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
+	{CLICK_WINDOW,            8, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_click_window},
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
