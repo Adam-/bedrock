@@ -9,6 +9,7 @@
 #include "server/world.h"
 #include "server/packet.h"
 #include "blocks/items.h"
+#include "server/oper.h"
 
 typedef enum
 {
@@ -44,6 +45,8 @@ struct bedrock_client
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
+
+	struct bedrock_oper *oper;            /* set if this player is an operator */
 
 	nbt_tag *data;                        /* player's .dat file */
 	struct bedrock_world *world;          /* world this player is in */

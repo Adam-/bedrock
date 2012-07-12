@@ -11,7 +11,7 @@ void command_help(struct bedrock_client *client, int bedrock_attribute_unused ar
 	{
 		struct bedrock_command *cmd = &commands[i];
 
-		if (cmd->can_use(client))
+		if (cmd->can_use(client, cmd))
 		{
 			command_reply(client, "  %-10s %-15s %s", cmd->name, cmd->syntax, cmd->desc);
 			++count;

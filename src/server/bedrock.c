@@ -175,6 +175,7 @@ int main(int argc, char **argv)
 	listener_shutdown();
 	io_shutdown();
 	world_free(world);
+	bedrock_list_clear(&oper_conf_list);
 
 	bedrock_assert(bedrock_memory.size == 0, ;);
 	bedrock_assert(fdlist.count == 0, ;);

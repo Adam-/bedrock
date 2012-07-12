@@ -26,3 +26,19 @@ server
 	port = 25565;
 }
 
+# Represents a server operator (admin).
+oper
+{
+	# The name of the user
+	name = "Adam";
+
+	# The password for this operator to login.
+	# If ommited no password is required and they
+	# are automatically given operator status on
+	# login.
+	#password = "moo";
+
+	# Commands this operator is allowed to use.
+	commands = "FDLIST MEMORY PLAYERS SHUTDOWN STATS TELEPORT TIME";
+}
+
