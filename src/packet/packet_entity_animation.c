@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/column.h"
 #include "packet/packet_entity_animation.h"
 
 enum
@@ -28,7 +29,7 @@ int packet_entity_animation(struct bedrock_client *client, const bedrock_packet 
 	else if (anim != ANIMATION_SWING_ARM)
 		return ERROR_UNEXPECTED;
 
-	LIST_FOREACH(&client->players, node)
+	LIST_FOREACH(&client->column->players, node)
 	{
 		struct bedrock_client *c = node->data;
 

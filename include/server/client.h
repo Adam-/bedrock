@@ -33,9 +33,9 @@ typedef enum
 
 struct bedrock_client
 {
-	bedrock_fd fd;
+	bedrock_fd fd;                       /* fd for this client */
 
-	uint32_t id;
+	uint32_t id;                         /* unique entity id, shared across players and NPCs */
 	bedrock_client_authentication_state authenticated;
 
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
@@ -53,7 +53,6 @@ struct bedrock_client
 	struct bedrock_column *column;        /* column this player is in */
 
 	bedrock_list columns;                 /* columns this player knows about */
-	bedrock_list players;                 /* players this player knows about */
 
 	struct timespec ping_time_sent;       /* time keepalive was sent */
 	uint32_t ping_id;                     /* ping id sent */
@@ -116,7 +115,7 @@ extern nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t 
 extern bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
 extern void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
 
-extern void client_update_chunks(struct bedrock_client *client);
+extern void client_update_columns(struct bedrock_client *client);
 extern void client_update_players(struct bedrock_client *client);
 extern void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground);
 

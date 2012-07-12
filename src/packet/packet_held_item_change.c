@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/column.h"
 #include "packet/packet_entity_equipment.h"
 #include "nbt/nbt.h"
 #include "util/list.h"
@@ -30,7 +31,7 @@ int packet_held_item_change(struct bedrock_client *client, const bedrock_packet 
 	// No more digging now
 	memset(&client->digging_data, 0, sizeof(client->digging_data));
 
-	LIST_FOREACH(&client->players, node)
+	LIST_FOREACH(&client->column->players, node)
 	{
 		struct bedrock_client *c = node->data;
 

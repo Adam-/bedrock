@@ -131,7 +131,7 @@ static void region_exit(struct bedrock_region bedrock_attribute_unused *region)
 
 		if (client->authenticated >= STATE_BURSTING)
 		{
-			client_update_chunks(client);
+			client_update_columns(client);
 		}
 	}
 }

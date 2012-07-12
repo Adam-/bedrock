@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/column.h"
 #include "packet/packet_entity_metadata.h"
 
 void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_index index, entity_metadata_type type, const void *data, size_t size)
@@ -8,7 +9,7 @@ void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_
 	bedrock_node *node;
 	bedrock_packet packet;
 
-	LIST_FOREACH(&client->players, node)
+	LIST_FOREACH(&client->column->players, node)
 	{
 		struct bedrock_client *c = node->data;
 

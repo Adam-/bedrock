@@ -145,14 +145,13 @@ static void client_free(struct bedrock_client *client)
 		bedrock_assert(authenticated_client_count >= 0, authenticated_client_count = 0);
 	}
 
-	LIST_FOREACH(&client->players, node)
-	{
-		struct bedrock_client *c = node->data;
+	if (client->column)
+		LIST_FOREACH(&client->column->players, node)
+		{
+			struct bedrock_client *c = node->data;
 
-		bedrock_assert(bedrock_list_del(&c->players, client), ;);
-		packet_send_destroy_entity_player(c, client);
-	}
-	bedrock_list_clear(&client->players);
+			packet_send_destroy_entity_player(c, client);
+		}
 
 	LIST_FOREACH(&client->columns, node)
 	{
@@ -498,11 +497,9 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	bedrock_list_add(list, item_tag);
 }
 
-void client_update_chunks(struct bedrock_client *client)
+void client_update_columns(struct bedrock_client *client)
 {
-	/* Update the chunks around the player. Used for when the player moves to a new chunk.
-	 * client->columns contains a list of nbt_tag columns.
-	 */
+	/* Update the column around the player. Used for when the player moves to a new column. */
 
 	int i;
 	struct bedrock_region *region;
@@ -526,6 +523,20 @@ void client_update_chunks(struct bedrock_client *client)
 			bedrock_free(node);
 
 			bedrock_list_del(&c->players, client);
+
+			/* This column is going away, find players in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Remove these clients from each other */
+					packet_send_destroy_entity_player(client, cl);
+					packet_send_destroy_entity_player(cl, client);
+				}
+			}
 
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
@@ -554,6 +565,20 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
+			/* Tell this client about any clients in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Send this client */
+					packet_send_spawn_named_entity(client, cl);
+					packet_send_spawn_named_entity(cl, client);
+				}
+			}
 
 			bedrock_list_add(&client->columns, c);
 			bedrock_list_add(&c->players, client);
@@ -584,6 +609,20 @@ void client_update_chunks(struct bedrock_client *client)
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
 
+			/* Tell this client about any clients in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Send this client */
+					packet_send_spawn_named_entity(client, cl);
+					packet_send_spawn_named_entity(cl, client);
+				}
+			}
+
 			bedrock_list_add(&client->columns, c);
 			bedrock_list_add(&c->players, client);
 		}
@@ -604,6 +643,20 @@ void client_update_chunks(struct bedrock_client *client)
 
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
+
+			/* Tell this client about any clients in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Send this client */
+					packet_send_spawn_named_entity(client, cl);
+					packet_send_spawn_named_entity(cl, client);
+				}
+			}
 
 			bedrock_list_add(&client->columns, c);
 			bedrock_list_add(&c->players, client);
@@ -626,6 +679,20 @@ void client_update_chunks(struct bedrock_client *client)
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
 
+			/* Tell this client about any clients in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Send this client */
+					packet_send_spawn_named_entity(client, cl);
+					packet_send_spawn_named_entity(cl, client);
+				}
+			}
+
 			bedrock_list_add(&client->columns, c);
 			bedrock_list_add(&c->players, client);
 		}
@@ -647,61 +714,22 @@ void client_update_chunks(struct bedrock_client *client)
 			packet_send_column_allocation(client, c, true);
 			packet_send_column(client, c);
 
+			/* Tell this client about any clients in this column */
+			LIST_FOREACH(&c->players, node)
+			{
+				struct bedrock_client *cl = node->data;
+
+				/* We only want players *in* this column not *near* this column */
+				if (cl->column == c)
+				{
+					/* Send this client */
+					packet_send_spawn_named_entity(client, cl);
+					packet_send_spawn_named_entity(cl, client);
+				}
+			}
+
 			bedrock_list_add(&client->columns, c);
 			bedrock_list_add(&c->players, client);
-		}
-	}
-}
-
-void client_update_players(struct bedrock_client *client)
-{
-	/* Update the players this player knows about. Used for when a player
-	 * moves to a new chunk.
-	 */
-	bedrock_node *node;
-
-	/* Chunk coords player is in */
-	double player_x = *client_get_pos_x(client) / BEDROCK_BLOCKS_PER_CHUNK, player_z = *client_get_pos_z(client) / BEDROCK_BLOCKS_PER_CHUNK;
-	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
-	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
-
-	LIST_FOREACH(&client_list, node)
-	{
-		struct bedrock_client *c = node->data;
-		double c_x, c_z;
-
-		if (c->authenticated != STATE_AUTHENTICATED || c == client)
-			continue;
-
-		c_x = *client_get_pos_x(c) / BEDROCK_BLOCKS_PER_CHUNK, c_z = *client_get_pos_z(c) / BEDROCK_BLOCKS_PER_CHUNK;
-		c_x = (int) (c_x >= 0 ? ceil(c_x) : floor(c_x));
-		c_z = (int) (c_z >= 0 ? ceil(c_z) : floor(c_z));
-
-		if (abs(player_x - c_x) <= BEDROCK_VIEW_LENGTH || abs(player_z - c_z) <= BEDROCK_VIEW_LENGTH)
-		{
-			/* Player c is in range of player client */
-			if (bedrock_list_has_data(&client->players, c) == false)
-			{
-				/* Not already being tracked */
-				bedrock_list_add(&client->players, c);
-				packet_send_spawn_named_entity(client, c);
-
-				bedrock_assert(bedrock_list_has_data(&c->players, client) == false, ;);
-				bedrock_list_add(&c->players, client);
-				packet_send_spawn_named_entity(c, client);
-			}
-		}
-		else
-		{
-			/* Player c is not in range of player client */
-			if (bedrock_list_del(&client->players, c) != NULL)
-			{
-				/* And being tracked */
-				packet_send_destroy_entity_player(client, c);
-
-				bedrock_assert(bedrock_list_del(&c->players, client) != NULL, ;);
-				packet_send_destroy_entity_player(client, c);
-			}
 		}
 	}
 }
@@ -719,7 +747,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	int8_t c_x, c_y, c_z, new_y, new_p;
 
-	bool update_loc, update_rot, update_chunk;
+	bool update_loc, update_rot, update_col;
 
 	bedrock_node *node, *node2;
 
@@ -756,14 +784,17 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	update_loc = c_x || c_y || c_z;
 	update_rot = ((old_yaw / 360.0) * 256) != new_y || ((old_pitch / 360.0) * 256) != new_p;
-	update_chunk = old_column_x != new_column_x || old_column_z != new_column_z;
+	update_col = old_column_x != new_column_x || old_column_z != new_column_z;
 
 	if (!update_loc && !update_rot)
 		return;
 
-	LIST_FOREACH(&client->players, node)
+	LIST_FOREACH(&client->column->players, node)
 	{
 		struct bedrock_client *c = node->data;
+
+		if (c == client)
+			continue;
 
 		packet_send_entity_teleport(c, client);
 
@@ -771,8 +802,8 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 			packet_send_entity_head_look(c, client);
 	}
 
-	if (update_chunk)
-		client_update_chunks(client);
+	if (update_col)
+		client_update_columns(client);
 
 	if (client->column != NULL)
 		/* Check if this player should pick up any dropped items near them */
@@ -793,7 +824,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		}
 }
 
-/* Starts the login sequence. This is split up in to two parts because client_update_chunks
+/* Starts the login sequence. This is split up in to two parts because client_update_columns
  * may not have the chunks available this player is in until later. client_finish_login_sequence
  * is called when the column the player is in is allocated to the client.
  */
@@ -808,7 +839,7 @@ void client_start_login_sequence(struct bedrock_client *client)
 	packet_send_spawn_point(client);
 
 	/* Send chunks */
-	client_update_chunks(client);
+	client_update_columns(client);
 }
 
 void client_finish_login_sequence(struct bedrock_client *client)
@@ -856,9 +887,6 @@ void client_finish_login_sequence(struct bedrock_client *client)
 			packet_send_chat_message(c, "%s joined the game", client->name);
 		}
 	}
-
-	/* Send nearby players */
-	client_update_players(client);
 
 	oper = oper_find(client->name);
 	if (oper != NULL && *oper->password == 0)
