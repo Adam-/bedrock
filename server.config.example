@@ -1,13 +1,27 @@
+# Bedrock configuration file
+
+# Configures a world. Currently only one world is supported.
 world
 {
+	# The name of the world
 	name = "world";
+
+	# The full path to the world (so path/level.dat exists)
 	path = "/home/adam/world-original";
 }
 
+# The configuration for the server.
 server
 {
+	# The description to show in the client's server list.
 	description = "Adam's custom server";
-	maxusers = 8;
+
+	# The maximum uamount of sers this server can support. Note that the
+	# file limit for this user will override anything set here. On Unix
+	# systems see ulimit -n.
+	maxusers = 1024;
+
+	# The IP and port to listen on.
 	ip = "0.0.0.0";
 	port = 25565;
 }
