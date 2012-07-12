@@ -814,6 +814,7 @@ void client_start_login_sequence(struct bedrock_client *client)
 void client_finish_login_sequence(struct bedrock_client *client)
 {
 	bedrock_node *node;
+	struct bedrock_oper *oper;
 
 	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
 
@@ -858,4 +859,8 @@ void client_finish_login_sequence(struct bedrock_client *client)
 
 	/* Send nearby players */
 	client_update_players(client);
+
+	oper = oper_find(client->name);
+	if (oper != NULL && *oper->password == 0)
+		client->oper = oper;
 }
