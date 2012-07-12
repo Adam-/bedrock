@@ -35,6 +35,9 @@ int packet_held_item_change(struct bedrock_client *client, const bedrock_packet 
 	{
 		struct bedrock_client *c = node->data;
 
+		if (client == c)
+			continue;
+
 		packet_send_entity_equipment(c, client, ENTITY_EQUIPMENT_HELD, item, damage != NULL ? *damage : 0);
 	}
 

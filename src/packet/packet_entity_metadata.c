@@ -13,6 +13,9 @@ void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_
 	{
 		struct bedrock_client *c = node->data;
 
+		if (client == c)
+			continue;
+
 		packet_init(&packet, ENTITY_METADATA);
 
 		packet_pack_header(&packet, ENTITY_METADATA);

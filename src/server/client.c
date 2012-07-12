@@ -497,6 +497,35 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	bedrock_list_add(list, item_tag);
 }
 
+static void client_update_column(struct bedrock_client *client, struct bedrock_column *column)
+{
+	bedrock_node *node;
+
+	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
+
+	++column->region->player_column_count;
+
+	packet_send_column_allocation(client, column, true);
+	packet_send_column(client, column);
+
+	/* Tell this client about any clients in this column */
+	LIST_FOREACH(&column->players, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		/* We only want players *in* this column not *near* this column */
+		if (c->column == column)
+		{
+			/* Send this client */
+			packet_send_spawn_named_entity(client, c);
+			packet_send_spawn_named_entity(c, client);
+		}
+	}
+
+	bedrock_list_add(&client->columns, column);
+	bedrock_list_add(&column->players, client);
+}
+
 void client_update_columns(struct bedrock_client *client)
 {
 	/* Update the column around the player. Used for when the player moves to a new column. */
@@ -602,29 +631,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
-
-			++region->player_column_count;
-
-			packet_send_column_allocation(client, c, true);
-			packet_send_column(client, c);
-
-			/* Tell this client about any clients in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Send this client */
-					packet_send_spawn_named_entity(client, cl);
-					packet_send_spawn_named_entity(cl, client);
-				}
-			}
-
-			bedrock_list_add(&client->columns, c);
-			bedrock_list_add(&c->players, client);
+			client_update_column(client, c);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
@@ -637,29 +644,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
-
-			++region->player_column_count;
-
-			packet_send_column_allocation(client, c, true);
-			packet_send_column(client, c);
-
-			/* Tell this client about any clients in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Send this client */
-					packet_send_spawn_named_entity(client, cl);
-					packet_send_spawn_named_entity(cl, client);
-				}
-			}
-
-			bedrock_list_add(&client->columns, c);
-			bedrock_list_add(&c->players, client);
+			client_update_column(client, c);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
@@ -672,29 +657,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
-
-			++region->player_column_count;
-
-			packet_send_column_allocation(client, c, true);
-			packet_send_column(client, c);
-
-			/* Tell this client about any clients in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Send this client */
-					packet_send_spawn_named_entity(client, cl);
-					packet_send_spawn_named_entity(cl, client);
-				}
-			}
-
-			bedrock_list_add(&client->columns, c);
-			bedrock_list_add(&c->players, client);
+			client_update_column(client, c);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
@@ -707,29 +670,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
-
-			++region->player_column_count;
-
-			packet_send_column_allocation(client, c, true);
-			packet_send_column(client, c);
-
-			/* Tell this client about any clients in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Send this client */
-					packet_send_spawn_named_entity(client, cl);
-					packet_send_spawn_named_entity(cl, client);
-				}
-			}
-
-			bedrock_list_add(&client->columns, c);
-			bedrock_list_add(&c->players, client);
+			client_update_column(client, c);
 		}
 	}
 }
