@@ -35,49 +35,54 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 
 	if (window == WINDOW_INVENTORY)
 	{
+		nbt_tag *tag;
+
 		if (slot < 9 || slot > 44)
 			return ERROR_NOT_ALLOWED;
 
 		if (slot >= 36)
 			slot -= 36;
 
-		nbt_tag *tag;
-
 		tag = client_get_inventory_tag(client, slot);
 
 		if (tag != NULL)
 		{
 			uint16_t id;
-			//uint8_t count;
 			int16_t metadata;
-			//int16_t *id = nbt_get(tag, TAG_SHORT, 1, "id");
-			uint8_t *count = nbt_read(tag, TAG_BYTE, 1, "Count");
-			//int16_t *metadata = nbt_get(tag, TAG_SHORT, 1, "Damage");
+			uint8_t *count_ptr = nbt_read(tag, TAG_BYTE, 1, "Count");
+			uint8_t count = *count_ptr; // After a replace count_ptr is invalid
 			bool replaced = false;
 
 			nbt_copy(tag, TAG_SHORT, &id, sizeof(id), 1, "id");
-			//nbt_copy(tag, TAG_BYTE, &count, sizeof(count), 1, "Count");
 			nbt_copy(tag, TAG_SHORT, &metadata, sizeof(metadata), 1, "Damage");
 
-			bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s", client->name, slot, item_find_or_create(id)->name);
+			if (id != item_id || item_count != count || item_metadata != metadata)
+				return ERROR_UNEXPECTED;
 
 			// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot.
 			if (client->window_drag_data.id)
 			{
 				// However if I am right clicking and this slot is of the same type as my drag type, move one item
-				if (right_click && id == client->window_drag_data.id && *count < BEDROCK_MAX_ITEMS_PER_STACK)
+				if (right_click && id == client->window_drag_data.id)
 				{
-					++*count;
-					--client->window_drag_data.count;
-
-					bedrock_log(LEVEL_DEBUG, "click window: %s moves one item from stack of %s to %d", client->name, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name, slot);
-
-					// Might have been the last item, zero out drag state
-					if (client->window_drag_data.count == 0)
+					if (count < BEDROCK_MAX_ITEMS_PER_STACK)
 					{
-						client->window_drag_data.id = 0;
-						client->window_drag_data.metadata = 0;
+						++*count_ptr;
+						--client->window_drag_data.count;
+
+						bedrock_log(LEVEL_DEBUG, "click window: %s moves one item from stack of %s to %d, has %d left", client->name, item_find_or_create(client->window_drag_data.id)->name, slot, client->window_drag_data.count);
+
+						// Might have been the last item, zero out drag state
+						if (client->window_drag_data.count == 0)
+						{
+							client->window_drag_data.id = 0;
+							client->window_drag_data.metadata = 0;
+						}
 					}
+
+					// At this point we are done, do not pick up this item
+					packet_send_confirm_transaction(client, window, action, true);
+					return offset;
 				}
 				// Replacing a slot
 				else
@@ -100,7 +105,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 			if (right_click && replaced == false)
 			{
 				/* We only want half of the blocks here. If there is an odd count then they are holding the larger. */
-				double dcount = (double) *count / 2;
+				double dcount = (double) *count_ptr / 2;
 				bool even = floor(dcount) == dcount;
 
 				// If this isn't an even outcome give the client one more
@@ -108,15 +113,19 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 					++dcount;
 
 				client->window_drag_data.count = dcount;
-				*count /= 2;
+				bedrock_log(LEVEL_DEBUG, "click window: %s right clicks on slot %d which contains %s and takes %d", client->name, slot, item_find_or_create(id)->name, client->window_drag_data.count);bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s", client->name, slot, item_find_or_create(id)->name);
+
+				*count_ptr /= 2;
 
 				// Slot can be empty (right clicking a 1 item slot)
-				if (*count == 0)
+				if (*count_ptr == 0)
 					nbt_free(tag);
 			}
 			else
 			{
-				client->window_drag_data.count = *count;
+				// count_ptr might not be ok here because it could have been replaced with the item we are now holding
+				client->window_drag_data.count = count;
+				bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s and takes all blocks", client->name, slot, item_find_or_create(id)->name);
 
 				/* Slot goes away */
 				if (replaced == false)
