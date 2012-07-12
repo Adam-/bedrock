@@ -5,6 +5,7 @@
 #include "command/command_help.h"
 #include "command/command_me.h"
 #include "command/command_memory.h"
+#include "command/command_oper.h"
 #include "command/command_players.h"
 #include "command/command_shutdown.h"
 #include "command/command_stats.h"
@@ -16,27 +17,28 @@
 #define MAX_PARAMETERS 15
 
 struct bedrock_command commands[] = {
-	{"FDLIST",   "",                               "shows file descriptors", 0, 0, command_oper,   command_fdlist},
-	{"HELP",     "",                               "shows this message",     0, 0, command_anyone, command_help},
-	{"ME",       "<action>",                       "performs an action",     1, 1, command_anyone, command_me},
-	{"MEMORY",   "",                               "shows memory usage",     0, 0, command_oper,   command_memory},
-	{"PLAYERS",  "",                               "lists players online",   0, 0, command_anyone, command_players},
-	{"SHUTDOWN", "",                               "shuts down the server",  0, 0, command_oper,   command_shutdown},
-	{"STATS",    "",                               "shows statistics",       0, 0, command_oper,   command_stats},
-	{"TIME",     "[day|night|dawn|dusk|<number>]", "Sets world time",        0, 3, command_oper,   command_time},
-	{"TP",       "<player1> <player2>",            "teleports players",      2, 2, command_oper,   command_teleport},
-	{"UPTIME",   "",                               "shows server uptime",    0, 0, command_anyone, command_uptime},
-	{"VERSION",  "",                               "shows server version",   0, 0, command_anyone, command_version}
+	{"FDLIST",   "",                               "shows file descriptors", 0, 0, command_use_oper,   command_fdlist},
+	{"HELP",     "",                               "shows this message",     0, 0, command_use_anyone, command_help},
+	{"ME",       "<action>",                       "performs an action",     1, 1, command_use_anyone, command_me},
+	{"MEMORY",   "",                               "shows memory usage",     0, 0, command_use_oper,   command_memory},
+	{"OPER",     "<username> <password>",          "gain operator status",   2, 2, command_use_anyone, command_oper},
+	{"PLAYERS",  "",                               "lists players online",   0, 0, command_use_anyone, command_players},
+	{"SHUTDOWN", "",                               "shuts down the server",  0, 0, command_use_oper,   command_shutdown},
+	{"STATS",    "",                               "shows statistics",       0, 0, command_use_oper,   command_stats},
+	{"TIME",     "[day|night|dawn|dusk|<number>]", "Sets world time",        0, 3, command_use_oper,   command_time},
+	{"TP",       "<player1> <player2>",            "teleports players",      2, 2, command_use_oper,   command_teleport},
+	{"UPTIME",   "",                               "shows server uptime",    0, 0, command_use_anyone, command_uptime},
+	{"VERSION",  "",                               "shows server version",   0, 0, command_use_anyone, command_version}
 };
 
 int command_count = sizeof(commands) / sizeof(struct bedrock_command);
 
-bool command_anyone(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_command bedrock_attribute_unused *command)
+bool command_use_anyone(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_command bedrock_attribute_unused *command)
 {
 	return true;
 }
 
-bool command_oper(struct bedrock_client *client, struct bedrock_command *command)
+bool command_use_oper(struct bedrock_client *client, struct bedrock_command *command)
 {
 	return oper_has_command(client->oper, command->name);
 }
