@@ -11,6 +11,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 bool bedrock_running = true;
 time_t bedrock_start;
@@ -57,6 +60,20 @@ void bedrock_update_time()
 	}
 }
 
+static bedrock_fd log_fd;
+
+static void bedrock_log_init()
+{
+	int fd = open("server.log", O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
+	if (fd == -1)
+	{
+		bedrock_log(LEVEL_CRIT, "Unable to open log file: %s", strerror(errno));
+		return;
+	}
+
+	bedrock_fd_open(&log_fd, fd, FD_FILE, "server log");
+}
+
 void bedrock_log(bedrock_log_level level, const char *msg, ...)
 {
 	va_list args;
@@ -67,7 +84,20 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	va_end(args);
 
 	if (bedrock_conf_log_level & level)
+	{
 		fprintf(stdout, "%s\n", buffer);
+
+		if (log_fd.open)
+		{
+			write(log_fd.fd, buffer, strlen(buffer));
+			write(log_fd.fd, "\n", 1);
+		}
+	}
+}
+
+static void bedrock_log_close()
+{
+	bedrock_fd_close(&log_fd);
 }
 
 static void send_keepalive(void __attribute__((__unused__)) *notused)
@@ -132,21 +162,23 @@ int main(int argc, char **argv)
 	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
 
+	bedrock_log_init();
+
 	parse_cli_args(argc, argv);
 
-	fprintf(stdout, "Bedrock %d.%d%s starting up\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
+	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 
 	if (config_parse("server.config"))
 		exit(1);
 
-	fprintf(stdout, "Listening on %s:%d with %d max players - %s\n", server_ip, server_port, server_maxusers, server_desc);
+	bedrock_log(LEVEL_INFO, "Listening on %s:%d with %d max players - %s", server_ip, server_port, server_maxusers, server_desc);
 
 	if (world_list.count == 0)
 		exit(1);
 	
 	world = world_list.head->data;
 
-	fprintf(stdout, "Using world \"%s\" at %s\n", world->name, world->path);
+	bedrock_log(LEVEL_INFO, "Using world \"%s\" at %s", world->name, world->path);
 
 	bedrock_start = time(NULL);
 	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
@@ -178,6 +210,7 @@ int main(int argc, char **argv)
 	io_shutdown();
 	world_free(world);
 	bedrock_list_clear(&oper_conf_list);
+	bedrock_log_close();
 
 	bedrock_assert(bedrock_memory.size == 0, ;);
 	bedrock_assert(fdlist.count == 0, ;);
