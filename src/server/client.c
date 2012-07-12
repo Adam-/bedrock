@@ -588,29 +588,7 @@ void client_update_columns(struct bedrock_client *client)
 	if (c != NULL)
 		if (bedrock_list_has_data(&client->columns, c) == false)
 		{
-			bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", c->x, c->z, client->name);
-
-			++region->player_column_count;
-
-			packet_send_column_allocation(client, c, true);
-			packet_send_column(client, c);
-
-			/* Tell this client about any clients in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Send this client */
-					packet_send_spawn_named_entity(client, cl);
-					packet_send_spawn_named_entity(cl, client);
-				}
-			}
-
-			bedrock_list_add(&client->columns, c);
-			bedrock_list_add(&c->players, client);
+			client_update_column(client, c);
 
 			/* Loading the column the player is in on a bursting player, finish burst */
 			if (client->authenticated == STATE_BURSTING)
