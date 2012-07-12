@@ -2,6 +2,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "packet/packet_set_slot.h" // XXX for WINDOW_
+#include "packet/packet_confirm_transaction.h"
 #include "nbt/nbt.h"
 
 #include <math.h>
@@ -47,25 +48,47 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 		if (tag != NULL)
 		{
 			uint16_t id;
-			uint8_t count;
+			//uint8_t count;
 			int16_t metadata;
+			//int16_t *id = nbt_get(tag, TAG_SHORT, 1, "id");
+			uint8_t *count = nbt_read(tag, TAG_BYTE, 1, "Count");
+			//int16_t *metadata = nbt_get(tag, TAG_SHORT, 1, "Damage");
 			bool replaced = false;
 
 			nbt_copy(tag, TAG_SHORT, &id, sizeof(id), 1, "id");
-			nbt_copy(tag, TAG_BYTE, &count, sizeof(count), 1, "Count");
+			//nbt_copy(tag, TAG_BYTE, &count, sizeof(count), 1, "Count");
 			nbt_copy(tag, TAG_SHORT, &metadata, sizeof(metadata), 1, "Damage");
 
 			bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s", client->name, slot, item_find_or_create(id)->name);
 
-			// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot
+			// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot.
 			if (client->window_drag_data.id)
 			{
-				// Replace this slot with drag data
-				nbt_set(tag, TAG_SHORT, &client->window_drag_data.id, sizeof(client->window_drag_data.id), 1, "id");
-				nbt_set(tag, TAG_BYTE, &client->window_drag_data.count, sizeof(client->window_drag_data.count), 1, "Count");
-				nbt_set(tag, TAG_SHORT, &client->window_drag_data.metadata, sizeof(client->window_drag_data.metadata), 1, "Damage");
+				// However if I am right clicking and this slot is of the same type as my drag type, move one item
+				if (right_click && id == client->window_drag_data.id && *count < BEDROCK_MAX_ITEMS_PER_STACK)
+				{
+					++*count;
+					--client->window_drag_data.count;
 
-				bedrock_log(LEVEL_DEBUG, "click window: %s replaces slot %d with %d blocks of %s", client->name, slot, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name);
+					bedrock_log(LEVEL_DEBUG, "click window: %s moves one item from stack of %s to %d", client->name, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name, slot);
+
+					// Might have been the last item, zero out drag state
+					if (client->window_drag_data.count == 0)
+					{
+						client->window_drag_data.id = 0;
+						client->window_drag_data.metadata = 0;
+					}
+				}
+				// Replacing a slot
+				else
+				{
+					// Replace this slot with drag data
+					nbt_set(tag, TAG_SHORT, &client->window_drag_data.id, sizeof(client->window_drag_data.id), 1, "id");
+					nbt_set(tag, TAG_BYTE, &client->window_drag_data.count, sizeof(client->window_drag_data.count), 1, "Count");
+					nbt_set(tag, TAG_SHORT, &client->window_drag_data.metadata, sizeof(client->window_drag_data.metadata), 1, "Damage");
+
+					bedrock_log(LEVEL_DEBUG, "click window: %s replaces slot %d with %d blocks of %s", client->name, slot, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name);
+				}
 
 				replaced = true;
 			}
@@ -77,7 +100,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 			if (right_click && replaced == false)
 			{
 				/* We only want half of the blocks here. If there is an odd count then they are holding the larger. */
-				double dcount = (double) count / 2;
+				double dcount = (double) *count / 2;
 				bool even = floor(dcount) == dcount;
 
 				// If this isn't an even outcome give the client one more
@@ -85,14 +108,15 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 					++dcount;
 
 				client->window_drag_data.count = dcount;
+				*count /= 2;
 
 				// Slot can be empty (right clicking a 1 item slot)
-				if (dcount == 1)
+				if (*count == 0)
 					nbt_free(tag);
 			}
 			else
 			{
-				client->window_drag_data.count = count;
+				client->window_drag_data.count = *count;
 
 				/* Slot goes away */
 				if (replaced == false)
@@ -110,17 +134,32 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 				tag->owner = nbt_get(client->data, TAG_LIST, 1, "Inventory");
 				tag->type = TAG_COMPOUND;
 
+				// On a right click we only transfer one item, otherwise take them all
 				nbt_add(tag, TAG_SHORT, "id", &client->window_drag_data.id, sizeof(client->window_drag_data.id));
 				nbt_add(tag, TAG_SHORT, "Damage", &client->window_drag_data.metadata, sizeof(client->window_drag_data.metadata));
-				nbt_add(tag, TAG_BYTE, "Count", &client->window_drag_data.count, sizeof(client->window_drag_data.count));
+				if (right_click)
+				{
+					uint8_t count = 1;
+					nbt_add(tag, TAG_BYTE, "Count", &count, sizeof(count));
+
+					--client->window_drag_data.count;
+
+					bedrock_log(LEVEL_DEBUG, "click window: %s right click places 1 block of %s in empty slot %d", client->name, item_find_or_create(client->window_drag_data.id)->name, slot);
+				}
+				else
+				{
+					nbt_add(tag, TAG_BYTE, "Count", &client->window_drag_data.count, sizeof(client->window_drag_data.count));
+					bedrock_log(LEVEL_DEBUG, "click window: %s places %d blocks of %s in empty slot %d", client->name, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name, slot);
+				}
 				nbt_add(tag, TAG_BYTE, "Slot", &slot, sizeof(slot));
 
-				bedrock_log(LEVEL_DEBUG, "click window: %s places %d blocks of %s in empty slot %d", client->name, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name, slot);
-
-				// Zero out drag state
-				client->window_drag_data.id = 0;
-				client->window_drag_data.count = 0;
-				client->window_drag_data.metadata = 0;
+				// Zero out drag state if this wasn't a right click replace or if there are no items left
+				if (right_click == false || client->window_drag_data.count == 0)
+				{
+					client->window_drag_data.id = 0;
+					client->window_drag_data.count = 0;
+					client->window_drag_data.metadata = 0;
+				}
 
 				// Insert slot
 				LIST_FOREACH(&tag->owner->payload.tag_list.list, node)
@@ -132,6 +171,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 					{
 						// Insert before c
 						bedrock_list_add_node_before(&tag->owner->payload.tag_list.list, bedrock_malloc(sizeof(bedrock_node)), node, tag);
+						packet_send_confirm_transaction(client, window, action, true);
 						return offset;
 					}
 				}
@@ -140,6 +180,8 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 				bedrock_list_add(&tag->owner->payload.tag_list.list, tag);
 			}
 		}
+
+		packet_send_confirm_transaction(client, window, action, true);
 	}
 
 	return offset;

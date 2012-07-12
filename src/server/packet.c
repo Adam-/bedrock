@@ -57,6 +57,7 @@ static struct c2s_packet_handler
 	{CLOSE_WINDOW,            2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
 	{CLICK_WINDOW,            8, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_click_window},
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{CONFIRM_TRANSACTION,     5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
 	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
