@@ -29,12 +29,16 @@ int packet_entity_animation(struct bedrock_client *client, const bedrock_packet 
 	else if (anim != ANIMATION_SWING_ARM)
 		return ERROR_UNEXPECTED;
 
-	LIST_FOREACH(&client->column->players, node)
-	{
-		struct bedrock_client *c = node->data;
+	if (client->column != NULL)
+		LIST_FOREACH(&client->column->players, node)
+		{
+			struct bedrock_client *c = node->data;
 
-		packet_send_entity_animation(c, client, anim);
-	}
+			if (c == client)
+				continue;
+
+			packet_send_entity_animation(c, client, anim);
+		}
 
 	return offset;
 }

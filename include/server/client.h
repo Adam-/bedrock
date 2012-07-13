@@ -50,7 +50,7 @@ struct bedrock_client
 
 	nbt_tag *data;                        /* player's .dat file */
 	struct bedrock_world *world;          /* world this player is in */
-	struct bedrock_column *column;        /* column this player is in */
+	struct bedrock_column *column;        /* column this player is in, can be NULL if it an unloaded column! */
 
 	bedrock_list columns;                 /* columns this player knows about */
 

@@ -9,6 +9,9 @@ void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_
 	bedrock_node *node;
 	bedrock_packet packet;
 
+	if (client->column == NULL)
+		return;
+
 	LIST_FOREACH(&client->column->players, node)
 	{
 		struct bedrock_client *c = node->data;

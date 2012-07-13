@@ -708,18 +708,19 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (!update_loc && !update_rot)
 		return;
 
-	LIST_FOREACH(&client->column->players, node)
-	{
-		struct bedrock_client *c = node->data;
+	if (client->column != NULL)
+		LIST_FOREACH(&client->column->players, node)
+		{
+			struct bedrock_client *c = node->data;
 
-		if (c == client)
-			continue;
+			if (c == client)
+				continue;
 
-		packet_send_entity_teleport(c, client);
+			packet_send_entity_teleport(c, client);
 
-		if (update_rot)
-			packet_send_entity_head_look(c, client);
-	}
+			if (update_rot)
+				packet_send_entity_head_look(c, client);
+		}
 
 	if (update_col)
 		client_update_columns(client);

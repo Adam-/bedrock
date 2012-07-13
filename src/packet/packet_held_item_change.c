@@ -31,15 +31,16 @@ int packet_held_item_change(struct bedrock_client *client, const bedrock_packet 
 	// No more digging now
 	memset(&client->digging_data, 0, sizeof(client->digging_data));
 
-	LIST_FOREACH(&client->column->players, node)
-	{
-		struct bedrock_client *c = node->data;
+	if (client->column != NULL)
+		LIST_FOREACH(&client->column->players, node)
+		{
+			struct bedrock_client *c = node->data;
 
-		if (client == c)
-			continue;
+			if (client == c)
+				continue;
 
-		packet_send_entity_equipment(c, client, ENTITY_EQUIPMENT_HELD, item, damage != NULL ? *damage : 0);
-	}
+			packet_send_entity_equipment(c, client, ENTITY_EQUIPMENT_HELD, item, damage != NULL ? *damage : 0);
+		}
 
 	return offset;
 }

@@ -42,6 +42,6 @@ oper
 	#password = "moo";
 
 	# Commands this operator is allowed to use.
-	commands = "FDLIST MEMORY PLAYERS SHUTDOWN STATS TELEPORT TIME";
+	commands = "FDLIST MEMORY PLAYERS SHUTDOWN STATS TP TIME";
 }
 
