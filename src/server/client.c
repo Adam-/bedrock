@@ -202,7 +202,7 @@ void client_process_exits()
 	bedrock_list_clear(&exiting_client_list);
 }
 
-void client_event_read(bedrock_fd *fd, void *data)
+void client_event_read(struct bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
@@ -243,7 +243,7 @@ void client_event_read(bedrock_fd *fd, void *data)
 	}
 }
 
-void client_event_write(bedrock_fd *fd, void *data)
+void client_event_write(struct bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_node *node;

@@ -8,6 +8,6 @@ typedef enum
 
 extern void io_init();
 extern void io_shutdown();
-extern void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove);
-extern bool io_has(bedrock_fd *fd, bedrock_io_ops flag);
+extern void io_set(struct bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove);
+extern bool io_has(struct bedrock_fd *fd, bedrock_io_ops flag);
 extern void io_process();

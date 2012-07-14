@@ -4,7 +4,7 @@
 #include <sys/epoll.h>
 #include <errno.h>
 
-static bedrock_fd efd;
+static struct bedrock_fd efd;
 
 void io_init()
 {
@@ -23,7 +23,7 @@ void io_shutdown()
 	bedrock_fd_close(&efd);
 }
 
-void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
+void io_set(struct bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 {
 	unsigned int ops = fd->ops;
 
@@ -69,7 +69,7 @@ void io_set(bedrock_fd *fd, bedrock_io_ops add, bedrock_io_ops remove)
 	}
 }
 
-bool io_has(bedrock_fd *fd, bedrock_io_ops flag)
+bool io_has(struct bedrock_fd *fd, bedrock_io_ops flag)
 {
 	return (fd->ops & flag) != 0;
 }
@@ -94,7 +94,7 @@ void io_process()
 	for (i = 0; i < num; ++i)
 	{
 		struct epoll_event *ev = &events[i];
-		bedrock_fd *fd = bedrock_fd_find(ev->data.fd);
+		struct bedrock_fd *fd = bedrock_fd_find(ev->data.fd);
 		bedrock_assert(fd != NULL, continue);
 
 		if (ev->events & (EPOLLIN | EPOLLHUP | EPOLLERR))

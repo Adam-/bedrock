@@ -9,9 +9,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-static bedrock_fd fd;
+static struct bedrock_fd fd;
 
-static void accept_client(bedrock_fd *fd, void __attribute__((__unused__)) *unused)
+static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)) *unused)
 {
 	struct bedrock_client *client;
 	int client_fd;

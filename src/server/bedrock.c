@@ -60,7 +60,7 @@ void bedrock_update_time()
 	}
 }
 
-static bedrock_fd log_fd;
+static struct bedrock_fd log_fd;
 
 static void bedrock_log_init()
 {

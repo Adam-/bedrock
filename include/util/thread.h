@@ -1,11 +1,17 @@
 #ifndef BEDROCK_UTIL_THREAD_H
 #define BEDROCK_UTIL_THREAD_H
 
-#include "util/list.h"
-#include "util/pipe.h"
-
 #include <pthread.h>
 #include <semaphore.h>
+
+typedef struct
+{
+	pthread_mutex_t mutex;
+	char desc[32];
+} bedrock_mutex;
+
+#include "util/list.h"
+#include "util/pipe.h"
 
 typedef void (*bedrock_thread_entry)(void *);
 typedef void (*bedrock_thread_exit)(void *);
@@ -19,12 +25,6 @@ typedef struct
 	bedrock_thread_exit at_exit;
 	void *data;
 } bedrock_thread;
-
-typedef struct
-{
-	pthread_mutex_t mutex;
-	char desc[32];
-} bedrock_mutex;
 
 #define BEDROCK_MUTEX_INIT(desc) { PTHREAD_MUTEX_INITIALIZER, desc }
 

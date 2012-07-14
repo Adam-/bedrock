@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static void pipe_reader(bedrock_fd *fd, void *data)
+static void pipe_reader(struct bedrock_fd *fd, void *data)
 {
 	bedrock_pipe *p = data;
 	char buf[32];

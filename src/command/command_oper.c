@@ -1,6 +1,7 @@
 #include "server/command.h"
+#include "packet/packet_chat_message.h"
 
-void command_oper(struct bedrock_client *client, int argc, const char **argv)
+void command_oper(struct bedrock_client *client, int bedrock_attribute_unused argc, const char **argv)
 {
 	const char *name = argv[1];
 	const char *pass = argv[2];

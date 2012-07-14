@@ -11,9 +11,10 @@ void command_fdlist(struct bedrock_client *client, int bedrock_attribute_unused 
 	int engines = 0, files = 0, sockets = 0, pipes = 0, total = 0;
 	struct rlimit rlim;
 
+	bedrock_mutex_lock(&fdlist_mutex);
 	LIST_FOREACH(&fdlist, node)
 	{
-		bedrock_fd *fd = node->data;
+		struct bedrock_fd *fd = node->data;
 		char *type = "Unknown";
 
 		switch (fd->type)
@@ -42,6 +43,7 @@ void command_fdlist(struct bedrock_client *client, int bedrock_attribute_unused 
 
 		command_reply(client, "#%d - %s - %s", fd->fd, type, fd->desc);
 	}
+	bedrock_mutex_unlock(&fdlist_mutex);
 
 	command_reply(client, "Total: %d open FDs, %d engine, %d files, %d pipes, and %d sockets", total, engines, files, pipes, sockets);
 

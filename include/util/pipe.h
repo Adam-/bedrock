@@ -2,8 +2,8 @@
 
 typedef struct
 {
-	bedrock_fd read_fd;
-	bedrock_fd write_fd;
+	struct bedrock_fd read_fd;
+	struct bedrock_fd write_fd;
 	void (*on_notify)(void *);
 	void *data;
 } bedrock_pipe;
