@@ -88,7 +88,10 @@ bool bedrock_thread_want_exit(bedrock_thread *thread)
 void bedrock_thread_set_exit(bedrock_thread *thread)
 {
 	if (bedrock_thread_want_exit(thread) == false)
+	{
 		bedrock_list_add(&thread_exited_list, thread);
+		bedrock_pipe_notify(&thread_notify_pipe);
+	}
 }
 
 void bedrock_thread_exit_all()
