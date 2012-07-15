@@ -25,16 +25,16 @@ struct dirty_column
 	char region_path[PATH_MAX];
 };
 
-struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data)
+void column_load(struct bedrock_column *column, nbt_tag *data)
 {
-	struct bedrock_column *column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
 	nbt_tag *tag;
 	bedrock_node *node;
 	struct nbt_tag_byte_array *byte_array;
 
-	column->region = region;
-	nbt_copy(data, TAG_INT, &column->x, sizeof(column->x), 2, "Level", "xPos");
-	nbt_copy(data, TAG_INT, &column->z, sizeof(column->z), 2, "Level", "zPos");
+	//column->region = region;
+	//nbt_copy(data, TAG_INT, &column->x, sizeof(column->x), 2, "Level", "xPos");
+	//nbt_copy(data, TAG_INT, &column->z, sizeof(column->z), 2, "Level", "zPos");
+	// assert
 	column->data = data;
 
 	tag = nbt_get(data, TAG_LIST, 2, "Level", "Sections");
@@ -77,17 +77,7 @@ void column_free(struct bedrock_column *column)
 	int i;
 
 	bedrock_assert(column->players.count == 0, ;);
-
-	if (column->saving || column->dirty)
-	{
-		/* We can't free this now because it's being written to disk *or*
-		 * has pending changes needing disk write.
-		 * Instead detach it from the region, and it will be deleted
-		 * later once the write is complete.
-		 */
-		column->region = NULL;
-		return;
-	}
+	bedrock_assert(column->flags == 0, ;);
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
 
@@ -158,6 +148,8 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	if (region == NULL)
 		return NULL;
 
+	// XXX assert x and z are within this region
+
 	column_x = floor(column_x);
 	column_z = floor(column_z);
 
@@ -178,6 +170,23 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 	bedrock_mutex_unlock(&region->column_mutex);
 
+	if (column == NULL)
+	{
+		struct bedrock_column *column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
+		column->region = region;
+		column->x = column_x;
+		column->z = column_z;
+
+		bedrock_mutex_lock(&region->column_mutex);
+		bedrock_list_add(&region->columns, column);
+		bedrock_mutex_unlock(&region->column_mutex);
+
+		column->flags |= COLUMN_FLAG_READ;
+		region_schedule_operation(region, column, REGION_OP_READ);
+	}
+	else if (column->flags & COLUMN_FLAG_READ)
+		column = NULL;
+
 	return column;
 }
 
@@ -185,13 +194,13 @@ void column_dirty(struct bedrock_column *column)
 {
 	struct dirty_column *dc;
 
-	if (column == NULL || column->dirty == true)
+	if (column == NULL || column->flags & COLUMN_FLAG_DIRTY)
 		return;
 
 	dc = bedrock_malloc(sizeof(struct dirty_column));
 
 	dc->column = column;
-	column->dirty = true;
+	column->flags |= COLUMN_FLAG_DIRTY;
 	strncpy(dc->region_path, column->region->path, sizeof(dc->region_path));
 
 	bedrock_list_add(&dirty_columns, dc);
@@ -384,13 +393,9 @@ static void column_save_exit(struct dirty_column *dc)
 {
 	struct bedrock_column *column = dc->column;
 
-	column->saving = false;
+	column->flags &= ~COLUMN_FLAG_WRITE;
 
 	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d to %s", column->x, column->z, dc->region_path);
-
-	/* This column may need to be deleted now */
-	if (column->region == NULL)
-		column_free(column);
 
 	bedrock_buffer_free(dc->nbt_out);
 	bedrock_free(dc);
@@ -405,7 +410,7 @@ void column_save()
 		struct dirty_column *dc = node->data;
 		struct bedrock_column *column = dc->column;
 
-		if (column->saving)
+		if (column->flags & COLUMN_FLAG_WRITE)
 		{
 			bedrock_log(LEVEL_WARN, "column: Column %d,%d queued for save but a save is already in progress", column->x, column->z);
 			continue;
@@ -457,8 +462,8 @@ void column_save()
 			nbt_free(biomes);
 		}
 
-		column->dirty = false;
-		column->saving = true;
+		column->flags &= ~COLUMN_FLAG_DIRTY;
+		column->flags |= COLUMN_FLAG_WRITE;
 
 		bedrock_thread_start((bedrock_thread_entry) column_save_entry, (bedrock_thread_exit) column_save_exit, dc);
 

@@ -190,6 +190,7 @@ int main(int argc, char **argv)
 	io_init();
 	listener_init();
 	bedrock_threadengine_start();
+	region_init(); // xxx
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, region_free_queue, NULL);

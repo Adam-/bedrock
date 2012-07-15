@@ -3,14 +3,21 @@
 #include "config/hard.h"
 #include "blocks/items.h"
 
+enum
+{
+	/* Column is dirty and will be written soon */
+	COLUMN_FLAG_DIRTY = 1 << 0,
+	/* Column is being loaded from disk */
+	COLUMN_FLAG_READ = 1 << 1,
+	/* Column is being written to disk */
+	COLUMN_FLAG_WRITE = 1 << 2
+};
+
 struct bedrock_column
 {
 	struct bedrock_region *region;
 
-	/* True if this column is dirty */
-	bool dirty;
-	/* True if this column is being saved */
-	bool saving;
+	uint8_t flags;
 
 	int32_t x;
 	int32_t z;
@@ -49,7 +56,8 @@ struct bedrock_dropped_item
 
 extern struct bedrock_memory_pool column_pool;
 
-extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
+//extern struct bedrock_column *column_create(struct bedrock_region *region, nbt_tag *data);
+extern void column_load(struct bedrock_column *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
 extern uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z);
 extern int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z);
