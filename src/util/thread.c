@@ -9,24 +9,6 @@ bedrock_pipe thread_notify_pipe;
 
 static bedrock_list thread_exited_list = LIST_INIT;
 
-static void do_join_thread(bedrock_thread *thread)
-{
-	bedrock_thread_set_exit(thread);
-
-	if (pthread_join(thread->handle, NULL))
-		bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
-	else
-		bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", thread->handle);
-
-	if (thread->at_exit)
-		thread->at_exit(thread->data);
-
-	bedrock_free(thread);
-
-	bedrock_list_del(&thread_list, thread);
-}
-
-
 static void do_exit_threads()
 {
 	bedrock_node *node;
@@ -34,7 +16,7 @@ static void do_exit_threads()
 	LIST_FOREACH(&thread_exited_list, node)
 	{
 		bedrock_thread *thread = node->data;
-		do_join_thread(thread);
+		bedrock_thread_join(thread);
 	}
 
 	bedrock_list_clear(&thread_exited_list);
@@ -58,7 +40,7 @@ static void *thread_entry(void *data)
 	pthread_exit(0);
 }
 
-void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)
+bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)
 {
 	bedrock_thread *thread = bedrock_malloc(sizeof(bedrock_thread));
 	int err;
@@ -78,6 +60,8 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 	}
 	else
 		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", thread->handle);
+
+	return thread;
 }
 
 bool bedrock_thread_want_exit(bedrock_thread *thread)
@@ -94,6 +78,23 @@ void bedrock_thread_set_exit(bedrock_thread *thread)
 	}
 }
 
+void bedrock_thread_join(bedrock_thread *thread)
+{
+	bedrock_thread_set_exit(thread);
+
+	if (pthread_join(thread->handle, NULL))
+		bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
+	else
+		bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", thread->handle);
+
+	if (thread->at_exit)
+		thread->at_exit(thread->data);
+
+	bedrock_free(thread);
+
+	bedrock_list_del(&thread_list, thread);
+}
+
 void bedrock_thread_exit_all()
 {
 	bedrock_node *node, *node2;;
@@ -101,7 +102,7 @@ void bedrock_thread_exit_all()
 	LIST_FOREACH_SAFE(&thread_list, node, node2)
 	{
 		bedrock_thread *thread = node->data;
-		do_join_thread(thread);
+		bedrock_thread_join(thread);
 	}
 }
 
@@ -160,4 +161,25 @@ void bedrock_mutex_unlock(bedrock_mutex *mutex)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to unlock mutex %s - %s", mutex->desc, strerror(errno));
 	else
 		bedrock_log(LEVEL_THREAD, "thread: Successfully unlocked mutex %s", mutex->desc);
+}
+
+void bedrock_cond_init(bedrock_cond *cond, const char *desc)
+{
+	strncpy(cond->desc, desc, sizeof(cond->desc));
+	pthread_cond_init(&cond->cond, NULL);
+}
+
+void bedrock_cond_destroy(bedrock_cond *cond)
+{
+	pthread_cond_destroy(&cond->cond);
+}
+
+void bedrock_cond_wakeup(bedrock_cond *cond)
+{
+	pthread_cond_signal(&cond->cond);
+}
+
+bool bedrock_cond_wait(bedrock_cond *cond, bedrock_mutex *mutex)
+{
+	return pthread_cond_wait(&cond->cond, mutex) == 0;
 }
