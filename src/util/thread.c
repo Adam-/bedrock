@@ -5,11 +5,12 @@
 #include <errno.h>
 
 bedrock_list thread_list = LIST_INIT;
+bedrock_pipe thread_notify_pipe;
 
-static void do_join_thread(void *data)
+static bedrock_list thread_exited_list = LIST_INIT;
+
+static void do_join_thread(bedrock_thread *thread)
 {
-	bedrock_thread *thread = data;
-
 	bedrock_thread_set_exit(thread);
 
 	if (pthread_join(thread->handle, NULL))
@@ -20,11 +21,33 @@ static void do_join_thread(void *data)
 	if (thread->at_exit)
 		thread->at_exit(thread->data);
 
-	sem_destroy(&thread->exit);
-	bedrock_pipe_close(&thread->notify_pipe);
 	bedrock_free(thread);
 
-	bedrock_list_del(&thread_list, data);
+	bedrock_list_del(&thread_list, thread);
+}
+
+
+static void do_exit_threads()
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&thread_exited_list, node)
+	{
+		bedrock_thread *thread = node->data;
+		do_join_thread(thread);
+	}
+
+	bedrock_list_clear(&thread_exited_list);
+}
+
+void bedrock_threadengine_start()
+{
+	bedrock_pipe_open(&thread_notify_pipe, "thread exit pipe", do_exit_threads, NULL);
+}
+
+void bedrock_threadengine_stop()
+{
+	bedrock_pipe_close(&thread_notify_pipe);
 }
 
 static void *thread_entry(void *data)
@@ -40,14 +63,6 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 	bedrock_thread *thread = bedrock_malloc(sizeof(bedrock_thread));
 	int err;
 
-	if (sem_init(&thread->exit, 0, 0))
-	{
-		bedrock_log(LEVEL_CRIT, "thread: Unable to create semaphore - %s", strerror(errno));
-		bedrock_free(thread);
-		return;
-	}
-
-	bedrock_pipe_open(&thread->notify_pipe, "thread exit pipe", do_join_thread, thread);
 	thread->entry = entry;
 	thread->at_exit = at_exit;
 	thread->data = data;
@@ -59,7 +74,6 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 	{
 		bedrock_log(LEVEL_CRIT, "thread: Unable to create thread - %s", strerror(errno));
 		bedrock_list_del(&thread_list, thread);
-		sem_destroy(&thread->exit);
 		bedrock_free(thread);
 	}
 	else
@@ -68,14 +82,13 @@ void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exi
 
 bool bedrock_thread_want_exit(bedrock_thread *thread)
 {
-	int val = 0;
-	return sem_getvalue(&thread->exit, &val) == 0 && val;
+	return bedrock_list_has_data(&thread_exited_list, thread);
 }
 
 void bedrock_thread_set_exit(bedrock_thread *thread)
 {
-	bedrock_assert(sem_post(&thread->exit) == 0, ;);
-	bedrock_pipe_notify(&thread->notify_pipe);
+	if (bedrock_thread_want_exit(thread) == false)
+		bedrock_list_add(&thread_exited_list, thread);
 }
 
 void bedrock_thread_exit_all()

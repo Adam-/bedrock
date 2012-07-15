@@ -189,6 +189,7 @@ int main(int argc, char **argv)
 
 	io_init();
 	listener_init();
+	bedrock_threadengine_start();
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, region_free_queue, NULL);
@@ -203,6 +204,7 @@ int main(int argc, char **argv)
 	column_save();
 
 	bedrock_thread_exit_all();
+	bedrock_threadengine_stop();
 
 	bedrock_timer_cancel_all_for(NULL);
 

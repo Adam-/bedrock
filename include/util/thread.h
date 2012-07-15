@@ -2,7 +2,6 @@
 #define BEDROCK_UTIL_THREAD_H
 
 #include <pthread.h>
-#include <semaphore.h>
 
 typedef struct
 {
@@ -19,8 +18,6 @@ typedef void (*bedrock_thread_exit)(void *);
 typedef struct
 {
 	pthread_t handle;
-	sem_t exit;
-	bedrock_pipe notify_pipe;
 	bedrock_thread_entry entry;
 	bedrock_thread_exit at_exit;
 	void *data;
@@ -29,6 +26,10 @@ typedef struct
 #define BEDROCK_MUTEX_INIT(desc) { PTHREAD_MUTEX_INITIALIZER, desc }
 
 extern bedrock_list thread_list;
+extern bedrock_pipe thread_notify_pipe;
+
+extern void bedrock_threadengine_start();
+extern void bedrock_threadengine_stop();
 
 extern void bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data);
 extern bool bedrock_thread_want_exit(bedrock_thread *thread);
