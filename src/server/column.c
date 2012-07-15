@@ -197,7 +197,7 @@ void column_dirty(struct bedrock_column *column)
 	bedrock_list_add(&dirty_columns, dc);
 }
 
-static void column_save_entry(struct dirty_column *dc)
+static void column_save_entry(struct bedrock_thread bedrock_attribute_unused *thread, struct dirty_column *dc)
 {
 	struct bedrock_column *column = dc->column;
 	int i;

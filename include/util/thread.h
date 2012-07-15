@@ -22,16 +22,18 @@ typedef struct
 #include "util/list.h"
 #include "util/pipe.h"
 
-typedef void (*bedrock_thread_entry)(void *);
+struct bedrock_thread;
+
+typedef void (*bedrock_thread_entry)(struct bedrock_thread *, void *);
 typedef void (*bedrock_thread_exit)(void *);
 
-typedef struct
+struct bedrock_thread
 {
 	pthread_t handle;
 	bedrock_thread_entry entry;
 	bedrock_thread_exit at_exit;
 	void *data;
-} bedrock_thread;
+};
 
 extern bedrock_list thread_list;
 extern bedrock_pipe thread_notify_pipe;
@@ -39,10 +41,10 @@ extern bedrock_pipe thread_notify_pipe;
 extern void bedrock_threadengine_start();
 extern void bedrock_threadengine_stop();
 
-extern bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data);
-extern bool bedrock_thread_want_exit(bedrock_thread *thread);
-extern void bedrock_thread_set_exit(bedrock_thread *thread);
-extern void bedrock_thread_join(bedrock_thread *thread);
+extern struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data);
+extern bool bedrock_thread_want_exit(struct bedrock_thread *thread);
+extern void bedrock_thread_set_exit(struct bedrock_thread *thread);
+extern void bedrock_thread_join(struct bedrock_thread *thread);
 extern void bedrock_thread_exit_all();
 
 extern void bedrock_mutex_init(bedrock_mutex *mutex, const char *desc);

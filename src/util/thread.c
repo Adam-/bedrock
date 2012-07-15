@@ -15,7 +15,7 @@ static void do_exit_threads()
 
 	LIST_FOREACH(&thread_exited_list, node)
 	{
-		bedrock_thread *thread = node->data;
+		struct bedrock_thread *thread = node->data;
 		bedrock_thread_join(thread);
 	}
 
@@ -34,15 +34,15 @@ void bedrock_threadengine_stop()
 
 static void *thread_entry(void *data)
 {
-	bedrock_thread *thread = data;
-	thread->entry(thread->data);
+	struct bedrock_thread *thread = data;
+	thread->entry(thread, thread->data);
 	bedrock_thread_set_exit(thread);
 	pthread_exit(0);
 }
 
-bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)
+struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)
 {
-	bedrock_thread *thread = bedrock_malloc(sizeof(bedrock_thread));
+	struct bedrock_thread *thread = bedrock_malloc(sizeof(struct bedrock_thread));
 	int err;
 
 	thread->entry = entry;
@@ -64,12 +64,12 @@ bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_
 	return thread;
 }
 
-bool bedrock_thread_want_exit(bedrock_thread *thread)
+bool bedrock_thread_want_exit(struct bedrock_thread *thread)
 {
 	return bedrock_list_has_data(&thread_exited_list, thread);
 }
 
-void bedrock_thread_set_exit(bedrock_thread *thread)
+void bedrock_thread_set_exit(struct bedrock_thread *thread)
 {
 	if (bedrock_thread_want_exit(thread) == false)
 	{
@@ -78,7 +78,7 @@ void bedrock_thread_set_exit(bedrock_thread *thread)
 	}
 }
 
-void bedrock_thread_join(bedrock_thread *thread)
+void bedrock_thread_join(struct bedrock_thread *thread)
 {
 	bedrock_thread_set_exit(thread);
 
@@ -101,7 +101,7 @@ void bedrock_thread_exit_all()
 
 	LIST_FOREACH_SAFE(&thread_list, node, node2)
 	{
-		bedrock_thread *thread = node->data;
+		struct bedrock_thread *thread = node->data;
 		bedrock_thread_join(thread);
 	}
 }
@@ -181,5 +181,5 @@ void bedrock_cond_wakeup(bedrock_cond *cond)
 
 bool bedrock_cond_wait(bedrock_cond *cond, bedrock_mutex *mutex)
 {
-	return pthread_cond_wait(&cond->cond, mutex) == 0;
+	return pthread_cond_wait(&cond->cond, &mutex->mutex) == 0;
 }
