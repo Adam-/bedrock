@@ -179,8 +179,6 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 			column = c;
 			break;
 		}
-		//else if (c->z > column_z || (c->z == column_z && c->x > column_x))
-			//break; // XXXXXXXXXXXXXXx
 	}
 
 	bedrock_mutex_unlock(&region->column_mutex);

@@ -19,13 +19,8 @@ struct bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT("region memory
 
 static bedrock_pipe region_worker_read_pipe;
 
-static void region_worker_read_exit(struct bedrock_column *column)
+static void region_worker_read_exit(void *unused)
 {
-	//column->flags &= ~COLUMN_FLAG_READ;
-
-	//bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d", column->x, column->z);
-	bedrock_log(LEVEL_COLUMN, "region: Successfully loaded something");
-
 	bedrock_node *node;
 
 	LIST_FOREACH(&client_list, node)
@@ -70,50 +65,63 @@ static void region_worker_read(struct region_operation *op)
 
 	if (op->region->fd.open == false)
 	{
-		//op->column->flags &= ~COLUMN_FLAG_READ;
 		bedrock_mutex_unlock(&op->region->fd_mutex);
-		bedrock_pipe_notify(&region_worker_read_pipe);
 		return;
 	}
 
-	bedrock_assert(lseek(op->region->fd.fd, offset, SEEK_SET) != -1, ;);
+	if (lseek(op->region->fd.fd, offset, SEEK_SET) == -1)
+	{
+		bedrock_mutex_unlock(&op->region->fd_mutex);
+		bedrock_log(LEVEL_WARN, "Unable to lseek %s to read structure offset - %s", op->region->path, strerror(errno));
+		return;
+	}
 
-	bedrock_assert(read(op->region->fd.fd, &read_offset, sizeof(read_offset)) == sizeof(read_offset), ;);
+	if (read(op->region->fd.fd, &read_offset, sizeof(read_offset)) != sizeof(read_offset))
+	{
+		bedrock_mutex_unlock(&op->region->fd_mutex);
+		bedrock_log(LEVEL_WARN, "Unable to read %s to get compressed data offset - %s", op->region->path, strerror(errno));
+		return;
+	}
 	convert_endianness((unsigned char *) &read_offset, sizeof(read_offset));
 
 	if (read_offset == 0)
 	{
-		//op->column->flags &= ~COLUMN_FLAG_READ;
 		bedrock_mutex_unlock(&op->region->fd_mutex);
-		bedrock_pipe_notify(&region_worker_read_pipe);
 		return;
 	}
 
 	read_offset >>= 8;
 
-	bedrock_assert(lseek(op->region->fd.fd, read_offset * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) != -1, ;);
-
-	int whynot = read(op->region->fd.fd, &compressed_len, sizeof(compressed_len));
-
-	if (whynot != sizeof(compressed_len))
+	if (lseek(op->region->fd.fd, read_offset * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)
 	{
-		printf("ERROR READING COMPRESSED LENGTH %d, my offset is %d, orig %d, and %d for %d %d\n", whynot, read_offset, read_offset * BEDROCK_REGION_SECTOR_SIZE, offset, op->column->x, op->column->z);
-
-		bedrock_mutex_lock(&op->region->column_mutex);
-		//bedrock_list_del(&op->region->columns, op->column);
-		bedrock_mutex_unlock(&op->region->column_mutex);
-
-		//op->column->flags &= ~COLUMN_FLAG_READ;
 		bedrock_mutex_unlock(&op->region->fd_mutex);
-		bedrock_pipe_notify(&region_worker_read_pipe);
+		bedrock_log(LEVEL_WARN, "Unable to lseek %s to read compressed data length - %s", op->region->path, strerror(errno));
+		return;
+	}
+
+	if (read(op->region->fd.fd, &compressed_len, sizeof(compressed_len)) != sizeof(compressed_len))
+	{
+		bedrock_mutex_unlock(&op->region->fd_mutex);
+		bedrock_log(LEVEL_WARN, "Unable to read %s to get compressed data length - %s", op->region->path, strerror(errno));
 		return;
 	}
 	convert_endianness((unsigned char *) &compressed_len, sizeof(compressed_len));
 
-	bedrock_assert(read(op->region->fd.fd, &compression_type, sizeof(compression_type)) == sizeof(compression_type), ;);
+	if (read(op->region->fd.fd, &compression_type, sizeof(compression_type)) != sizeof(compression_type))
+	{
+		bedrock_mutex_unlock(&op->region->fd_mutex);
+		bedrock_log(LEVEL_WARN, "Unable to read %s to get compression type - %s", op->region->path, strerror(errno));
+		return;
+	}
 
 	buffer = bedrock_malloc(compressed_len);
-	bedrock_assert(read(op->region->fd.fd, buffer, compressed_len) == compressed_len, ;);
+	if (read(op->region->fd.fd, buffer, compressed_len) != compressed_len)
+	{
+		bedrock_mutex_unlock(&op->region->fd_mutex);
+		bedrock_free(buffer);
+		bedrock_log(LEVEL_WARN, "Unable to read %s to get compressed data structure - %s", op->region->path, strerror(errno));
+		return;
+	}
 
 	bedrock_mutex_unlock(&op->region->fd_mutex);
 
@@ -127,8 +135,9 @@ static void region_worker_read(struct region_operation *op)
 
 	column_load(op->column, tag);
 
-
 	op->column->flags &= ~COLUMN_FLAG_READ;
+
+	bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d from %s", op->column->x, op->column->z, op->region->path);
 
 	bedrock_pipe_notify(&region_worker_read_pipe);
 }
@@ -176,7 +185,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
 
-	fd = open(region->path, O_RDONLY);// O_RDWR);
+	fd = open(region->path, O_RDONLY);// O_RDWR
 	if (fd == -1)
 		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s - %s", region->path, strerror(errno));
 	else
@@ -192,8 +201,6 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 
 	bedrock_cond_init(&region->worker_condition, "region condition");
 	region->worker = bedrock_thread_start((bedrock_thread_entry) region_worker, NULL, region);
-
-	//bedrock_thread_start((bedrock_thread_entry) region_load, (bedrock_thread_exit) region_exit, region);
 
 	return region;
 }
@@ -224,36 +231,6 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_free_pool(&region_pool, region);
 }
-
-#if 0
-void region_queue_free(struct bedrock_region *region)
-{
-	if (bedrock_list_has_data(&empty_regions, region) == false)
-	{
-		bedrock_log(LEVEL_COLUMN, "region: Queuing region %d, %d for free", region->x, region->z);
-		bedrock_list_add(&empty_regions, region);
-	}
-}
-
-void region_free_queue()
-{
-	bedrock_node *node, *node2;
-
-	LIST_FOREACH_SAFE(&empty_regions, node, node2)
-	{
-		struct bedrock_region *region = node->data;
-
-		if (region->player_column_count == 0 && region->operations.count == 0)
-		{
-			bedrock_log(LEVEL_COLUMN, "region: Freeing region %d, %d", region->x, region->z);
-			region_free(region);
-		}
-	}
-	bedrock_list_clear(&empty_regions);
-
-	bedrock_timer_schedule(6000, region_free_queue, NULL);
-}
-#endif
 
 void region_schedule_operation(struct bedrock_region *region, struct bedrock_column *column, enum region_op op)
 {
@@ -287,7 +264,6 @@ struct bedrock_region *find_region_which_contains(struct bedrock_world *world, d
 	{
 		region = n->data;
 
-		// XXX are these in some order?
 		if (region->x == region_x && region->z == region_z)
 			return region;
 	}
