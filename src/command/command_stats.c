@@ -21,8 +21,6 @@ void command_stats(struct bedrock_client *client, int bedrock_attribute_unused a
 
 			++regions;
 
-			bedrock_mutex_lock(&region->column_mutex);
-
 			LIST_FOREACH(&region->columns, node3)
 			{
 				struct bedrock_column *column = node3->data;
@@ -49,8 +47,6 @@ void command_stats(struct bedrock_client *client, int bedrock_attribute_unused a
 					}
 				}
 			}
-
-			bedrock_mutex_unlock(&region->column_mutex);
 		}
 	}
 

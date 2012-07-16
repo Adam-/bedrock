@@ -200,7 +200,6 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 
 	bedrock_mutex_init(&region->operations_mutex, "region operation mutex");
 
-	bedrock_mutex_init(&region->column_mutex, "region column mutex");
 	region->columns.free = (bedrock_free_func) column_free;
 
 	bedrock_list_add(&world->regions, region);
@@ -230,10 +229,7 @@ void region_free(struct bedrock_region *region)
 	bedrock_mutex_unlock(&region->operations_mutex);
 	bedrock_mutex_destroy(&region->operations_mutex);
 
-	bedrock_mutex_lock(&region->column_mutex);
 	bedrock_list_clear(&region->columns);
-	bedrock_mutex_unlock(&region->column_mutex);
-	bedrock_mutex_destroy(&region->column_mutex);
 
 	bedrock_free_pool(&region_pool, region);
 }

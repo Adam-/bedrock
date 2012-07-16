@@ -37,8 +37,6 @@ struct bedrock_region
 	/* condition for worker */
 	bedrock_cond worker_condition;
 
-	/* Must be held when reading or writing to columns! */
-	bedrock_mutex column_mutex;//XXX this needed?
 	/* Columns in this region */
 	bedrock_list columns;
 };

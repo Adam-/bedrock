@@ -169,8 +169,6 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	bedrock_assert(region_x == region->x, ;);
 	bedrock_assert(region_z == region->z, ;);
 
-	bedrock_mutex_lock(&region->column_mutex);
-
 	LIST_FOREACH(&region->columns, n)
 	{
 		struct bedrock_column *c = n->data;
@@ -182,8 +180,6 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 		}
 	}
 
-	bedrock_mutex_unlock(&region->column_mutex);
-
 	if (column == NULL)
 	{
 		column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
@@ -191,9 +187,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 		column->x = column_x;
 		column->z = column_z;
 
-		bedrock_mutex_lock(&region->column_mutex);
 		bedrock_list_add(&region->columns, column);
-		bedrock_mutex_unlock(&region->column_mutex);
 
 		column->flags |= COLUMN_FLAG_READ;
 		region_schedule_operation(region, column, REGION_OP_READ);
@@ -504,8 +498,7 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 		bedrock_free(node);
 	}
 
-	//bedrock_timer_schedule(6000, column_process_pending, NULL);
-	bedrock_timer_schedule(100, column_process_pending, NULL);
+	bedrock_timer_schedule(6000, column_process_pending, NULL);
 }
 
 void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)
