@@ -19,7 +19,7 @@ server
 	# The maximum uamount of sers this server can support. Note that the
 	# file limit for this user will override anything set here. On Unix
 	# systems see ulimit -n.
-	maxusers = 1024;
+	maxusers = 127;
 
 	# The IP and port to listen on.
 	ip = "0.0.0.0";
