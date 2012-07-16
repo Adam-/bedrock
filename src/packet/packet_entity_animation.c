@@ -26,8 +26,8 @@ int packet_entity_animation(struct bedrock_client *client, const bedrock_packet 
 
 	if (id != client->id)
 		return ERROR_UNEXPECTED;
-	//else if (anim != ANIMATION_SWING_ARM)
-		//return ERROR_UNEXPECTED; ??
+	else if (anim != ANIMATION_SWING_ARM)
+		return ERROR_UNEXPECTED;
 
 	if (client->column != NULL)
 		LIST_FOREACH(&client->column->players, node)

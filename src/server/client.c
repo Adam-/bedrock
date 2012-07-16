@@ -159,10 +159,9 @@ static void client_free(struct bedrock_client *client)
 
 		bedrock_list_del(&c->players, client);
 
-		--c->region->player_column_count;
-
-		if (c->region->player_column_count == 0)
-			region_queue_free(c->region);
+		/* Column is no longer in render distance of anything */
+		if (c->players.count == 0)
+			column_set_pending(c, COLUMN_FLAG_EMPTY);
 	}
 	bedrock_list_clear(&client->columns);
 
@@ -509,8 +508,6 @@ static void client_update_column(struct bedrock_client *client, struct bedrock_c
 
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
-	++column->region->player_column_count;
-
 	packet_send_column_allocation(client, column, true);
 	packet_send_column(client, column);
 
@@ -575,13 +572,12 @@ void client_update_columns(struct bedrock_client *client)
 
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
-			--c->region->player_column_count;
-
 			packet_send_column_allocation(client, c, false);
 			packet_send_column_empty(client, c);
 
-			if (c->region->player_column_count == 0)
-				region_queue_free(c->region);
+			/* Column is no longer in render distance of anything */
+			if (c->players.count == 0)
+				column_set_pending(c, COLUMN_FLAG_EMPTY);
 		}
 	}
 

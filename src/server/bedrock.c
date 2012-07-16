@@ -117,13 +117,6 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 }
 
-static void save_databases(void __attribute__((__unused__)) *notused)
-{
-	column_save();
-
-	bedrock_timer_schedule(6000, save_databases, NULL);
-}
-
 static void parse_cli_args(int argc, char **argv)
 {
 	int c;
@@ -193,8 +186,8 @@ int main(int argc, char **argv)
 	region_init(); // xxx
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
-	bedrock_timer_schedule(6000, region_free_queue, NULL);
-	bedrock_timer_schedule(6000, save_databases, NULL);
+	//bedrock_timer_schedule(6000, column_process_pending, NULL);
+	bedrock_timer_schedule(100, column_process_pending, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{
@@ -202,7 +195,9 @@ int main(int argc, char **argv)
 		client_process_exits();
 	}
 
-	column_save();
+	column_process_pending(NULL);
+
+	world_free(world);
 
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();
@@ -211,7 +206,6 @@ int main(int argc, char **argv)
 
 	listener_shutdown();
 	io_shutdown();
-	world_free(world);
 	bedrock_list_clear(&oper_conf_list);
 	bedrock_log_close();
 
