@@ -17,7 +17,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	uint32_t i;
 	bedrock_node *node;
 
-	buffer = compression_compress_init(NULL, COLUMN_BUFFER_SIZE);
+	buffer = compression_compress_init(COLUMN_BUFFER_SIZE);
 	bedrock_assert(buffer, return);
 
 	packet_init(&packet, MAP_COLUMN);
@@ -78,7 +78,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	}
 
 	{
-		compression_buffer *biomes = compression_decompress(NULL, BEDROCK_BUFFER_DEFAULT_SIZE, column->biomes->data, column->biomes->length);
+		compression_buffer *biomes = compression_decompress(BEDROCK_BUFFER_DEFAULT_SIZE, column->biomes->data, column->biomes->length);
 		bedrock_assert(biomes->buffer->length == BEDROCK_BIOME_LENGTH, ;);
 		compression_compress_deflate_finish(buffer, (const unsigned char *) biomes->buffer->data, biomes->buffer->length);
 		compression_decompress_end(biomes);

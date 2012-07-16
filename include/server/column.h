@@ -56,8 +56,6 @@ struct bedrock_dropped_item
 	double z;
 };
 
-extern struct bedrock_memory_pool column_pool;
-
 extern void column_load(struct bedrock_column *region, nbt_tag *data);
 extern void column_free(struct bedrock_column *column);
 extern uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z);

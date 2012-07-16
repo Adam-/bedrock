@@ -41,8 +41,6 @@ struct bedrock_region
 	bedrock_list columns;
 };
 
-extern struct bedrock_memory_pool region_pool;
-
 extern void region_init();
 extern void region_shutdown();
 extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);

@@ -8,8 +8,6 @@
 #define BLOCK_CHUNK_SIZE 8192
 #define DATA_CHUNK_SIZE 16384
 
-struct bedrock_memory_pool chunk_pool = BEDROCK_MEMORY_POOL_INIT("chunk memory pool");
-
 struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 {
 	struct bedrock_chunk *chunk;
@@ -19,11 +17,11 @@ struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
 
-	chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
+	chunk = bedrock_malloc(sizeof(struct bedrock_chunk));
 	chunk->column = column;
 	chunk->y = y;
 
-	buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+	buffer = compression_compress_init(BLOCK_CHUNK_SIZE);
 
 	memset(&empty_chunk, 0, sizeof(empty_chunk));
 	compression_compress_deflate(buffer, empty_chunk, sizeof(empty_chunk));
@@ -48,11 +46,11 @@ struct bedrock_chunk *chunk_load(struct bedrock_column *column, uint8_t y, nbt_t
 	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
 
-	chunk = bedrock_malloc_pool(&chunk_pool, sizeof(struct bedrock_chunk));
+	chunk = bedrock_malloc(sizeof(struct bedrock_chunk));
 	chunk->column = column;
 	chunk->y = y;
 
-	buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+	buffer = compression_compress_init(BLOCK_CHUNK_SIZE);
 
 	byte_array = &nbt_get(chunk_tag, TAG_BYTE_ARRAY, 1, "Blocks")->payload.tag_byte_array;
 	bedrock_assert(byte_array->length == BEDROCK_BLOCK_LENGTH, ;);
@@ -121,7 +119,7 @@ void chunk_free(struct bedrock_chunk *chunk)
 
 	bedrock_buffer_free(chunk->compressed_data);
 
-	bedrock_free_pool(&chunk_pool, chunk);
+	bedrock_free(chunk);
 }
 
 void chunk_decompress(struct bedrock_chunk *chunk)
@@ -134,7 +132,7 @@ void chunk_decompress(struct bedrock_chunk *chunk)
 	if (chunk->decompressed_data != NULL)
 		return;
 
-	buffer = compression_decompress(&chunk_pool, DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
+	buffer = compression_decompress(DATA_CHUNK_SIZE, chunk->compressed_data->data, chunk->compressed_data->length);
 	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	chunk->decompressed_data = buffer->buffer;
 	buffer->buffer = NULL;
@@ -155,7 +153,7 @@ void chunk_compress(struct bedrock_chunk *chunk)
 
 	if (chunk->modified)
 	{
-		compression_buffer *buffer = compression_compress_init(&chunk_pool, BLOCK_CHUNK_SIZE);
+		compression_buffer *buffer = compression_compress_init(BLOCK_CHUNK_SIZE);
 
 		compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
 		compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);

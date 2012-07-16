@@ -33,13 +33,12 @@
 
 bedrock_list client_list = LIST_INIT;
 int authenticated_client_count = 0;
-struct bedrock_memory_pool client_pool = BEDROCK_MEMORY_POOL_INIT("client memory pool");
 
 static bedrock_list exiting_client_list;
 
 struct bedrock_client *client_create()
 {
-	struct bedrock_client *client = bedrock_malloc_pool(&client_pool, sizeof(struct bedrock_client));
+	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
@@ -99,7 +98,7 @@ bool client_load(struct bedrock_client *client)
 
 	close(fd);
 
-	cb = compression_decompress(&client_pool, PLAYER_BUFFER_SIZE, file_base, file_info.st_size);
+	cb = compression_decompress(PLAYER_BUFFER_SIZE, file_base, file_info.st_size);
 	munmap(file_base, file_info.st_size);
 	if (cb == NULL)
 	{
@@ -175,7 +174,7 @@ static void client_free(struct bedrock_client *client)
 	if (client->data != NULL)
 		nbt_free(client->data);
 	bedrock_list_clear(&client->out_buffer);
-	bedrock_free_pool(&client_pool, client);
+	bedrock_free(client);
 }
 
 void client_exit(struct bedrock_client *client)
@@ -226,7 +225,6 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 
 	client->in_buffer_len += i;
 
-	packet.pool = NULL;
 	packet.data = client->in_buffer;
 	packet.length = client->in_buffer_len;
 	packet.capacity = sizeof(client->in_buffer);
@@ -299,13 +297,11 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
-	p->pool = packet->pool;
 	strncpy(p->name, packet->name, sizeof(p->name));
 	p->data = packet->data;
 	p->length = packet->length;
 	p->capacity = packet->capacity;
 
-	packet->pool = NULL;
 	packet->data = NULL;
 	packet->length = 0;
 	packet->capacity = 0;

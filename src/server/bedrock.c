@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 	bedrock_list_clear(&oper_conf_list);
 	bedrock_log_close();
 
-	bedrock_assert(bedrock_memory.size == 0, ;);
+	bedrock_assert(memory_size == 0, ;);
 	bedrock_assert(fdlist.count == 0, ;);
 
 	return 0;

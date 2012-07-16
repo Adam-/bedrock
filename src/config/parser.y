@@ -3,6 +3,7 @@
 #include "server/world.h"
 #include "server/oper.h"
 #include "config/config.h"
+#include "util/string.h"
 
 extern int yylex();
 extern void yyerror(const char *s);
@@ -60,7 +61,7 @@ conf_items: world_entry | server_entry | operator_entry;
 /* World */
 world_entry: WORLD
 {
-	world = bedrock_malloc_pool(&world_pool, sizeof(struct bedrock_world));
+	world = bedrock_malloc(sizeof(struct bedrock_world));
 }
 '{' world_items '}'
 {

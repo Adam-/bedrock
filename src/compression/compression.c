@@ -3,9 +3,9 @@
 #include "util/util.h"
 #include "util/memory.h"
 
-compression_buffer *compression_compress_init(struct bedrock_memory_pool *pool, size_t buffer_size)
+compression_buffer *compression_compress_init(size_t buffer_size)
 {
-	compression_buffer *buffer = bedrock_malloc_pool(pool, sizeof(compression_buffer));
+	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_COMPRESS;
 	buffer->buffer_size = buffer_size;
@@ -18,12 +18,11 @@ compression_buffer *compression_compress_init(struct bedrock_memory_pool *pool, 
 	if (i != Z_OK)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error initializing deflate stream - error code %d", i);
-		bedrock_free_pool(pool, buffer);
+		bedrock_free(buffer);
 		return NULL;
 	}
 
-	buffer->pool = pool;
-	buffer->buffer = bedrock_buffer_create(pool, "compression buffer", NULL, 0, buffer->buffer_size);
+	buffer->buffer = bedrock_buffer_create("compression buffer", NULL, 0, buffer->buffer_size);
 
 	return buffer;
 }
@@ -33,7 +32,7 @@ void compression_compress_end(compression_buffer *buffer)
 	bedrock_assert(buffer->type == ZLIB_COMPRESS, return);
 	deflateEnd(&buffer->stream);
 	bedrock_buffer_free(buffer->buffer);
-	bedrock_free_pool(buffer->pool, buffer);
+	bedrock_free(buffer);
 }
 
 void compression_compress_reset(compression_buffer *buffer)
@@ -49,7 +48,7 @@ void compression_compress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(buffer->pool, "compression buffer", NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create("compression buffer", NULL, 0, buffer->buffer_size);
 }
 
 static void compress_deflate(compression_buffer *buffer, const unsigned char *data, size_t len, int type)
@@ -95,9 +94,9 @@ void compression_compress_deflate_finish(compression_buffer *buffer, const unsig
 	compress_deflate(buffer, data, len, Z_FINISH);
 }
 
-compression_buffer *compression_decompress_init(struct bedrock_memory_pool *pool, size_t buffer_size)
+compression_buffer *compression_decompress_init(size_t buffer_size)
 {
-	compression_buffer *buffer = bedrock_malloc_pool(pool, sizeof(compression_buffer));
+	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_DECOMPRESS;
 	buffer->buffer_size = buffer_size;
@@ -110,12 +109,11 @@ compression_buffer *compression_decompress_init(struct bedrock_memory_pool *pool
 	if (i != Z_OK)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error initializing deflate stream - error code %d", i);
-		bedrock_free_pool(pool, buffer);
+		bedrock_free(buffer);
 		return NULL;
 	}
 
-	buffer->pool = pool;
-	buffer->buffer = bedrock_buffer_create(pool, "decompression buffer", NULL, 0, buffer_size);
+	buffer->buffer = bedrock_buffer_create("decompression buffer", NULL, 0, buffer_size);
 
 	return buffer;
 }
@@ -125,7 +123,7 @@ void compression_decompress_end(compression_buffer *buffer)
 	bedrock_assert(buffer->type == ZLIB_DECOMPRESS, return);
 	inflateEnd(&buffer->stream);
 	bedrock_buffer_free(buffer->buffer);
-	bedrock_free_pool(buffer->pool, buffer);
+	bedrock_free(buffer);
 }
 
 void compression_decompress_reset(compression_buffer *buffer)
@@ -141,7 +139,7 @@ void compression_decompress_reset(compression_buffer *buffer)
 	if (buffer->buffer != NULL)
 		buffer->buffer->length = 0;
 	else
-		buffer->buffer = bedrock_buffer_create(buffer->pool, "decompression buffer", NULL, 0, buffer->buffer_size);
+		buffer->buffer = bedrock_buffer_create("decompression buffer", NULL, 0, buffer->buffer_size);
 }
 
 void compression_decompress_inflate(compression_buffer *buffer, const unsigned char *data, size_t len)
@@ -177,17 +175,17 @@ void compression_decompress_inflate(compression_buffer *buffer, const unsigned c
 		bedrock_log(LEVEL_CRIT, "zlib: Error inflating stream - error code %d", i);
 }
 
-compression_buffer *compression_compress(struct bedrock_memory_pool *pool, size_t buffer_size, const unsigned char *data, size_t len)
+compression_buffer *compression_compress(size_t buffer_size, const unsigned char *data, size_t len)
 {
-	compression_buffer *buffer = compression_compress_init(pool, buffer_size);
+	compression_buffer *buffer = compression_compress_init(buffer_size);
 	compression_compress_deflate_finish(buffer, data, len);
 	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	return buffer;
 }
 
-compression_buffer *compression_decompress(struct bedrock_memory_pool *pool, size_t buffer_size, const unsigned char *data, size_t len)
+compression_buffer *compression_decompress(size_t buffer_size, const unsigned char *data, size_t len)
 {
-	compression_buffer *buffer = compression_decompress_init(pool, buffer_size);
+	compression_buffer *buffer = compression_decompress_init(buffer_size);
 	compression_decompress_inflate(buffer, data, len);
 	bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
 	return buffer;

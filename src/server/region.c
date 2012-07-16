@@ -16,8 +16,6 @@
 
 #define REGION_BUFFER_SIZE 65536
 
-struct bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT("region memory pool");
-
 static bedrock_pipe region_worker_read_pipe;
 
 static void region_worker_read_exit(void __attribute__((__unused__)) *unused)
@@ -131,7 +129,7 @@ static void region_worker_read(struct region_operation *op)
 
 	bedrock_mutex_unlock(&op->region->fd_mutex);
 
-	cb = compression_decompress(&region_pool, REGION_BUFFER_SIZE, buffer, compressed_len);
+	cb = compression_decompress(REGION_BUFFER_SIZE, buffer, compressed_len);
 
 	bedrock_free(buffer);
 
@@ -183,7 +181,7 @@ static void region_worker(struct bedrock_thread *thread, struct bedrock_region *
 
 struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 {
-	struct bedrock_region *region = bedrock_malloc_pool(&region_pool, sizeof(struct bedrock_region));
+	struct bedrock_region *region = bedrock_malloc(sizeof(struct bedrock_region));
 	int fd;
 
 	region->world = world;
@@ -231,7 +229,7 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_list_clear(&region->columns);
 
-	bedrock_free_pool(&region_pool, region);
+	bedrock_free(region);
 }
 
 void region_schedule_operation(struct bedrock_region *region, struct bedrock_column *column, enum region_op op)

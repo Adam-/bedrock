@@ -2,6 +2,7 @@
 #include "nbt/nbt.h"
 #include "util/memory.h"
 #include "util/endian.h"
+#include "util/string.h"
 
 static bool read_bytes(void *dest, size_t dst_size, const unsigned char **src, size_t *src_size, bool swap)
 {
@@ -332,7 +333,7 @@ bedrock_buffer *nbt_write(nbt_tag *tag)
 
 	bedrock_assert(tag->type == TAG_COMPOUND, return NULL);
 
-	buffer = bedrock_buffer_create(NULL, "nbt write", NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
+	buffer = bedrock_buffer_create("nbt write", NULL, 0, BEDROCK_BUFFER_DEFAULT_SIZE);
 	write_named_tag(buffer, tag);
 	return buffer;
 }

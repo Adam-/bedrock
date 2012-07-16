@@ -16,8 +16,6 @@
 
 #define DATA_CHUNK_SIZE 2048
 
-struct bedrock_memory_pool column_pool = BEDROCK_MEMORY_POOL_INIT("column memory pool");
-
 /* A list of pending_column_update structures.
  * Columns on this list are either:
  * dirty (modified in memory and need to be written to disk sometime)
@@ -66,7 +64,7 @@ void column_load(struct bedrock_column *column, nbt_tag *data)
 	nbt_free(tag);
 
 	{
-		compression_buffer *buffer = compression_compress_init(&column_pool, DATA_CHUNK_SIZE);
+		compression_buffer *buffer = compression_compress_init(DATA_CHUNK_SIZE);
 
 		tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 		byte_array = &tag->payload.tag_byte_array;
@@ -101,7 +99,7 @@ void column_free(struct bedrock_column *column)
 	bedrock_buffer_free(column->biomes);
 
 	nbt_free(column->data);
-	bedrock_free_pool(&column_pool, column);
+	bedrock_free(column);
 }
 
 uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z)
@@ -182,7 +180,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 	if (column == NULL)
 	{
-		column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
+		column = bedrock_malloc(sizeof(struct bedrock_column));
 		column->region = region;
 		column->x = column_x;
 		column->z = column_z;
@@ -266,7 +264,7 @@ static void column_save_entry(struct bedrock_thread bedrock_attribute_unused *th
 	sectors = structure_start & 0xFF;
 	structure_start >>= 8;
 
-	cb = compression_compress_init(&region_pool, DATA_CHUNK_SIZE);
+	cb = compression_compress_init(DATA_CHUNK_SIZE);
 	/* Compress structure */
 	compression_compress_deflate_finish(cb, dc->nbt_out->data, dc->nbt_out->length);
 
@@ -467,7 +465,7 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 					chunk_compress(chunk);
 				}
 
-				buf = compression_decompress(NULL, BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
+				buf = compression_decompress(BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
 
 				biomes = nbt_add(level, TAG_BYTE_ARRAY, "Biomes", buf->buffer->data, buf->buffer->length);
 
