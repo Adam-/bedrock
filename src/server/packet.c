@@ -20,14 +20,7 @@
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
 
-static struct c2s_packet_handler
-{
-	uint8_t id;
-	uint8_t len;
-	uint8_t permission;
-	uint8_t flags;
-	int (*handler)(struct bedrock_client *, const bedrock_packet *);
-} packet_handlers[] = {
+struct packet_info packet_handlers[] = {
 	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
 	{LOGIN_REQUEST,          20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
 	{HANDSHAKE,               3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
@@ -63,7 +56,7 @@ static struct c2s_packet_handler
 	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
-static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *handler)
+static int packet_compare(const uint8_t *id, const struct packet_info *handler)
 {
 	if (*id < handler->id)
 		return -1;
@@ -74,14 +67,14 @@ static int packet_compare(const uint8_t *id, const struct c2s_packet_handler *ha
 
 typedef int (*compare_func)(const void *, const void *);
 
-static struct c2s_packet_handler *packet_find(uint8_t id)
+struct packet_info *packet_find(uint8_t id)
 {
-	return bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct c2s_packet_handler), sizeof(struct c2s_packet_handler), (compare_func) packet_compare);
+	return bsearch(&id, packet_handlers, sizeof(packet_handlers) / sizeof(struct packet_info), sizeof(struct packet_info), (compare_func) packet_compare);
 }
 
 void packet_init(bedrock_packet *packet, uint8_t id)
 {
-	struct c2s_packet_handler *handler = packet_find(id);
+	struct packet_info *handler = packet_find(id);
 	
 	bedrock_assert(packet != NULL && handler != NULL, return);
 
@@ -105,7 +98,7 @@ int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
 	uint8_t id = *packet->data;
 	int i;
 
-	struct c2s_packet_handler *handler = packet_find(id);
+	struct packet_info *handler = packet_find(id);
 	if (handler == NULL)
 	{
 		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s", id, client_get_ip(client));

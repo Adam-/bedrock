@@ -90,9 +90,10 @@ void bedrock_thread_join(struct bedrock_thread *thread)
 	if (thread->at_exit)
 		thread->at_exit(thread->data);
 
-	bedrock_free(thread);
-
 	bedrock_list_del(&thread_list, thread);
+	bedrock_list_del(&thread_exited_list, thread);
+
+	bedrock_free(thread);
 }
 
 void bedrock_thread_exit_all()

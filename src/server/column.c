@@ -164,15 +164,15 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 			column = c;
 			break;
 		}
-		else if (c->z > column_z || (c->z == column_z && c->x > column_x))
-			break;
+		//else if (c->z > column_z || (c->z == column_z && c->x > column_x))
+			//break; // XXXXXXXXXXXXXXx
 	}
 
 	bedrock_mutex_unlock(&region->column_mutex);
 
 	if (column == NULL)
 	{
-		struct bedrock_column *column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
+		column = bedrock_malloc_pool(&column_pool, sizeof(struct bedrock_column));
 		column->region = region;
 		column->x = column_x;
 		column->z = column_z;
@@ -183,6 +183,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 		column->flags |= COLUMN_FLAG_READ;
 		region_schedule_operation(region, column, REGION_OP_READ);
+		column = NULL;
 	}
 	else if (column->flags & COLUMN_FLAG_READ)
 		column = NULL;
@@ -227,11 +228,11 @@ static void column_save_entry(struct bedrock_thread bedrock_attribute_unused *th
 		return;
 	}
 
-	column_x = column->x;
+	column_x = column->x % BEDROCK_COLUMNS_PER_REGION;
 	if (column_x < 0)
 		column_x = BEDROCK_COLUMNS_PER_REGION - abs(column_x);
 
-	column_z = column->z;
+	column_z = column->z % BEDROCK_COLUMNS_PER_REGION;
 	if (column_z < 0)
 		column_z = BEDROCK_COLUMNS_PER_REGION - abs(column_z);
 
@@ -465,7 +466,8 @@ void column_save()
 		column->flags &= ~COLUMN_FLAG_DIRTY;
 		column->flags |= COLUMN_FLAG_WRITE;
 
-		bedrock_thread_start((bedrock_thread_entry) column_save_entry, (bedrock_thread_exit) column_save_exit, dc);
+		//bedrock_thread_start((bedrock_thread_entry) column_save_entry, (bedrock_thread_exit) column_save_exit, dc);
+		column_save_exit(dc); // XXX
 
 		bedrock_list_del_node(&dirty_columns, node);
 		bedrock_free(node);

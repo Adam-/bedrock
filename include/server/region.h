@@ -33,7 +33,7 @@ struct bedrock_region
 	/* Pending operations on this region, list of region_operation structures */
 	bedrock_list operations;
 	/* Worker thread for this region */
-	bedrock_thread *worker;
+	struct bedrock_thread *worker;
 	/* condition for worker */
 	bedrock_cond worker_condition;
 

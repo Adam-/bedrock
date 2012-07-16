@@ -294,6 +294,7 @@ void client_event_write(struct bedrock_fd *fd, void *data)
 void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 {
 	bedrock_packet *p;
+	struct packet_info *pi;
 
 	bedrock_assert(client != NULL && packet != NULL && packet->length > 0, return);
 
@@ -311,6 +312,11 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	packet->capacity = 0;
 
 	packet = p;
+
+	pi = packet_find(*packet->data);
+	bedrock_assert(pi != NULL, ;);
+	if (pi != NULL)
+		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
 
 	bedrock_list_add(&client->out_buffer, packet);
 
