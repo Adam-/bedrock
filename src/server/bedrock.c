@@ -199,6 +199,8 @@ int main(int argc, char **argv)
 
 	world_free(world);
 
+	region_shutdown();
+
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();
 

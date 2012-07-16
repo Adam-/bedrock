@@ -13,7 +13,7 @@ enum region_op
 struct region_operation
 {
 	struct bedrock_region *region;
-	uint8_t operation:2;
+	unsigned int operation:2;
 	struct bedrock_column *column;
 };
 
@@ -45,6 +45,8 @@ struct bedrock_region
 
 extern struct bedrock_memory_pool region_pool;
 
+extern void region_init();
+extern void region_shutdown();
 extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);
 extern void region_free(struct bedrock_region *region);
 extern void region_schedule_operation(struct bedrock_region *region, struct bedrock_column *column, enum region_op op);

@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <math.h>
 
 #define REGION_BUFFER_SIZE 65536
 
@@ -19,7 +20,7 @@ struct bedrock_memory_pool region_pool = BEDROCK_MEMORY_POOL_INIT("region memory
 
 static bedrock_pipe region_worker_read_pipe;
 
-static void region_worker_read_exit(void *unused)
+static void region_worker_read_exit(void __attribute__((__unused__)) *unused)
 {
 	bedrock_node *node;
 
@@ -37,6 +38,11 @@ static void region_worker_read_exit(void *unused)
 void region_init()
 {
 	bedrock_pipe_open(&region_worker_read_pipe, "region worker read pipe", region_worker_read_exit, NULL);
+}
+
+void region_shutdown()
+{
+	bedrock_pipe_close(&region_worker_read_pipe);
 }
 
 static void region_worker_read(struct region_operation *op)

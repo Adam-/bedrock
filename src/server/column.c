@@ -3,6 +3,7 @@
 #include "nbt/nbt.h"
 #include "util/memory.h"
 #include "util/endian.h"
+#include "util/timer.h"
 #include "compression/compression.h"
 #include "packet/packet_spawn_dropped_item.h"
 #include "packet/packet_destroy_entity.h"
@@ -87,7 +88,7 @@ void column_free(struct bedrock_column *column)
 	int i;
 
 	bedrock_assert(column->players.count == 0, ;);
-	bedrock_assert(column->flags == COLUMN_FLAG_EMPTY, ;);
+	bedrock_assert((column->flags & ~COLUMN_FLAG_EMPTY) == 0, ;);
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
 
@@ -423,7 +424,7 @@ static void column_save_exit(struct pending_column_update *dc)
 	bedrock_free(dc);
 }
 
-void column_process_pending(void *notused)
+void column_process_pending(void __attribute__((__unused__)) *notused)
 {
 	bedrock_node *node, *node2;
 
@@ -499,6 +500,7 @@ void column_process_pending(void *notused)
 		}
 
 		bedrock_list_del_node(&pending_updates, node);
+		bedrock_free(dc);
 		bedrock_free(node);
 	}
 

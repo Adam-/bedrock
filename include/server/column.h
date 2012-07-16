@@ -19,7 +19,7 @@ struct bedrock_column
 {
 	struct bedrock_region *region;
 
-	enum bedrock_column_flag flags:4;
+	unsigned int flags:4;
 
 	int32_t x;
 	int32_t z;
@@ -66,7 +66,7 @@ extern int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, 
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
 
 extern void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag flag);
-extern void column_process_pending(void __attribute__((__unused__)) *notused);
+extern void column_process_pending(void *notused);
 
 /* Place a dropped item in the column */
 extern void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di);

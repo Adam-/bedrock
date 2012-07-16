@@ -60,6 +60,8 @@ enum
 	ERROR_NOT_ALLOWED    = -4
 };
 
+struct bedrock_client;
+
 struct packet_info
 {
 	uint8_t id;
@@ -70,8 +72,6 @@ struct packet_info
 };
 
 #define PACKET_HEADER_LENGTH 1
-
-struct bedrock_client;
 
 extern struct packet_info packet_handlers[];
 
