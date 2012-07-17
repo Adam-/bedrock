@@ -372,8 +372,7 @@ static void region_operations_notify(struct bedrock_region *region)
 				if (op->column->data == NULL)
 				{
 					// Column doesn't exist on disk
-					//column_free(op->column);
-					bedrock_list_del(&op->column->region->columns, op->column); // XXX dumb
+					column_free(op->column);
 				}
 				else
 				{
@@ -401,8 +400,7 @@ static void region_operations_notify(struct bedrock_region *region)
 				if (op->column->flags & COLUMN_FLAG_EMPTY)
 				{
 					if (op->column->players.count == 0)
-						bedrock_list_del(&op->column->region->columns, op->column); // XXX dumb
-						//column_free(column);
+						column_free(op->column);
 					else
 						op->column->flags &= ~COLUMN_FLAG_EMPTY;
 				}
@@ -439,8 +437,6 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	bedrock_pipe_open(&region->finished_operations_pipe, "region operations pipe", (bedrock_pipe_notify_func) region_operations_notify, region);
 
 	bedrock_cond_init(&region->worker_condition, "region condition");
-
-	region->columns.free = (bedrock_free_func) column_free;
 
 	bedrock_list_add(&world->regions, region);
 

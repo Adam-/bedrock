@@ -86,6 +86,8 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
 
+	bedrock_list_del(&column->region->columns, column);
+
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);
 
@@ -289,8 +291,7 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 		else if (column->flags & COLUMN_FLAG_EMPTY)
 		{
 			if (column->players.count == 0)
-				bedrock_list_del(&column->region->columns, column); // XXX dumb
-				//column_free(column);
+				column_free(column);
 			else
 				column->flags &= ~COLUMN_FLAG_EMPTY;
 		}
