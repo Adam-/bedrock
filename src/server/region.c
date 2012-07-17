@@ -367,19 +367,28 @@ static void region_operations_notify(struct bedrock_region *region)
 		{
 			case REGION_OP_READ:
 			{
-				bedrock_node *node;
-
 				op->column->flags &= ~COLUMN_FLAG_READ;
 
-				bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d from %s", op->column->x, op->column->z, op->region->path);
-
-				LIST_FOREACH(&client_list, node)
+				if (op->column->data == NULL)
 				{
-					struct bedrock_client *client = node->data;
+					// Column doesn't exist on disk
+					//column_free(op->column);
+					bedrock_list_del(&op->column->region->columns, op->column); // XXX dumb
+				}
+				else
+				{
+					bedrock_node *node;
 
-					if (client->authenticated >= STATE_BURSTING)
+					bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d from %s", op->column->x, op->column->z, op->region->path);
+
+					LIST_FOREACH(&client_list, node)
 					{
-						client_update_columns(client);
+						struct bedrock_client *client = node->data;
+
+						if (client->authenticated >= STATE_BURSTING)
+						{
+							client_update_columns(client);
+						}
 					}
 				}
 				break;
