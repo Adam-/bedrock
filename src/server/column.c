@@ -94,7 +94,8 @@ void column_free(struct bedrock_column *column)
 
 	bedrock_buffer_free(column->biomes);
 
-	nbt_free(column->data);
+	if (column->data != NULL)
+		nbt_free(column->data);
 	bedrock_free(column);
 }
 
