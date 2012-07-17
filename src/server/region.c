@@ -417,23 +417,24 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->z = z;
 	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
 
+	bedrock_mutex_init(&region->fd_mutex, "region fd mutex");
 	fd = open(region->path, O_RDWR);
 	if (fd == -1)
 		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s - %s", region->path, strerror(errno));
 	else
 		bedrock_fd_open(&region->fd, fd, FD_FILE, "region file");
-	bedrock_mutex_init(&region->fd_mutex, "region fd mutex");
 
 	bedrock_mutex_init(&region->operations_mutex, "region operation mutex");
 	bedrock_mutex_init(&region->finished_operations_mutex, "region finished operations mutex");
 	region->finished_operations.free = (bedrock_free_func) region_operation_free;
 	bedrock_pipe_open(&region->finished_operations_pipe, "region operations pipe", (bedrock_pipe_notify_func) region_operations_notify, region);
 
+	bedrock_cond_init(&region->worker_condition, "region condition");
+
 	region->columns.free = (bedrock_free_func) column_free;
 
 	bedrock_list_add(&world->regions, region);
 
-	bedrock_cond_init(&region->worker_condition, "region condition");
 	region->worker = bedrock_thread_start((bedrock_thread_entry) region_worker, NULL, region);
 
 	return region;
@@ -441,6 +442,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 
 void region_free(struct bedrock_region *region)
 {
+	bedrock_thread_set_exit(region->worker);
 	bedrock_cond_wakeup(&region->worker_condition);
 	bedrock_thread_join(region->worker);
 	bedrock_cond_destroy(&region->worker_condition);
@@ -466,7 +468,7 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_pipe_close(&region->finished_operations_pipe);
 
-	bedrock_list_clear(&region->columns);
+	bedrock_assert(region->columns.count == 0, ;);
 
 	bedrock_free(region);
 }
