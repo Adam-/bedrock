@@ -9,10 +9,6 @@
 #include "packet/packet_destroy_entity.h"
 
 #include <math.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
 
 #define DATA_CHUNK_SIZE 2048
 
@@ -180,6 +176,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 	if (column == NULL)
 	{
+		struct region_operation *op = bedrock_malloc(sizeof(struct region_operation));
 		column = bedrock_malloc(sizeof(struct bedrock_column));
 		column->region = region;
 		column->x = column_x;
@@ -188,7 +185,12 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 		bedrock_list_add(&region->columns, column);
 
 		column->flags |= COLUMN_FLAG_READ;
-		region_schedule_operation(region, column, REGION_OP_READ);
+
+		op->region = region;
+		op->operation = REGION_OP_READ;
+		op->column = column;
+		region_operation_schedule(op);
+
 		column = NULL;
 	}
 	else if (column->flags & COLUMN_FLAG_READ)
@@ -212,210 +214,6 @@ void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag 
 	bedrock_list_add(&pending_updates, pc);
 }
 
-static void column_save_entry(struct bedrock_thread bedrock_attribute_unused *thread, struct pending_column_update *dc)
-{
-	struct bedrock_column *column = dc->column;
-	int i;
-	int32_t column_x, column_z;
-	int offset;
-	uint8_t sectors;
-	uint32_t structure_start;
-	compression_buffer *cb;
-	int required_sectors, j;
-	uint32_t header_len;
-	unsigned char header[5];
-	char padding[BEDROCK_REGION_SECTOR_SIZE];
-
-	i = open(column->region->path, O_RDWR);
-	if (i == -1)
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to open region file %s for saving - %s", column->region->path, strerror(errno));
-		return;
-	}
-
-	column_x = column->x % BEDROCK_COLUMNS_PER_REGION;
-	if (column_x < 0)
-		column_x = BEDROCK_COLUMNS_PER_REGION - abs(column_x);
-
-	column_z = column->z % BEDROCK_COLUMNS_PER_REGION;
-	if (column_z < 0)
-		column_z = BEDROCK_COLUMNS_PER_REGION - abs(column_z);
-
-	offset = column_x + column_z * BEDROCK_COLUMNS_PER_REGION;
-	offset *= sizeof(int32_t);
-
-	// Move to the offset, which contains the offset into the file of where this column starts
-	if (lseek(i, offset, SEEK_SET) == -1)
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to get offset - %s", column->region->path, strerror(errno));
-		close(i);
-		return;
-	}
-
-	if (read(i, &structure_start, sizeof(structure_start)) != sizeof(structure_start))
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to read column structure offset in file %s to get file offset - %s", column->region->path, strerror(errno));
-		close(i);
-		return;
-	}
-
-	convert_endianness((unsigned char *) &structure_start, sizeof(structure_start));
-
-	sectors = structure_start & 0xFF;
-	structure_start >>= 8;
-
-	cb = compression_compress_init(DATA_CHUNK_SIZE);
-	/* Compress structure */
-	compression_compress_deflate_finish(cb, dc->nbt_out->data, dc->nbt_out->length);
-
-	// Remember, this data will have a 5 byte header!
-	required_sectors = (cb->buffer->length + 5) / BEDROCK_REGION_SECTOR_SIZE;
-	if ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE)
-		++required_sectors;
-
-	bedrock_log(LEVEL_DEBUG, "column: Current offset for %d,%d is %d which takes %d sectors, I need %d sectors", column->x, column->z, structure_start, sectors, required_sectors);
-
-	if (required_sectors <= sectors)
-	{
-		if (lseek(i, structure_start * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)
-		{
-			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to write structure - %s", column->region->path, strerror(errno));
-			compression_compress_end(cb);
-			close(i);
-			return;
-		}
-
-		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are sufficient, moved file offset to %d", structure_start);
-	}
-	else
-	{
-		off_t pos = lseek(i, 0, SEEK_END);
-		uint32_t offset_buffer;
-
-		if (pos == -1)
-		{
-			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", column->region->path, strerror(errno));
-			compression_compress_end(cb);
-			close(i);
-			return;
-		}
-		else if (pos % BEDROCK_REGION_SECTOR_SIZE)
-		{
-			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %d more bytes", column->region->path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
-
-			j = BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE);
-			memset(&padding, 0, j);
-			if (write(i, padding, j) != j)
-			{
-				bedrock_log(LEVEL_WARN, "column: Unable to fix padding in region file %s - %s", column->region->path, strerror(errno));
-				compression_compress_end(cb);
-				close(i);
-				return;
-			}
-
-			pos += j;
-		}
-
-		if (lseek(i, offset, SEEK_SET) == -1)
-		{
-			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to write offset - %s", column->region->path, strerror(errno));
-			compression_compress_end(cb);
-			close(i);
-			return;
-		}
-
-		bedrock_assert((pos % BEDROCK_REGION_SECTOR_SIZE) == 0, ;);
-		bedrock_assert(((pos / BEDROCK_REGION_SECTOR_SIZE) & 0xFF000000) == 0, ;);
-		bedrock_assert((required_sectors & ~0xFF) == 0, ;);
-
-		offset_buffer = pos / BEDROCK_REGION_SECTOR_SIZE;
-		offset_buffer <<= 8;
-		offset_buffer |= required_sectors;
-
-		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header of position %d with %d sectors", offset, pos / BEDROCK_REGION_SECTOR_SIZE, required_sectors);
-
-		convert_endianness((unsigned char *) &offset_buffer, sizeof(offset_buffer));
-
-		if (write(i, &offset_buffer, sizeof(offset_buffer)) != sizeof(offset_buffer))
-		{
-			bedrock_log(LEVEL_WARN, "column: Unable to write header for new column in region file %s - %s", column->region->path, strerror(errno));
-			compression_compress_end(cb);
-			close(i);
-			return;
-		}
-
-		pos = lseek(i, 0, SEEK_END);
-		if (pos == -1)
-		{
-			bedrock_log(LEVEL_WARN, "column: Unable to lseek region file %s to EOF to write structure - %s", column->region->path, strerror(errno));
-			compression_compress_end(cb);
-			close(i);
-			return;
-		}
-
-		bedrock_assert(pos % BEDROCK_REGION_SECTOR_SIZE == 0, ;);
-	}
-
-	// Set up header
-	header_len = cb->buffer->length;
-	convert_endianness((unsigned char *) &header_len, sizeof(header_len));
-	memcpy(&header, &header_len, sizeof(header_len));
-	// Compression type
-	header[4] = 2;
-
-	if (write(i, header, sizeof(header)) != sizeof(header))
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to write column header for region file %s - %s", column->region->path, strerror(errno));
-		compression_compress_end(cb);
-		close(i);
-		return;
-	}
-
-	if ((size_t) write(i, cb->buffer->data, cb->buffer->length) != cb->buffer->length)
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to write column structure for region file %s - %s", column->region->path, strerror(errno));
-		compression_compress_end(cb);
-		close(i);
-		return;
-	}
-
-	// Pad the end
-	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
-	bedrock_log(LEVEL_DEBUG, "column: Finished writing compressed NBT structure, file requires an additional %d bytes of padding", j);
-	memset(&padding, 0, j);
-	if (write(i, padding, j) != j)
-	{
-		bedrock_log(LEVEL_WARN, "column: Unable to write padding for region file %s - %s", column->region->path, strerror(errno));
-		compression_compress_end(cb);
-		close(i);
-		return;
-	}
-
-	compression_compress_end(cb);
-	close(i);
-}
-
-static void column_save_exit(struct pending_column_update *dc)
-{
-	struct bedrock_column *column = dc->column;
-
-	column->flags &= ~COLUMN_FLAG_WRITE;
-
-	bedrock_log(LEVEL_COLUMN, "column: Finished save for column %d,%d to %s", column->x, column->z, column->region->path);
-
-	if (column->flags & COLUMN_FLAG_EMPTY)
-	{
-		if (column->players.count == 0)
-			bedrock_list_del(&column->region->columns, column); // XXX dumb
-			//column_free(column);
-		else
-			column->flags &= ~COLUMN_FLAG_EMPTY;
-	}
-
-	bedrock_buffer_free(dc->nbt_out);
-	bedrock_free(dc);
-}
-
 void column_process_pending(void __attribute__((__unused__)) *notused)
 {
 	bedrock_node *node, *node2;
@@ -433,9 +231,14 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 			}
 			else
 			{
+				struct region_operation *op = bedrock_malloc(sizeof(struct region_operation));
 				int i;
 				nbt_tag *level, *sections, *biomes;
 				compression_buffer *buf;
+
+				op->region = column->region;
+				op->operation = REGION_OP_WRITE;
+				op->column = column;
 
 				bedrock_log(LEVEL_COLUMN, "column: Starting save for column %d,%d", column->x, column->z);
 
@@ -471,7 +274,7 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 
 				compression_decompress_end(buf);
 
-				dc->nbt_out = nbt_write(column->data);
+				op->nbt_out = nbt_write(column->data);
 
 				nbt_free(sections);
 				nbt_free(biomes);
@@ -479,7 +282,7 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 				column->flags &= ~COLUMN_FLAG_DIRTY;
 				column->flags |= COLUMN_FLAG_WRITE;
 
-				bedrock_thread_start((bedrock_thread_entry) column_save_entry, (bedrock_thread_exit) column_save_exit, dc);
+				region_operation_schedule(op);
 			}
 		}
 		else if (column->flags & COLUMN_FLAG_EMPTY)

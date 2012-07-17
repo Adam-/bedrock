@@ -83,8 +83,8 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 	va_end(args);
 
-	//if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && /*level != LEVEL_COLUMN && */level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
-	if (bedrock_conf_log_level & level)
+	if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && /*level != LEVEL_COLUMN && */level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
+	//if (bedrock_conf_log_level & level)
 	{
 		fprintf(stdout, "%s\n", buffer);
 		if (log_fd.open)
@@ -183,7 +183,6 @@ int main(int argc, char **argv)
 	io_init();
 	listener_init();
 	bedrock_threadengine_start();
-	region_init();
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 	bedrock_timer_schedule(6000, column_process_pending, NULL);
@@ -197,8 +196,6 @@ int main(int argc, char **argv)
 	column_process_pending(NULL);
 
 	world_free(world);
-
-	region_shutdown();
 
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();
