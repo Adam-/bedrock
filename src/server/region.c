@@ -426,8 +426,8 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 
 	bedrock_mutex_init(&region->operations_mutex, "region operation mutex");
 	bedrock_mutex_init(&region->finished_operations_mutex, "region finished operations mutex");
-	region->finished_operations.free = region_operation_free;
-	bedrock_pipe_open(&region->finished_operations_pipe, "region operations pipe", region_operations_notify, region);
+	region->finished_operations.free = (bedrock_free_func) region_operation_free;
+	bedrock_pipe_open(&region->finished_operations_pipe, "region operations pipe", (bedrock_pipe_notify_func) region_operations_notify, region);
 
 	region->columns.free = (bedrock_free_func) column_free;
 
@@ -453,13 +453,13 @@ void region_free(struct bedrock_region *region)
 	bedrock_mutex_destroy(&region->fd_mutex);
 
 	bedrock_mutex_lock(&region->operations_mutex);
-	region->operations.free = region_operation_free;
+	region->operations.free = (bedrock_free_func) region_operation_free;
 	bedrock_list_clear(&region->operations);
 	bedrock_mutex_unlock(&region->operations_mutex);
 	bedrock_mutex_destroy(&region->operations_mutex);
 
 	bedrock_mutex_lock(&region->finished_operations_mutex);
-	region->finished_operations.free = region_operation_free;
+	region->finished_operations.free = (bedrock_free_func) region_operation_free;
 	bedrock_list_clear(&region->finished_operations);
 	bedrock_mutex_unlock(&region->finished_operations_mutex);
 	bedrock_mutex_destroy(&region->finished_operations_mutex);

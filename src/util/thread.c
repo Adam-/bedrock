@@ -9,7 +9,7 @@ bedrock_pipe thread_notify_pipe;
 
 static bedrock_list thread_exited_list = LIST_INIT;
 
-static void do_exit_threads()
+static void do_exit_threads(void bedrock_attribute_unused *unused)
 {
 	bedrock_node *node;
 

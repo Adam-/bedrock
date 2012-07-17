@@ -16,7 +16,7 @@ static void pipe_reader(struct bedrock_fd *fd, void *data)
 	p->on_notify(p->data);
 }
 
-void bedrock_pipe_open(bedrock_pipe *p, const char *desc, void (*on_notify)(void *), void *data)
+void bedrock_pipe_open(bedrock_pipe *p, const char *desc, bedrock_pipe_notify_func on_notify, void *data)
 {
 	int fds[2];
 	char fulldesc[32];
