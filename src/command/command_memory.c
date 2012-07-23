@@ -6,9 +6,8 @@ void command_memory(struct bedrock_client *client, int bedrock_attribute_unused 
 {
 	long double memory;
 
-	bedrock_mutex_lock(&memory_mutex);
-	memory = memory_size / 1024.0 / 1024.0;
-	bedrock_mutex_unlock(&memory_mutex);
+	memory = __sync_or_and_fetch(&memory_size, 0);
+	memory = memory / 1024.0 / 1024.0;
 
 	command_reply(client, "Total memory: %0.2LfMB", memory);
 }

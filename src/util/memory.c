@@ -1,7 +1,6 @@
 #include "util/memory.h"
 
-bedrock_mutex memory_mutex = BEDROCK_MUTEX_INIT("memory mutex");
-int64_t memory_size = 0;
+long long memory_size = 0;
 
 void *bedrock_malloc(size_t size)
 {
@@ -16,9 +15,7 @@ void *bedrock_malloc(size_t size)
 
 	*sz = size;
 
-	bedrock_mutex_lock(&memory_mutex);
-	memory_size += (int64_t) (*sz + sizeof(size_t));
-	bedrock_mutex_unlock(&memory_mutex);
+	__sync_fetch_and_add(&memory_size, (*sz + sizeof(size_t)));
 
 	return memory;
 }
@@ -38,10 +35,7 @@ void *bedrock_realloc(void *pointer, size_t size)
 	pointer = ((size_t *) pointer) - 1;
 	sz = pointer;
 
-	bedrock_mutex_lock(&memory_mutex);
-	memory_size -= (int64_t) (*sz + sizeof(size_t));
-	bedrock_assert(memory_size >= 0, memory_size = 0);
-	bedrock_mutex_unlock(&memory_mutex);
+	bedrock_assert(__sync_fetch_and_sub(&memory_size, (*sz + sizeof(size_t))) >= 0, __sync_and_and_fetch(&memory_size, 0));
 
 	pointer = realloc(pointer, size + sizeof(size_t));
 	if (pointer == NULL)
@@ -52,9 +46,7 @@ void *bedrock_realloc(void *pointer, size_t size)
 
 	*sz = size;
 
-	bedrock_mutex_lock(&memory_mutex);
-	memory_size += (int64_t) (*sz + sizeof(size_t));
-	bedrock_mutex_unlock(&memory_mutex);
+	__sync_fetch_and_add(&memory_size, (*sz + sizeof(size_t)));
 
 	return pointer;
 }
@@ -67,10 +59,7 @@ void bedrock_free(void *pointer)
 		return;
 
 	sz = ((size_t *) pointer) - 1;
-	bedrock_mutex_lock(&memory_mutex);
-	memory_size -= (int64_t) (*sz + sizeof(size_t));
-	bedrock_assert(memory_size >= 0, memory_size = 0);
-	bedrock_mutex_unlock(&memory_mutex);
+	bedrock_assert(__sync_fetch_and_sub(&memory_size, (*sz + sizeof(size_t))) >= 0, __sync_and_and_fetch(&memory_size, 0));
 
 	free(sz);
 }
