@@ -186,6 +186,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 					{
 						// Insert before c
 						bedrock_list_add_node_before(&tag->owner->payload.tag_list.list, bedrock_malloc(sizeof(bedrock_node)), node, tag);
+						++tag->owner->payload.tag_list.length;
 						packet_send_confirm_transaction(client, window, action, true);
 						return offset;
 					}
@@ -193,6 +194,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 
 				// Insert at the end
 				bedrock_list_add(&tag->owner->payload.tag_list.list, tag);
+				++tag->owner->payload.tag_list.length;
 			}
 		}
 

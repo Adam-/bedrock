@@ -495,7 +495,9 @@ bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock
 
 void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
 {
-	bedrock_list *list = &nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list;
+	nbt_tag *inven = nbt_get(client->data, TAG_LIST, 1, "Inventory");
+	struct nbt_tag_list *tag_list = &inven->payload.tag_list;
+	bedrock_list *list = &tag_list->list;
 	bedrock_node *node;
 	int i = -1;
 	nbt_tag *c, *item_tag;
@@ -536,7 +538,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	packet_send_set_slot(client, WINDOW_INVENTORY, pos, item, 1, 0);
 
 	item_tag = bedrock_malloc(sizeof(nbt_tag));
-	item_tag->owner = nbt_get(client->data, TAG_LIST, 1, "Inventory");
+	item_tag->owner = inven;
 	item_tag->type = TAG_COMPOUND;
 
 	nbt_add(item_tag, TAG_SHORT, "id", &item->id, sizeof(item->id));
@@ -557,12 +559,14 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 		{
 			// Insert before c
 			bedrock_list_add_node_before(list, bedrock_malloc(sizeof(bedrock_node)), node, item_tag);
+			++tag_list->length;
 			return;
 		}
 	}
 
 	// Insert at the end
 	bedrock_list_add(list, item_tag);
+	++tag_list->length;
 }
 
 static void client_update_column(struct bedrock_client *client, struct bedrock_column *column)

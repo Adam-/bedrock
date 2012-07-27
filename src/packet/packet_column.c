@@ -70,11 +70,14 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 	{
 		struct bedrock_chunk *chunk = column->chunks[i];
+		unsigned char fake_light[BEDROCK_DATA_LENGTH]; // Temporary until lighting is sorted
+		memset(fake_light, 0xFF, sizeof(fake_light));
 
 		if (!chunk)
 			continue;
 
-		compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
+		compression_compress_deflate(buffer, fake_light, BEDROCK_DATA_LENGTH);
+		//compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
 	}
 
 	{
