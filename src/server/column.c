@@ -217,7 +217,7 @@ void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag 
 	bedrock_list_add(&pending_updates, pc);
 }
 
-void column_process_pending(void __attribute__((__unused__)) *notused)
+void column_process_pending()
 {
 	bedrock_node *node, *node2;
 
@@ -300,8 +300,6 @@ void column_process_pending(void __attribute__((__unused__)) *notused)
 		bedrock_free(dc);
 		bedrock_free(node);
 	}
-
-	bedrock_timer_schedule(6000, column_process_pending, NULL);
 }
 
 void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)

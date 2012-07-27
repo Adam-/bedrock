@@ -33,7 +33,7 @@ typedef enum
 
 struct bedrock_client
 {
-	struct bedrock_fd fd;                       /* fd for this client */
+	struct bedrock_fd fd;                /* fd for this client */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
 	bedrock_client_authentication_state authenticated;
@@ -91,6 +91,8 @@ extern int authenticated_client_count;
 extern struct bedrock_client *client_create();
 extern struct bedrock_client *client_find(const char *name);
 extern bool client_load(struct bedrock_client *client);
+extern void client_save(struct bedrock_client *client);
+extern void client_save_all();
 extern void client_exit(struct bedrock_client *client);
 extern void client_process_exits();
 

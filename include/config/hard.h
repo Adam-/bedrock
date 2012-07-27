@@ -42,3 +42,7 @@
 
 #define BEDROCK_REGION_HEADER_SIZE 1024
 #define BEDROCK_REGION_SECTOR_SIZE 4096
+
+#define BEDROCK_PLAYER_PATH "%s/players/%s.dat"
+
+#define BEDROCK_REGIION_PATH "%s/region/r.%d.%d.mca"

@@ -72,7 +72,7 @@ bool client_load(struct bedrock_client *client)
 
 	bedrock_assert(client != NULL && client->world != NULL, return false);
 
-	snprintf(path, sizeof(path), "%s/players/%s.dat", client->world->path, client->name);
+	snprintf(path, sizeof(path), BEDROCK_PLAYER_PATH, client->world->path, client->name);
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
@@ -120,12 +120,79 @@ bool client_load(struct bedrock_client *client)
 	return true;
 }
 
+struct client_save_info
+{
+	char name[BEDROCK_USERNAME_MAX];
+	char path[PATH_MAX];
+	bedrock_buffer *nbt_out;
+};
+
+static void client_save_entry(struct bedrock_thread bedrock_attribute_unused *thread, struct client_save_info *ci)
+{
+	int fd;
+	compression_buffer *buffer;
+	
+	fd = open(ci->path, O_WRONLY | O_TRUNC);
+	if (fd == -1)
+	{
+		bedrock_log(LEVEL_WARN, "client: Unable to open client file for %s - %s", ci->name, strerror(errno));
+		return;
+	}
+
+	buffer = compression_compress(PLAYER_BUFFER_SIZE, ci->nbt_out->data, ci->nbt_out->length);
+
+	if (write(fd, buffer->buffer->data, buffer->buffer->length) != (int) buffer->buffer->length)
+	{
+		bedrock_log(LEVEL_WARN, "client: Unable to save data for client %s - %s", ci->name, strerror(errno));
+	}
+
+	compression_compress_end(buffer);
+
+	close(fd);
+}
+
+static void client_save_exit(struct client_save_info *ci)
+{
+	bedrock_log(LEVEL_DEBUG, "client: Finished saving for client %s", ci->name);
+
+	bedrock_buffer_free(ci->nbt_out);
+	bedrock_free(ci);
+}
+
+void client_save(struct bedrock_client *client)
+{
+	struct client_save_info *ci = bedrock_malloc(sizeof(struct client_save_info));
+
+	strncpy(ci->name, client->name, sizeof(ci->name));
+	snprintf(ci->path, sizeof(ci->path), BEDROCK_PLAYER_PATH, client->world->path, client->name);
+	ci->nbt_out = nbt_write(client->data);
+
+	bedrock_log(LEVEL_DEBUG, "client: Starting save for client %s", client->name);
+
+	bedrock_thread_start((bedrock_thread_entry) client_save_entry, (bedrock_thread_exit) client_save_exit, ci);
+}
+
+void client_save_all()
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&client_list, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		if (c->authenticated == STATE_AUTHENTICATED)
+			client_save(c);
+	}
+}
+
 static void client_free(struct bedrock_client *client)
 {
 	bedrock_node *node;
 
 	if (client->authenticated == STATE_AUTHENTICATED)
 	{
+		client_save(client);
+
 		LIST_FOREACH(&client_list, node)
 		{
 			struct bedrock_client *c = node->data;

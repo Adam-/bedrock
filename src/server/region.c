@@ -422,7 +422,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	region->world = world;
 	region->x = x;
 	region->z = z;
-	snprintf(region->path, sizeof(region->path), "%s/region/r.%d.%d.mca", world->path, x, z);
+	snprintf(region->path, sizeof(region->path), BEDROCK_REGIION_PATH, world->path, x, z);
 
 	bedrock_mutex_init(&region->fd_mutex, "region fd mutex");
 	fd = open(region->path, O_RDWR);
@@ -473,7 +473,10 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_pipe_close(&region->finished_operations_pipe);
 
-	bedrock_assert(region->columns.count == 0, ;);
+	bedrock_assert(!bedrock_running || region->columns.count == 0, ;);
+
+	region->columns.free = column_free;
+	bedrock_list_clear(&region->columns);
 
 	bedrock_free(region);
 }

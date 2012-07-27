@@ -11,15 +11,15 @@ static bedrock_list thread_exited_list = LIST_INIT;
 
 static void do_exit_threads(void bedrock_attribute_unused *unused)
 {
-	bedrock_node *node;
+	bedrock_node *node, *node2;
 
-	LIST_FOREACH(&thread_exited_list, node)
+	LIST_FOREACH_SAFE(&thread_exited_list, node, node2)
 	{
 		struct bedrock_thread *thread = node->data;
 		bedrock_thread_join(thread);
 	}
 
-	bedrock_list_clear(&thread_exited_list);
+	bedrock_assert(thread_exited_list.count == 0, ;);
 }
 
 void bedrock_threadengine_start()
