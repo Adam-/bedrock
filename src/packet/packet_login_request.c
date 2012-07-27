@@ -61,7 +61,7 @@ int packet_login_request(struct bedrock_client *client, const bedrock_packet *p)
 	++authenticated_client_count;
 	client_start_login_sequence(client);
 
-	 bedrock_log(LEVEL_INFO, "client: %s logged in from %s", client->name, client_get_ip(client));
+	bedrock_log(LEVEL_INFO, "client: %s logged in from %s", client->name, client_get_ip(client));
 
 	return offset;
 }

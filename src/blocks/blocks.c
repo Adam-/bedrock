@@ -20,7 +20,7 @@ struct bedrock_block bedrock_blocks[] = {
 	{BLOCK_STONE,                 "Stone",               2.25,  7.5,  ITEM_FLAG_PICKAXE,                          ITEM_FLAG_PICKAXE,                          simple_drop},
 	{BLOCK_GRASS,                 "Grass",               0.9,   0.9,  ITEM_FLAG_SHOVEL,                           ITEM_FLAG_NONE,                             simple_drop},
 	{BLOCK_DIRT,                  "Dirt",                0.75,  0.75, ITEM_FLAG_SHOVEL,                           ITEM_FLAG_NONE,                             simple_drop},
-	{BLOCK_COBBLESTONE,           "Cobblestone",         3,     10,   ITEM_FLAG_PICKAXE,                          ITEM_FLAG_PICKAXE,                          simple_drop},
+	{BLOCK_COBBLESTONE,           "Cobblestone",         3,     9,    ITEM_FLAG_PICKAXE,                          ITEM_FLAG_PICKAXE,                          simple_drop},
 	{BLOCK_WOODEN_PLANKS,         "Wooden Planks",       3,     3,    ITEM_FLAG_AXE,                              ITEM_FLAG_AXE,                              simple_drop},
 	{BLOCK_SAPLINGS,              "Saplings",            0.05,  0.05, ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             simple_drop},
 	{BLOCK_BEDROCK,               "Bedrock",            -1,    -1,    ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             NULL},

@@ -178,7 +178,10 @@ static void do_fork()
 
 	i = fork();
 	if (i <= -1)
+	{
 		bedrock_log(LEVEL_WARN, "bedrock: Unable to fork into background - %s", strerror(errno));
+		return;
+	}
 	else if (i > 0)
 		exit(0);
 
