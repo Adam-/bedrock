@@ -475,7 +475,7 @@ void region_free(struct bedrock_region *region)
 
 	bedrock_assert(!bedrock_running || region->columns.count == 0, ;);
 
-	region->columns.free = column_free;
+	region->columns.free = (bedrock_free_func) column_free;
 	bedrock_list_clear(&region->columns);
 
 	bedrock_free(region);
