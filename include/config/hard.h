@@ -46,3 +46,5 @@
 #define BEDROCK_PLAYER_PATH "%s/players/%s.dat"
 
 #define BEDROCK_REGIION_PATH "%s/region/r.%d.%d.mca"
+
+#define BEDROCK_WORLD_LEVEL_FILE "level.dat"

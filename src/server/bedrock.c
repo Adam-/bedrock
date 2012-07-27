@@ -126,7 +126,7 @@ static void save(void __attribute__((__unused__)) *notused)
 	client_save_all();
 
 	/* Save worlds (level.dat) */
-	//world_save_all();
+	world_save_all();
 
 	bedrock_timer_schedule(6000, save, NULL);
 }

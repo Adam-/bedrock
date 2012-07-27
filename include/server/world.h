@@ -20,6 +20,8 @@ extern bedrock_list world_list;
 
 extern struct bedrock_world *world_create(const char *name, const char *path);
 extern bool world_load(struct bedrock_world *world);
+extern void world_save(struct bedrock_world *world);
+extern void world_save_all();
 extern void world_free(struct bedrock_world *world);
 extern struct bedrock_world *world_find(const char *name);
 

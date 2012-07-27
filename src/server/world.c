@@ -4,6 +4,7 @@
 #include "compression/compression.h"
 #include "server/world.h"
 #include "nbt/nbt.h"
+#include "config/hard.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -12,9 +13,8 @@
 #include <errno.h>
 
 #define WORLD_BUFFER_SIZE 4096
-#define WORLD_LEVEL_FILE "level.dat"
 
-bedrock_list world_list =  LIST_INIT;
+bedrock_list world_list = LIST_INIT;
 
 struct bedrock_world *world_create(const char *name, const char *path)
 {
@@ -34,7 +34,7 @@ bool world_load(struct bedrock_world *world)
 	compression_buffer *cb;
 	nbt_tag *tag;
 
-	snprintf(path, sizeof(path), "%s/%s", world->path, WORLD_LEVEL_FILE);
+	snprintf(path, sizeof(path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
@@ -83,8 +83,75 @@ bool world_load(struct bedrock_world *world)
 	return true;
 }
 
+struct world_save_info
+{
+	char name[128];
+	char path[PATH_MAX];
+	bedrock_buffer *nbt_out;
+};
+
+static void world_save_entry(struct bedrock_thread bedrock_attribute_unused *thread, struct world_save_info *wi)
+{
+	int fd;
+	compression_buffer *buffer;
+
+	fd = open(wi->path, O_WRONLY | O_TRUNC);
+	if (fd == -1)
+	{
+		bedrock_log(LEVEL_WARN, "world: Unable to open world %s - %s", wi->name, strerror(errno));
+		return;
+	}
+
+	buffer = compression_compress(WORLD_BUFFER_SIZE, wi->nbt_out->data, wi->nbt_out->length);
+
+	if (write(fd, buffer->buffer->data, buffer->buffer->length) != (int) buffer->buffer->length)
+	{
+		bedrock_log(LEVEL_WARN, "world: Unable to save world %s - %s", wi->name, strerror(errno));
+	}
+
+	compression_compress_end(buffer);
+
+	close(fd);
+}
+
+static void world_save_exit(struct world_save_info *wi)
+{
+	bedrock_log(LEVEL_DEBUG, "world: Finished saving for world %s", wi->name);
+
+	bedrock_buffer_free(wi->nbt_out);
+	bedrock_free(wi);
+}
+
+void world_save(struct bedrock_world *world)
+{
+	struct world_save_info *wi = bedrock_malloc(sizeof(struct world_save_info));
+
+	strncpy(wi->name, world->name, sizeof(wi->name));
+	snprintf(wi->path, sizeof(wi->path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);
+	wi->nbt_out = nbt_write(world->data);
+
+	bedrock_log(LEVEL_DEBUG, "world: Starting save for world %s", world->name);
+
+	bedrock_thread_start((bedrock_thread_entry) world_save_entry, (bedrock_thread_exit) world_save_exit, wi);
+}
+
+void world_save_all()
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&world_list, node)
+	{
+		struct bedrock_world *world = node->data;
+
+		world_save(world);
+	}
+}
+
 void world_free(struct bedrock_world *world)
 {
+	if (bedrock_running)
+		world_save(world);
+
 	nbt_free(world->data);
 
 	world->regions.free = (bedrock_free_func) region_free;
