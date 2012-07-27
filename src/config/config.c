@@ -37,5 +37,6 @@ int config_parse(const char *config)
 void yyerror(const char *s)
 {
 	bedrock_log(LEVEL_CRIT, "config: Error parsing line %d: %s", config_line_num, s);
+	fprintf(stderr, "config: Error parsing line %d: %s\n", config_line_num, s);
 }
 

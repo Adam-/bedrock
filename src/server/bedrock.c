@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+static bool foreground = false;
 bool bedrock_running = true;
 time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
@@ -83,10 +84,10 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 	va_end(args);
 
-	if (level != LEVEL_THREAD && level != LEVEL_NBT_DEBUG && level != LEVEL_IO_DEBUG && /*level != LEVEL_COLUMN && */level != LEVEL_PACKET_DEBUG)// && level != LEVEL_BUFFER && level != LEVEL_COLUMN)
-	//if (bedrock_conf_log_level & level)
+	if (bedrock_conf_log_level & level)
 	{
 		fprintf(stdout, "%s\n", buffer);
+
 		if (log_fd.open)
 		{
 			write(log_fd.fd, buffer, strlen(buffer));
@@ -137,11 +138,12 @@ static void parse_cli_args(int argc, char **argv)
 
 	struct option options[] = {
 		{"help", no_argument, NULL, 'h'},
+		{"foreground", no_argument, NULL, 'f'},
 		{"version", no_argument, NULL, 'v'},
 		{NULL, 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "hv", options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "hfv", options, NULL)) != -1)
 	{
 		switch (c)
 		{
@@ -149,9 +151,13 @@ static void parse_cli_args(int argc, char **argv)
 				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
 				fprintf(stdout, "usage:\n");
 				fprintf(stdout, " -h         shows this help\n");
+				fprintf(stdout, " -f         run in foreground\n");
 				fprintf(stdout, " -v         shows version\n");
 				fprintf(stdout, "\n");
 				exit(0);
+				break;
+			case 'f':
+				foreground = true;
 				break;
 			case 'v':
 				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
@@ -161,6 +167,26 @@ static void parse_cli_args(int argc, char **argv)
 				exit(1);
 		}
 	}
+}
+
+static void do_fork()
+{
+	int i;
+
+	if (foreground)
+		return;
+
+	i = fork();
+	if (i <= -1)
+		bedrock_log(LEVEL_WARN, "bedrock: Unable to fork into background - %s", strerror(errno));
+	else if (i > 0)
+		exit(0);
+
+	freopen("/dev/null", "r", stdin);
+	freopen("/dev/null", "w", stdout);
+	freopen("/dev/null", "w", stderr);
+
+	setpgid(0, 0);
 }
 
 #include <signal.h> // XXX
@@ -173,11 +199,10 @@ int main(int argc, char **argv)
 
 	parse_cli_args(argc, argv);
 
-	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
-
 	if (config_parse("server.config"))
 		exit(1);
 
+	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 	bedrock_log(LEVEL_INFO, "Listening on %s:%d with %d max players - %s", server_ip, server_port, server_maxusers, server_desc);
 
 	if (world_list.count == 0)
@@ -193,6 +218,8 @@ int main(int argc, char **argv)
 
 	if (world_load(world) == false)
 		exit(1);
+	
+	do_fork();
 
 	io_init();
 	listener_init();

@@ -1,3 +1,4 @@
+#include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
 #include "nbt/nbt.h"
@@ -59,6 +60,8 @@ int packet_login_request(struct bedrock_client *client, const bedrock_packet *p)
 	client->authenticated = STATE_BURSTING;
 	++authenticated_client_count;
 	client_start_login_sequence(client);
+
+	 bedrock_log(LEVEL_INFO, "client: %s logged in from %s", client->name, client_get_ip(client));
 
 	return offset;
 }
