@@ -280,7 +280,7 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 		return;
 	}
 
-	int i = recv(fd->fd, client->in_buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	int i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
