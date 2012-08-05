@@ -71,7 +71,7 @@ int crypto_rsa_decrypt(const unsigned char *src, size_t src_len, unsigned char *
 	return len;
 }
 
-void crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
+int crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
 {
 	int out_len = dest_len, final_len = 0;
 
@@ -83,9 +83,11 @@ void crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize encryption context");
 	
 	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);
+
+	return out_len + final_len;
 }
 
-void crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
+int crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
 {
 	int out_len = dest_len, final_len = 0;
 
@@ -97,5 +99,7 @@ void crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize decryption context");
 
 	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);
+
+	return out_len + final_len;
 }
 

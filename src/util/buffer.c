@@ -43,7 +43,7 @@ void bedrock_buffer_ensure_capacity(bedrock_buffer *buffer, size_t size)
 		bedrock_log(LEVEL_BUFFER, "buffer: Resizing buffer %s from %ld to %ld", buffer->name, old, buffer->capacity);
 	}
 
-	bedrock_assert(buffer->capacity - buffer->length >= size, return);
+	bedrock_assert(buffer->capacity - buffer->length >= size, ;);
 }
 
 void bedrock_buffer_append(bedrock_buffer *buffer, const void *data, size_t length)
