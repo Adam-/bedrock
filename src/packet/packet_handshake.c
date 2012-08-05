@@ -1,28 +1,38 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "config/config.h"
 #include "packet/packet_disconnect.h"
+#include "packet/packet_encryption_request.h"
 
 int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	struct bedrock_world *world;
-	char username[BEDROCK_USERNAME_MAX + 1 + 64 + 1 + 5];
-	char *s;
-	bedrock_packet packet;
+	uint8_t protocol;
+	char username[BEDROCK_USERNAME_MAX];
+	char server_host[64];
+	uint32_t server_port;
 
+	packet_read_int(p, &offset, &protocol, sizeof(protocol));
 	packet_read_string(p, &offset, username, sizeof(username));
+	packet_read_string(p, &offset, server_host, sizeof(server_host));
+	packet_read_int(p, &offset, &server_port, sizeof(server_port));
 
 	if (offset <= ERROR_UNKNOWN)
 		return offset;
 
-	s = strchr(username, ';');
-	if (s == NULL)
-		return ERROR_INVALID_FORMAT;
-
-	*s = 0;
-
 	if (client_valid_username(username) == false)
 		return ERROR_INVALID_FORMAT;
+	else if (protocol < BEDROCK_PROTOCOL_VERSION)
+	{
+		packet_send_disconnect(client, "Incorrect version");
+		return offset;
+	}
+	else if (authenticated_client_count >= server_maxusers)
+	{
+		packet_send_disconnect(client, "Server is full");
+		return offset;
+	}
 	else if (client_find(username) != NULL)
 	{
 		packet_send_disconnect(client, "Your account is already logged in");
@@ -48,12 +58,7 @@ int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
 		return offset;
 	}
 
-	packet_init(&packet, HANDSHAKE);
-
-	packet_pack_header(&packet, HANDSHAKE);
-	packet_pack_string(&packet, "-");
-
-	client_send_packet(client, &packet);
+	packet_send_encryption_request(client);
 
 	return offset;
 }

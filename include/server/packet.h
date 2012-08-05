@@ -40,6 +40,7 @@ enum
 	SET_SLOT                      = 0x67,
 	CONFIRM_TRANSACTION           = 0x6A,
 	PLAYER_LIST                   = 0xC9,
+	ENCRYPTION_REQUEST            = 0xFD,
 	LIST_PING                     = 0xFE,
 	DISCONNECT                    = 0xFF
 };

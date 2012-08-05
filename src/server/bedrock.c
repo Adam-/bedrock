@@ -6,6 +6,7 @@
 #include "util/timer.h"
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
+#include "util/crypto.h"
 
 #include <time.h>
 #include <errno.h>
@@ -198,6 +199,7 @@ int main(int argc, char **argv)
 	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
 
+	srand(time(NULL));
 	bedrock_log_init();
 
 	parse_cli_args(argc, argv);
@@ -224,6 +226,7 @@ int main(int argc, char **argv)
 	
 	do_fork();
 
+	crypto_init();
 	io_init();
 	listener_init();
 	bedrock_threadengine_start();
@@ -248,6 +251,8 @@ int main(int argc, char **argv)
 
 	listener_shutdown();
 	io_shutdown();
+	crypto_shutdown();
+
 	bedrock_list_clear(&oper_conf_list);
 	bedrock_log_close();
 

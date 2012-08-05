@@ -12,7 +12,7 @@ static int pubkey_len;
 
 void crypto_init()
 {
-	keypair = RSA_generate_key(BEDROCK_CERT_BIT_SIZE, BEDROCK_CERT_EXPONENT, NULL, NULL);
+	keypair = RSA_generate_key(BEDROCK_CERT_BIT_SIZE, RSA_F4, NULL, NULL);
 	if (keypair == NULL)
 	{
 		unsigned long en = ERR_get_error();
@@ -20,26 +20,18 @@ void crypto_init()
 		exit(-1);
 	}
 
-	BIO *pubkey_bio = BIO_new(BIO_s_mem());
-	if (!i2d_RSAPublicKey_bio(pubkey_bio, keypair))
+	pubkey_len = i2d_RSA_PUBKEY(keypair, &pubkey_encoded);
+	if (pubkey_len <= 0)
 	{
 		unsigned long en = ERR_get_error();
-		bedrock_log(LEVEL_CRIT, "cert: Unable to write public key to BIO - %s", ERR_error_string(en, NULL));
+		bedrock_log(LEVEL_CRIT, "cert: Unable to encode public key - %s", ERR_error_string(en, NULL));
 		exit(-1);
 	}
-
-	pubkey_len = BIO_pending(pubkey_bio);
-	pubkey_encoded = bedrock_malloc(pubkey_len);
-	if (BIO_read(pubkey_bio, pubkey_encoded, pubkey_len) != pubkey_len)
-	{
-		bedrock_log(LEVEL_CRIT, "cert: Unable to read public key BIO");
-		exit(-1);
-	}
-	BIO_free_all(pubkey_bio);
 }
 
 void crypto_shutdown()
 {
+	free(pubkey_encoded);
 	RSA_free(keypair);
 }
 

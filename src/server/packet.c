@@ -3,7 +3,6 @@
 #include "util/endian.h"
 
 #include "packet/packet_keep_alive.h"
-#include "packet/packet_login_request.h"
 #include "packet/packet_handshake.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_player.h"
@@ -22,8 +21,8 @@
 
 struct packet_info packet_handlers[] = {
 	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
-	{LOGIN_REQUEST,          20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
-	{HANDSHAKE,               3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
+	{LOGIN_REQUEST,          12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{HANDSHAKE,              10, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
 	{CHAT_MESSAGE,            3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
 	{TIME,                    9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_EQUIPMENT,       11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
@@ -52,6 +51,7 @@ struct packet_info packet_handlers[] = {
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,     5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{ENCRYPTION_REQUEST,      7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
 	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
