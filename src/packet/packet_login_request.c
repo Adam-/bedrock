@@ -24,6 +24,7 @@ void packet_send_login_request(struct bedrock_client *client)
 
 	client_send_packet(client, &packet);
 
+	bedrock_assert(client->authenticated == STATE_LOGGED_IN, ;);
 	client->authenticated = STATE_BURSTING;
 	++authenticated_client_count;
 	client_start_login_sequence(client);

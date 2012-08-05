@@ -371,36 +371,39 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	bedrock_assert(client != NULL && packet != NULL && packet->length > 0, return);
 
+	pi = packet_find(*packet->data);
+	bedrock_assert(pi != NULL, bedrock_log(LEVEL_PACKET_DEBUG, "packet: Sending unknown packet 0x%02x", *packet->data));
+	if (pi != NULL)
+		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", *packet->data, *client->name ? client->name : "(unknown)", client_get_ip(client));
+
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
 	strncpy(p->name, packet->name, sizeof(p->name));
-	p->length = packet->length;
-	p->capacity = packet->capacity;
-
-	packet->length = 0;
-	packet->capacity = 0;
 
 	if (client->authenticated >= STATE_LOGGED_IN)
 	{
 		bedrock_buffer_ensure_capacity(p, packet->capacity);
 		crypto_aes_encrypt(client->key, packet->data, packet->length, p->data, p->capacity);
+
+		bedrock_free(packet->data);
+		packet->data = NULL;
+		packet->length = 0;
+		packet->capacity = 0;
 	}
 	else
 	{
 		p->data = packet->data;
+		p->length = packet->length;
+		p->capacity = packet->capacity;
+
+		packet->length = 0;
+		packet->capacity = 0;
 		packet->data = NULL;
 	}
 
-	packet = p;
+	bedrock_list_add(&client->out_buffer, p);
 
-	pi = packet_find(*packet->data);
-	bedrock_assert(pi != NULL, ;);
-	if (pi != NULL)
-		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
-
-	bedrock_list_add(&client->out_buffer, packet);
-
-	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", packet->data[0], *client->name ? client->name : "(unknown)", client_get_ip(client));
 	io_set(&client->fd, OP_WRITE, 0);
 }
 

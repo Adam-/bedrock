@@ -16,6 +16,7 @@
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_click_window.h"
+#include "packet/packet_client_status.h"
 #include "packet/packet_encryption_response.h"
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
@@ -52,6 +53,7 @@ struct packet_info packet_handlers[] = {
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,     5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{CLIENT_STATUS,           2, STATE_LOGGED_IN | STATE_AUTHENTICATED,  HARD_SIZE,               packet_client_status},
 	{ENCRYPTION_RESPONSE,     5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,      7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
