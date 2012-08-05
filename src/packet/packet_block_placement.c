@@ -42,8 +42,10 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	packet_read_int(p, &offset, &id, sizeof(id));
 	if (id != -1)
 	{
+		uint16_t s;
 		packet_read_int(p, &offset, &count, sizeof(count));
 		packet_read_int(p, &offset, &metadata, sizeof(metadata));
+		packet_read_int(p, &offset, &s, sizeof(s));
 	}
 
 	real_x = x;
