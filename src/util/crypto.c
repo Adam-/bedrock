@@ -71,7 +71,21 @@ int crypto_rsa_decrypt(const unsigned char *src, size_t src_len, unsigned char *
 	return len;
 }
 
-int crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
+void crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
+{
+	int out_len = dest_len, final_len = 0;
+
+	if (!EVP_EncryptInit_ex(&cipher_ctx, cipher, NULL, key, key))
+		bedrock_log(LEVEL_CRIT, "crypto: Unable to initialize encryption context");
+	if (!EVP_EncryptUpdate(&cipher_ctx, dest, &out_len, src, src_len))
+		bedrock_log(LEVEL_CRIT, "crypto: Unable to update encryption context");
+	if (!EVP_EncryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
+		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize encryption context");
+	
+	bedrock_assert(out_len + final_len <= dest_len, ;);
+}
+
+void crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
 {
 	int out_len = dest_len, final_len = 0;
 
@@ -82,6 +96,6 @@ int crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_
 	if (!EVP_DecryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize decryption context");
 
-	return out_len + final_len;
+	bedrock_assert(out_len + final_len <= dest_len, ;);
 }
 

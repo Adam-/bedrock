@@ -285,7 +285,6 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 
 	bedrock_assert(sizeof(buffer) == sizeof(client->in_buffer), ;);
 	i = recv(fd->fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
-	//i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -375,13 +374,22 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
 	strncpy(p->name, packet->name, sizeof(p->name));
-	p->data = packet->data;
 	p->length = packet->length;
 	p->capacity = packet->capacity;
 
-	packet->data = NULL;
 	packet->length = 0;
 	packet->capacity = 0;
+
+	if (client->authenticated >= STATE_LOGGED_IN)
+	{
+		bedrock_buffer_ensure_capacity(p, packet->capacity);
+		crypto_aes_encrypt(client->key, packet->data, packet->length, p->data, p->capacity);
+	}
+	else
+	{
+		p->data = packet->data;
+		packet->data = NULL;
+	}
 
 	packet = p;
 

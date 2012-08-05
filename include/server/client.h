@@ -44,7 +44,7 @@ struct bedrock_client
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
-	bedrock_list out_buffer;              /* list of packets to send */
+	bedrock_list out_buffer;              /* list of packets to send, these are already encrypted! */
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
