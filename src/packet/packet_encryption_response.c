@@ -1,13 +1,15 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "packet/packet_encryption_response.h"
 #include "packet/packet_disconnect.h"
+#include "util/crypto.h"
 
 int packet_encryption_response(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
-	int16_t shared_secret_len, verify_token_len;
-	char shared_secret[512], verify_token[512];
-	char decrypted_shared_secret[512], decrypted_verify_token[512];
+	uint16_t shared_secret_len, verify_token_len;
+	unsigned char shared_secret[512], verify_token[512];
+	unsigned char decrypted_shared_secret[512], decrypted_verify_token[512];
 	int decrypted_shared_secret_len;
 
 	packet_read_int(p, &offset, &shared_secret_len, sizeof(shared_secret_len));

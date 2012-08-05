@@ -272,7 +272,7 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
-	char buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
+	unsigned char buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	int i;
 
 	if (client->in_buffer_len == sizeof(client->in_buffer))

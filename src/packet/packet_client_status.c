@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "packet/packet_login_request.h"
 
 enum
 {

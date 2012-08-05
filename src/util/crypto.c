@@ -10,7 +10,7 @@ static RSA *keypair;
 static unsigned char *pubkey_encoded;
 static int pubkey_len;
 
-static EVP_CIPHER *cipher;
+static const EVP_CIPHER *cipher;
 static EVP_CIPHER_CTX cipher_ctx;
 
 void crypto_init()
@@ -58,7 +58,7 @@ int crypto_rsa_decrypt(const unsigned char *src, size_t src_len, unsigned char *
 {
 	int len;
 
-	bedrock_assert(dest_len >= RSA_size(keypair), ;);
+	bedrock_assert(dest_len >= (size_t) RSA_size(keypair), ;);
 
 	len = RSA_private_decrypt(src_len, src, dest, keypair, RSA_PKCS1_PADDING);
 	if (len == -1)
@@ -82,7 +82,7 @@ void crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size
 	if (!EVP_EncryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize encryption context");
 	
-	bedrock_assert(out_len + final_len <= dest_len, ;);
+	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);
 }
 
 void crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
@@ -96,6 +96,6 @@ void crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size
 	if (!EVP_DecryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize decryption context");
 
-	bedrock_assert(out_len + final_len <= dest_len, ;);
+	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);
 }
 
