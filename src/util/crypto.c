@@ -45,3 +45,20 @@ unsigned char *crypto_pubkey()
 	return pubkey_encoded;
 }
 
+int crypto_rsa_decrypt(const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
+{
+	int len;
+
+	bedrock_assert(dest_len >= RSA_size(keypair), ;);
+
+	len = RSA_private_decrypt(src_len, src, dest, keypair, RSA_PKCS1_PADDING);
+	if (len == -1)
+	{
+		unsigned long en = ERR_get_error();
+		bedrock_log(LEVEL_CRIT, "cert: Unable to decrypt data with RSA keypair - %s", ERR_error_string(en, NULL));
+		len = 0;
+	}
+
+	return len;
+}
+

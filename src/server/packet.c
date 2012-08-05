@@ -16,6 +16,7 @@
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_click_window.h"
+#include "packet/packet_encryption_response.h"
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
 
@@ -51,6 +52,7 @@ struct packet_info packet_handlers[] = {
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,     5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{ENCRYPTION_RESPONSE,     5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,      7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
 	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
@@ -163,6 +165,20 @@ int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
 		}
 
 	return i;
+}
+
+void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)
+{
+	if (*offset <= ERROR_UNKNOWN)
+		return;
+	else if (*offset + dest_size > packet->length)
+	{
+		*offset = ERROR_EAGAIN;
+		return;
+	}
+
+	memcpy(dest, packet->data + *offset, dest_size);
+	*offset += dest_size;
 }
 
 void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)

@@ -40,6 +40,7 @@ enum
 	SET_SLOT                      = 0x67,
 	CONFIRM_TRANSACTION           = 0x6A,
 	PLAYER_LIST                   = 0xC9,
+	ENCRYPTION_RESPONSE           = 0xFC,
 	ENCRYPTION_REQUEST            = 0xFD,
 	LIST_PING                     = 0xFE,
 	DISCONNECT                    = 0xFF
@@ -82,6 +83,7 @@ extern void packet_free(bedrock_packet *packet);
 
 extern int packet_parse(struct bedrock_client *client, const bedrock_packet *packet);
 
+extern void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size);
 

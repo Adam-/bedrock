@@ -14,10 +14,11 @@
 typedef enum
 {
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
-	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
-	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
-	STATE_BURSTING        = 1 << 3,     /* Successfully authenticated but not in the game yet */
-	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
+	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake, including encryption request/response */
+	STATE_LOGGING_IN      = 1 << 2,     /* Logging in, checking session.minecraft.net/whatever else, AES encryption is not enabled yet */
+	STATE_LOGGED_IN       = 1 << 3,     /* Successfully authenticated, AES encryption is enabled at this point */
+	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
+	STATE_AUTHENTICATED   = 1 << 5,     /* Authenticated and in the game */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
@@ -34,7 +35,8 @@ typedef enum
 struct bedrock_client
 {
 	struct bedrock_fd fd;                /* fd for this client */
-	unsigned char key[BEDROCK_SHARED_SECRET_LEN];
+	unsigned char key[BEDROCK_SHARED_SECRET_LEN]; /* During handshake this contains our authentication token.
+	                                               * After handshake this contains the shared secret. */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
 	bedrock_client_authentication_state authenticated;
