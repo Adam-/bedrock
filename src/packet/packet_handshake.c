@@ -23,7 +23,7 @@ int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
 
 	if (client_valid_username(username) == false)
 		return ERROR_INVALID_FORMAT;
-	else if (protocol < BEDROCK_PROTOCOL_VERSION)
+	else if (protocol != BEDROCK_PROTOCOL_VERSION)
 	{
 		packet_send_disconnect(client, "Incorrect version");
 		return offset;

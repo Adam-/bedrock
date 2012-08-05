@@ -5,6 +5,7 @@
 #include "server/packet.h"
 #include "compression/compression.h"
 #include "util/endian.h"
+#include "util/crypto.h"
 #include "nbt/nbt.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
@@ -271,6 +272,8 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
+	char buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
+	int i;
 
 	if (client->in_buffer_len == sizeof(client->in_buffer))
 	{
@@ -280,7 +283,9 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 		return;
 	}
 
-	int i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	bedrock_assert(sizeof(buffer) == sizeof(client->in_buffer), ;);
+	i = recv(fd->fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	//i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -289,6 +294,11 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 		client_exit(client);
 		return;
 	}
+
+	if (client->authenticated >= STATE_LOGGED_IN)
+		crypto_aes_decrypt(client->key, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len);
+	else
+		memcpy(client->in_buffer + client->in_buffer_len, buffer, i);
 
 	client->in_buffer_len += i;
 
