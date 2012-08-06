@@ -16,7 +16,7 @@ server
 	# The description to show in the client's server list.
 	description = "Adam's custom server";
 
-	# The maximum uamount of sers this server can support. Note that the
+	# The maximum amount of users this server can support. Note that the
 	# file limit for this user will override anything set here. On Unix
 	# systems see ulimit -n.
 	maxusers = 127;

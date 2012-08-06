@@ -40,6 +40,7 @@ enum
 	SET_SLOT                      = 0x67,
 	CONFIRM_TRANSACTION           = 0x6A,
 	PLAYER_LIST                   = 0xC9,
+	LOCALE_AND_VIEW_DISTANCE      = 0xCC,
 	CLIENT_STATUS                 = 0xCD,
 	ENCRYPTION_RESPONSE           = 0xFC,
 	ENCRYPTION_REQUEST            = 0xFD,
