@@ -14,6 +14,7 @@
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
+#include "packet/packet_keep_alive.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
 #include "packet/packet_spawn_named_entity.h"
@@ -183,7 +184,7 @@ void client_save_all()
 	{
 		struct bedrock_client *c = node->data;
 
-		if ((c->authenticated & STATE_AUTHENTICATED) && (c->authenticated & STATE_SYNCED))
+		if ((c->authenticated & STATE_IN_GAME) && !(c->authenticated & STATE_BURSTING))
 			client_save(c);
 	}
 }
@@ -192,16 +193,16 @@ static void client_free(struct bedrock_client *client)
 {
 	bedrock_node *node;
 
-	if (client->authenticated & STATE_AUTHENTICATED)
+	if (client->authenticated & STATE_IN_GAME)
 	{
-		if (client->authenticated & STATE_SYNCED)
+		if (!(client->authenticated & STATE_BURSTING))
 			client_save(client);
 
 		LIST_FOREACH(&client_list, node)
 		{
 			struct bedrock_client *c = node->data;
 
-			if (c->authenticated & STATE_AUTHENTICATED && c != client)
+			if (c->authenticated & STATE_IN_GAME && c != client)
 			{
 				packet_send_player_list_item(c, client, false);
 				packet_send_chat_message(c, "%s left the game", client->name);
@@ -750,7 +751,8 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	if (old_x == x && old_y == y && old_z == z && old_yaw == yaw && old_pitch == pitch && old_stance == stance && old_on_ground == on_ground)
 		return;
-	else if (!(client->authenticated & STATE_SYNCED))
+	/* Don't allow bursting clients to move around */
+	else if (client->authenticated & STATE_BURSTING)
 		return;
 
 	if (old_x != x)
@@ -867,7 +869,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c == client || c->authenticated & STATE_AUTHENTICATED)
+		if (c == client || c->authenticated & STATE_IN_GAME)
 		{
 			/* Send this new client to every client that is authenticated */
 			packet_send_player_list_item(c, client, true);
@@ -879,9 +881,9 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	}
 
 	/* Once this comes back we know the client is synced */
-	packet_send_keep_alive(client, 0xFFFF);
+	packet_send_keep_alive(client, ~0);
 
-	client->authenticated = STATE_AUTHENTICATED;
+	client->authenticated |= STATE_IN_GAME;
 
 	oper = oper_find(client->name);
 	if (oper != NULL && *oper->password == 0)

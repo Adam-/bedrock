@@ -21,7 +21,7 @@ void command_me(struct bedrock_client *client, int bedrock_attribute_unused argc
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated & STATE_AUTHENTICATED)
+		if (c->authenticated & STATE_IN_GAME)
 		{
 			packet_send_chat_message(c, "%s", final_message);
 		}

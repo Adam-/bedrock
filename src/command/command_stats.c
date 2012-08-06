@@ -54,7 +54,7 @@ void command_stats(struct bedrock_client *client, int bedrock_attribute_unused a
 	{
 		struct bedrock_client *client = node->data;
 
-		if (client->authenticated & STATE_AUTHENTICATED)
+		if (client->authenticated & STATE_IN_GAME)
 			++players;
 		++connections;
 	}

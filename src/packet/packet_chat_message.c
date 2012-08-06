@@ -36,7 +36,7 @@ int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated & STATE_AUTHENTICATED)
+		if (c->authenticated & STATE_IN_GAME)
 		{
 			packet_send_chat_message(c, "%s", final_message);
 		}

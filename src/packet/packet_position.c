@@ -14,7 +14,7 @@ int packet_position(struct bedrock_client *client, const bedrock_packet *p)
 	packet_read_int(p, &offset, &z, sizeof(z));
 	packet_read_int(p, &offset, &on_ground, sizeof(on_ground));
 
-	if (client->authenticated & STATE_SYNCED && (abs(x - *client_get_pos_x(client)) > 100 || abs(z - *client_get_pos_z(client)) > 100))
+	if (!(client->authenticated & STATE_BURSTING) && (abs(x - *client_get_pos_x(client)) > 100 || abs(z - *client_get_pos_z(client)) > 100))
 	{
 		packet_send_disconnect(client, "Moving too fast");
 		return offset;

@@ -20,8 +20,7 @@ typedef enum
 	STATE_LOGGING_IN      = 1 << 2,     /* Logging in, checking session.minecraft.net/whatever else, AES encryption is not enabled yet */
 	STATE_LOGGED_IN       = 1 << 3,     /* Successfully authenticated, AES encryption is enabled at this point */
 	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
-	STATE_AUTHENTICATED   = 1 << 5,     /* Authenticated and is effectively in the game */
-	STATE_SYNCED          = 1 << 6,     /* Set alongside STATE_AUTHENTICATED, when set the client has processed all bursting information */
+	STATE_IN_GAME         = 1 << 5,     /* In the game, eg logon sequence is complete */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
