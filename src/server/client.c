@@ -10,7 +10,6 @@
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
 #include "packet/packet_column.h"
-#include "packet/packet_column_allocation.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
@@ -604,7 +603,6 @@ static void client_update_column(struct bedrock_client *client, struct bedrock_c
 
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
-	packet_send_column_allocation(client, column, true);
 	packet_send_column(client, column);
 
 	/* Tell this client about any clients in this column */
@@ -668,7 +666,6 @@ void client_update_columns(struct bedrock_client *client)
 
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
-			packet_send_column_allocation(client, c, false);
 			packet_send_column_empty(client, c);
 
 			/* Column is no longer in render distance of anything */

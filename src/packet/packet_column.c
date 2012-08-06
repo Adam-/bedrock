@@ -137,7 +137,6 @@ void packet_send_column_empty(struct bedrock_client *client, struct bedrock_colu
 
 	i = 0;
 	packet_pack_int(&packet, &i, sizeof(i)); // Size
-	packet_pack_int(&packet, &i, sizeof(i)); // Unused
 
 	client_send_packet(client, &packet);
 }

@@ -32,7 +32,6 @@ enum
 	ENTITY_TELEPORT               = 0x22,
 	ENTITY_HEAD_LOOK              = 0x23,
 	ENTITY_METADATA               = 0x28,
-	MAP_COLUMN_ALLOCATION         = 0x32,
 	MAP_COLUMN                    = 0x33,
 	BLOCK_CHANGE                  = 0x35,
 	CLOSE_WINDOW                  = 0x65,

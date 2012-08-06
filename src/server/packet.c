@@ -45,7 +45,6 @@ struct packet_info packet_handlers[] = {
 	{ENTITY_TELEPORT,        19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_HEAD_LOOK,        6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_METADATA,         5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{MAP_COLUMN_ALLOCATION,  10, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{MAP_COLUMN,             22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{BLOCK_CHANGE,           12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{CLOSE_WINDOW,            2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
