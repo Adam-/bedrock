@@ -111,7 +111,8 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	{
 		struct bedrock_client *client = n->data;
 
-		packet_send_keep_alive(client, id);
+		if ((client->authenticated & STATE_AUTHENTICATED) && (client->authenticated & STATE_SYNCED))
+			packet_send_keep_alive(client, id);
 	}
 
 	while (++id == 0);
