@@ -8,6 +8,70 @@
 
 #define COLUMN_BUFFER_SIZE 8192
 
+static void packet_column_send_players(struct bedrock_client *client, struct bedrock_column *column)
+{
+	bedrock_node *node;
+
+	/* Tell this client about any clients in this column */
+	LIST_FOREACH(&column->players, node)
+	{
+		struct bedrock_client *c = node->data;
+
+		// Don't send a spawn for ourself
+		if (client == c)
+			continue;
+
+		/* We only want players *in* this column not *near* this column */
+		if (c->column == column)
+		{
+			/* Send this client */
+			packet_send_spawn_named_entity(client, c);
+			packet_send_spawn_named_entity(c, client);
+		}
+	}
+}
+
+static void packet_column_send_items(struct bedrock_client *client, struct bedrock_column *column)
+{
+	bedrock_node *node;
+
+	/* Send any items in this column */
+	LIST_FOREACH(&column->items, node)
+	{
+		struct bedrock_dropped_item *item = node->data;
+		packet_send_spawn_dropped_item(client, item);
+	}
+}
+
+static void packet_column_remove_players(struct bedrock_client *client, struct bedrock_column *column)
+{
+	bedrock_node *node;
+
+	/* This column is going away, find players in this column */
+	LIST_FOREACH(&c->players, node)
+	{
+		struct bedrock_client *cl = node->data;
+
+		/* We only want players *in* this column not *near* this column */
+		if (cl->column == c)
+		{
+			/* Remove these clients from each other */
+			packet_send_destroy_entity_player(client, cl);
+			packet_send_destroy_entity_player(cl, client);
+		}
+	}
+}
+
+static void packet_column_remove_items(struct bedrock_client *client, struct bedrock_column *column)
+{
+	/* Remove items in this column */
+	LIST_FOREACH(&column->items, node)
+	{
+		struct bedrock_dropped_item *item = node->data;
+		packet_send_destroy_entity_dropped_item(client, item);
+	}
+}
+
 void packet_send_column(struct bedrock_client *client, struct bedrock_column *column)
 {
 	bedrock_packet packet;
@@ -23,8 +87,8 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	packet_init(&packet, MAP_COLUMN);
 
 	packet_pack_header(&packet, MAP_COLUMN);
-	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
+	packet_pack_int(&packet, &column->x, sizeof(column->x));
+	packet_pack_int(&packet, &column->z, sizeof(column->z));
 	b = 1;
 	packet_pack_int(&packet, &b, sizeof(b)); // Ground up continuous
 
@@ -83,7 +147,7 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	{
 		compression_buffer *biomes = compression_decompress(BEDROCK_BUFFER_DEFAULT_SIZE, column->biomes->data, column->biomes->length);
 		bedrock_assert(biomes->buffer->length == BEDROCK_BIOME_LENGTH, ;);
-		compression_compress_deflate_finish(buffer, (const unsigned char *) biomes->buffer->data, biomes->buffer->length);
+		compression_compress_deflate_finish(buffer, biomes->buffer->data, biomes->buffer->length);
 		compression_decompress_end(biomes);
 	}
 
@@ -100,12 +164,8 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	
 	client_send_packet(client, &packet);
 
-	/* Send any items in this column */
-	LIST_FOREACH(&column->items, node)
-	{
-		struct bedrock_dropped_item *item = node->data;
-		packet_send_spawn_dropped_item(client, item);
-	}
+	packet_column_send_players(client, column);
+	packet_column_send_items(client, column);
 }
 
 void packet_send_column_empty(struct bedrock_client *client, struct bedrock_column *column)
@@ -116,12 +176,8 @@ void packet_send_column_empty(struct bedrock_client *client, struct bedrock_colu
 	uint32_t i;
 	bedrock_node *node;
 
-	/* Remove items in this column */
-	LIST_FOREACH(&column->items, node)
-	{
-		struct bedrock_dropped_item *item = node->data;
-		packet_send_destroy_entity_dropped_item(client, item);
-	}
+	packet_column_remove_players(client, column);
+	packet_column_remove_items(client, column);
 
 	packet_init(&packet, SPAWN_DROPPED_ITEM);
 

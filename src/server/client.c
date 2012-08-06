@@ -10,6 +10,7 @@
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
 #include "packet/packet_column.h"
+#include "packet/packet_column_bulk.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
@@ -597,27 +598,12 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	++tag_list->length;
 }
 
-static void client_update_column(struct bedrock_client *client, struct bedrock_column *column)
+static void client_update_column(struct bedrock_client *client, packet_column_bulk *columns, struct bedrock_column *column)
 {
-	bedrock_node *node;
 
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
-	packet_send_column(client, column);
-
-	/* Tell this client about any clients in this column */
-	LIST_FOREACH(&column->players, node)
-	{
-		struct bedrock_client *c = node->data;
-
-		/* We only want players *in* this column not *near* this column */
-		if (c->column == column)
-		{
-			/* Send this client */
-			packet_send_spawn_named_entity(client, c);
-			packet_send_spawn_named_entity(c, client);
-		}
-	}
+	packet_column_bulk_add(client, columns, column);
 
 	bedrock_list_add(&client->columns, column);
 	bedrock_list_add(&column->players, client);
@@ -626,7 +612,6 @@ static void client_update_column(struct bedrock_client *client, struct bedrock_c
 void client_update_columns(struct bedrock_client *client)
 {
 	/* Update the column around the player. Used for when the player moves to a new column. */
-
 	int i;
 	struct bedrock_region *region;
 	struct bedrock_column *c;
@@ -634,6 +619,7 @@ void client_update_columns(struct bedrock_client *client)
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
 	double player_x = x / BEDROCK_BLOCKS_PER_CHUNK, player_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	packet_column_bulk columns = PACKET_COLUMN_BULK_INIT;
 
 	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
 	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
@@ -650,20 +636,6 @@ void client_update_columns(struct bedrock_client *client)
 
 			bedrock_list_del(&c->players, client);
 
-			/* This column is going away, find players in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Remove these clients from each other */
-					packet_send_destroy_entity_player(client, cl);
-					packet_send_destroy_entity_player(cl, client);
-				}
-			}
-
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
 			packet_send_column_empty(client, c);
@@ -674,7 +646,7 @@ void client_update_columns(struct bedrock_client *client)
 		}
 	}
 
-	/* Column the player is in */
+	/* Region the player is in */
 	region = find_region_which_contains(client->world, x, z);
 	bedrock_assert(region != NULL, return);
 
@@ -683,7 +655,7 @@ void client_update_columns(struct bedrock_client *client)
 	if (c != NULL)
 		if (bedrock_list_has_data(&client->columns, c) == false)
 		{
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 
 			/* Loading the column the player is in on a bursting player, finish burst */
 			if (client->authenticated == STATE_BURSTING)
@@ -704,7 +676,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
@@ -717,7 +689,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
@@ -730,7 +702,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
@@ -743,9 +715,11 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 	}
+
+	packet_send_column_bulk(client, &columns);
 }
 
 /* Called to update a players position */
