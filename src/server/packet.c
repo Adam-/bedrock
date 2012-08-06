@@ -41,7 +41,7 @@ struct packet_info packet_handlers[] = {
 	{SPAWN_NAMED_ENTITY,     23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{SPAWN_DROPPED_ITEM,     25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{COLLECT_ITEM,            9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{DESTROY_ENTITY,          5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{DESTROY_ENTITY,          6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_TELEPORT,        19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_HEAD_LOOK,        6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_METADATA,         5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
