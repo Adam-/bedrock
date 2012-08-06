@@ -5,6 +5,7 @@
 #include "nbt/nbt.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_spawn_dropped_item.h"
+#include "packet/packet_spawn_named_entity.h"
 
 #define COLUMN_BUFFER_SIZE 8192
 
@@ -48,12 +49,12 @@ static void packet_column_remove_players(struct bedrock_client *client, struct b
 	bedrock_node *node;
 
 	/* This column is going away, find players in this column */
-	LIST_FOREACH(&c->players, node)
+	LIST_FOREACH(&column->players, node)
 	{
 		struct bedrock_client *cl = node->data;
 
 		/* We only want players *in* this column not *near* this column */
-		if (cl->column == c)
+		if (cl->column == column)
 		{
 			/* Remove these clients from each other */
 			packet_send_destroy_entity_player(client, cl);
@@ -64,6 +65,8 @@ static void packet_column_remove_players(struct bedrock_client *client, struct b
 
 static void packet_column_remove_items(struct bedrock_client *client, struct bedrock_column *column)
 {
+	bedrock_node *node;
+
 	/* Remove items in this column */
 	LIST_FOREACH(&column->items, node)
 	{
@@ -79,7 +82,6 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 	uint16_t bitmask;
 	compression_buffer *buffer;
 	uint32_t i;
-	bedrock_node *node;
 
 	buffer = compression_compress_init(COLUMN_BUFFER_SIZE);
 	bedrock_assert(buffer, return);
@@ -174,7 +176,6 @@ void packet_send_column_empty(struct bedrock_client *client, struct bedrock_colu
 	uint8_t b;
 	uint16_t s;
 	uint32_t i;
-	bedrock_node *node;
 
 	packet_column_remove_players(client, column);
 	packet_column_remove_items(client, column);
