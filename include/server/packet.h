@@ -10,7 +10,7 @@ typedef bedrock_buffer bedrock_packet;
 enum
 {
 	KEEP_ALIVE                    = 0x00,
-	LOGIN_REQUEST                 = 0x01,
+	LOGIN_RESPONSE                = 0x01,
 	HANDSHAKE                     = 0x02,
 	CHAT_MESSAGE                  = 0x03,
 	TIME                          = 0x04,
@@ -32,14 +32,17 @@ enum
 	ENTITY_TELEPORT               = 0x22,
 	ENTITY_HEAD_LOOK              = 0x23,
 	ENTITY_METADATA               = 0x28,
-	MAP_COLUMN_ALLOCATION         = 0x32,
 	MAP_COLUMN                    = 0x33,
 	BLOCK_CHANGE                  = 0x35,
+	MAP_COLUMN_BULK               = 0x38,
 	CLOSE_WINDOW                  = 0x65,
 	CLICK_WINDOW                  = 0x66,
 	SET_SLOT                      = 0x67,
 	CONFIRM_TRANSACTION           = 0x6A,
 	PLAYER_LIST                   = 0xC9,
+	CLIENT_STATUS                 = 0xCD,
+	ENCRYPTION_RESPONSE           = 0xFC,
+	ENCRYPTION_REQUEST            = 0xFD,
 	LIST_PING                     = 0xFE,
 	DISCONNECT                    = 0xFF
 };
@@ -81,6 +84,7 @@ extern void packet_free(bedrock_packet *packet);
 
 extern int packet_parse(struct bedrock_client *client, const bedrock_packet *packet);
 
+extern void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size);
 

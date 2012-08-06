@@ -11,13 +11,16 @@
 #include "blocks/items.h"
 #include "server/oper.h"
 
+#include <openssl/evp.h>
+
 typedef enum
 {
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
-	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake */
-	//STATE_LOGGING_IN      = 1 << 2,     /* Logging in, after handshake */
-	STATE_BURSTING        = 1 << 3,     /* Successfully authenticated but not in the game yet */
-	STATE_AUTHENTICATED   = 1 << 4,     /* Authenticated and in the game */
+	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake, including encryption request/response */
+	STATE_LOGGING_IN      = 1 << 2,     /* Logging in, checking session.minecraft.net/whatever else, AES encryption is not enabled yet */
+	STATE_LOGGED_IN       = 1 << 3,     /* Successfully authenticated, AES encryption is enabled at this point */
+	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
+	STATE_IN_GAME         = 1 << 5,     /* In the game, eg logon sequence is complete */
 	STATE_ANY             = ~0,         /* Any state */
 } bedrock_client_authentication_state;
 
@@ -35,13 +38,16 @@ struct bedrock_client
 {
 	struct bedrock_fd fd;                /* fd for this client */
 
+	unsigned char auth_token[BEDROCK_VERIFY_TOKEN_LEN]; /* Contains our authentication token for handshake */
+	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
+
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
 	bedrock_client_authentication_state authenticated;
 
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
-	bedrock_list out_buffer;              /* list of packets to send */
+	bedrock_list out_buffer;              /* list of packets to send, these are already encrypted! */
 
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];

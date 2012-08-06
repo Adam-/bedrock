@@ -19,9 +19,10 @@ check_type_size(uint64_t UINT64_T)
 find_package(ZLIB REQUIRED)
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
+find_package(OpenSSL REQUIRED)
 
-# include the crap we need
-include_directories(include ${ZLIB_INCLUDE_DIRS})
+# Include library header files
+include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 
 # Generate the files for compile
 FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l
@@ -30,7 +31,7 @@ BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y
 ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.c)
 ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
 
-# Get a list of folders from src/ and remove any CMake crap
+# Get a list of folders from src/ and remove any CMake generated build files
 file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*")
 list(REMOVE_ITEM SOURCE_FOLDERS "src/CMakeFiles")
 
@@ -51,5 +52,5 @@ list(SORT BEDROCK_SOURCES)
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES})
+target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES})
 

@@ -5,14 +5,16 @@
 #include "server/packet.h"
 #include "compression/compression.h"
 #include "util/endian.h"
+#include "util/crypto.h"
 #include "nbt/nbt.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
 #include "packet/packet_column.h"
-#include "packet/packet_column_allocation.h"
+#include "packet/packet_column_bulk.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
+#include "packet/packet_keep_alive.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
 #include "packet/packet_spawn_named_entity.h"
@@ -39,6 +41,8 @@ static bedrock_list exiting_client_list;
 struct bedrock_client *client_create()
 {
 	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
+	EVP_CIPHER_CTX_init(&client->in_cipher_ctx);
+	EVP_CIPHER_CTX_init(&client->out_cipher_ctx);
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
@@ -180,7 +184,7 @@ void client_save_all()
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated == STATE_AUTHENTICATED)
+		if ((c->authenticated & STATE_IN_GAME) && !(c->authenticated & STATE_BURSTING))
 			client_save(c);
 	}
 }
@@ -189,15 +193,16 @@ static void client_free(struct bedrock_client *client)
 {
 	bedrock_node *node;
 
-	if (client->authenticated == STATE_AUTHENTICATED)
+	if (client->authenticated & STATE_IN_GAME)
 	{
-		client_save(client);
+		if (!(client->authenticated & STATE_BURSTING))
+			client_save(client);
 
 		LIST_FOREACH(&client_list, node)
 		{
 			struct bedrock_client *c = node->data;
 
-			if (c->authenticated == STATE_AUTHENTICATED && c != client)
+			if (c->authenticated & STATE_IN_GAME && c != client)
 			{
 				packet_send_player_list_item(c, client, false);
 				packet_send_chat_message(c, "%s left the game", client->name);
@@ -240,6 +245,10 @@ static void client_free(struct bedrock_client *client)
 
 	if (client->data != NULL)
 		nbt_free(client->data);
+
+	EVP_CIPHER_CTX_cleanup(&client->in_cipher_ctx);
+	EVP_CIPHER_CTX_cleanup(&client->out_cipher_ctx);
+
 	bedrock_list_clear(&client->out_buffer);
 	bedrock_free(client);
 }
@@ -271,6 +280,8 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
+	unsigned char buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
+	int i;
 
 	if (client->in_buffer_len == sizeof(client->in_buffer))
 	{
@@ -280,7 +291,8 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 		return;
 	}
 
-	int i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	bedrock_assert(sizeof(buffer) == sizeof(client->in_buffer), ;);
+	i = recv(fd->fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -289,6 +301,13 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 		client_exit(client);
 		return;
 	}
+
+	if (client->authenticated >= STATE_LOGGED_IN)
+	{
+		bedrock_assert(i == crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len), ;);
+	}
+	else
+		memcpy(client->in_buffer + client->in_buffer_len, buffer, i);
 
 	client->in_buffer_len += i;
 
@@ -362,27 +381,39 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	bedrock_assert(client != NULL && packet != NULL && packet->length > 0, return);
 
+	pi = packet_find(*packet->data);
+	bedrock_assert(pi != NULL, bedrock_log(LEVEL_PACKET_DEBUG, "packet: Sending unknown packet 0x%02x", *packet->data));
+	if (pi != NULL)
+		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", *packet->data, *client->name ? client->name : "(unknown)", client_get_ip(client));
+
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
 	strncpy(p->name, packet->name, sizeof(p->name));
-	p->data = packet->data;
-	p->length = packet->length;
-	p->capacity = packet->capacity;
 
-	packet->data = NULL;
-	packet->length = 0;
-	packet->capacity = 0;
+	if (client->authenticated >= STATE_LOGGED_IN)
+	{
+		bedrock_buffer_ensure_capacity(p, packet->capacity + EVP_CIPHER_CTX_block_size(&client->out_cipher_ctx));
+		p->length = crypto_aes_encrypt(&client->out_cipher_ctx, packet->data, packet->length, p->data, p->capacity);
 
-	packet = p;
+		bedrock_free(packet->data);
+		packet->data = NULL;
+		packet->length = 0;
+		packet->capacity = 0;
+	}
+	else
+	{
+		p->data = packet->data;
+		p->length = packet->length;
+		p->capacity = packet->capacity;
 
-	pi = packet_find(*packet->data);
-	bedrock_assert(pi != NULL, ;);
-	if (pi != NULL)
-		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
+		packet->data = NULL;
+		packet->length = 0;
+		packet->capacity = 0;
+	}
 
-	bedrock_list_add(&client->out_buffer, packet);
+	bedrock_list_add(&client->out_buffer, p);
 
-	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", packet->data[0], *client->name ? client->name : "(unknown)", client_get_ip(client));
 	io_set(&client->fd, OP_WRITE, 0);
 }
 
@@ -569,28 +600,11 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	++tag_list->length;
 }
 
-static void client_update_column(struct bedrock_client *client, struct bedrock_column *column)
+static void client_update_column(struct bedrock_client *client, packet_column_bulk *columns, struct bedrock_column *column)
 {
-	bedrock_node *node;
-
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
-	packet_send_column_allocation(client, column, true);
-	packet_send_column(client, column);
-
-	/* Tell this client about any clients in this column */
-	LIST_FOREACH(&column->players, node)
-	{
-		struct bedrock_client *c = node->data;
-
-		/* We only want players *in* this column not *near* this column */
-		if (c->column == column)
-		{
-			/* Send this client */
-			packet_send_spawn_named_entity(client, c);
-			packet_send_spawn_named_entity(c, client);
-		}
-	}
+	packet_column_bulk_add(client, columns, column);
 
 	bedrock_list_add(&client->columns, column);
 	bedrock_list_add(&column->players, client);
@@ -599,7 +613,6 @@ static void client_update_column(struct bedrock_client *client, struct bedrock_c
 void client_update_columns(struct bedrock_client *client)
 {
 	/* Update the column around the player. Used for when the player moves to a new column. */
-
 	int i;
 	struct bedrock_region *region;
 	struct bedrock_column *c;
@@ -607,6 +620,8 @@ void client_update_columns(struct bedrock_client *client)
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
 	double player_x = x / BEDROCK_BLOCKS_PER_CHUNK, player_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	packet_column_bulk columns = PACKET_COLUMN_BULK_INIT;
+	bool finish = false;
 
 	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
 	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
@@ -623,23 +638,8 @@ void client_update_columns(struct bedrock_client *client)
 
 			bedrock_list_del(&c->players, client);
 
-			/* This column is going away, find players in this column */
-			LIST_FOREACH(&c->players, node)
-			{
-				struct bedrock_client *cl = node->data;
-
-				/* We only want players *in* this column not *near* this column */
-				if (cl->column == c)
-				{
-					/* Remove these clients from each other */
-					packet_send_destroy_entity_player(client, cl);
-					packet_send_destroy_entity_player(cl, client);
-				}
-			}
-
 			bedrock_log(LEVEL_COLUMN, "client: Unallocating column %d, %d for %s", c->x, c->z, client->name);
 
-			packet_send_column_allocation(client, c, false);
 			packet_send_column_empty(client, c);
 
 			/* Column is no longer in render distance of anything */
@@ -648,7 +648,7 @@ void client_update_columns(struct bedrock_client *client)
 		}
 	}
 
-	/* Column the player is in */
+	/* Region the player is in */
 	region = find_region_which_contains(client->world, x, z);
 	bedrock_assert(region != NULL, return);
 
@@ -657,11 +657,11 @@ void client_update_columns(struct bedrock_client *client)
 	if (c != NULL)
 		if (bedrock_list_has_data(&client->columns, c) == false)
 		{
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 
 			/* Loading the column the player is in on a bursting player, finish burst */
 			if (client->authenticated == STATE_BURSTING)
-				client_finish_login_sequence(client);
+				finish = true;
 		}
 
 	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
@@ -678,7 +678,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from i,i to i,-i (exclusive) */
@@ -691,7 +691,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from i,-i to -i,-i (exclusive) */
@@ -704,7 +704,7 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 
 		/* Next, go from -i,-i to -i,i (exclusive) */
@@ -717,9 +717,14 @@ void client_update_columns(struct bedrock_client *client)
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
 
-			client_update_column(client, c);
+			client_update_column(client, &columns, c);
 		}
 	}
+
+	packet_send_column_bulk(client, &columns);
+
+	if (finish)
+		client_finish_login_sequence(client);
 }
 
 /* Called to update a players position */
@@ -746,8 +751,8 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 
 	if (old_x == x && old_y == y && old_z == z && old_yaw == yaw && old_pitch == pitch && old_stance == stance && old_on_ground == on_ground)
 		return;
-	/* Bursting clients try to move themselves during login for some reason. Don't allow it. */
-	else if (client->authenticated == STATE_BURSTING)
+	/* Don't allow bursting clients to move around */
+	else if (client->authenticated & STATE_BURSTING)
 		return;
 
 	if (old_x != x)
@@ -841,8 +846,6 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	/* Send player position */
 	packet_send_position_and_look(client);
 
-	client->authenticated = STATE_AUTHENTICATED;
-
 	/* Send inventory */
 	LIST_FOREACH(&nbt_get(client->data, TAG_LIST, 1, "Inventory")->payload.tag_list.list, node)
 	{
@@ -866,7 +869,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->authenticated == STATE_AUTHENTICATED)
+		if (c == client || c->authenticated & STATE_IN_GAME)
 		{
 			/* Send this new client to every client that is authenticated */
 			packet_send_player_list_item(c, client, true);
@@ -876,6 +879,11 @@ void client_finish_login_sequence(struct bedrock_client *client)
 			packet_send_chat_message(c, "%s joined the game", client->name);
 		}
 	}
+
+	/* Once this comes back we know the client is synced */
+	packet_send_keep_alive(client, ~0);
+
+	client->authenticated |= STATE_IN_GAME;
 
 	oper = oper_find(client->name);
 	if (oper != NULL && *oper->password == 0)

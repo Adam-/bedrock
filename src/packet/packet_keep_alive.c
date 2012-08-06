@@ -30,6 +30,12 @@ int packet_keep_alive(struct bedrock_client *client, const bedrock_packet *p)
 		}
 
 		client->ping = second_diff * 1000 + nanosecond_diff / 1000000;
+
+		if (client->authenticated & STATE_IN_GAME && client->authenticated & STATE_BURSTING)
+		{
+			client->authenticated &= ~STATE_BURSTING;
+			bedrock_log(LEVEL_DEBUG, "client: End of burst for %s", client->name);
+		}
 	}
 
 	return offset;

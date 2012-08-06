@@ -3,7 +3,6 @@
 #include "util/endian.h"
 
 #include "packet/packet_keep_alive.h"
-#include "packet/packet_login_request.h"
 #include "packet/packet_handshake.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_player.h"
@@ -17,26 +16,28 @@
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_click_window.h"
+#include "packet/packet_client_status.h"
+#include "packet/packet_encryption_response.h"
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
 
 struct packet_info packet_handlers[] = {
-	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
-	{LOGIN_REQUEST,          20, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_login_request},
-	{HANDSHAKE,               3, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
-	{CHAT_MESSAGE,            3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
+	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_IN_GAME,   HARD_SIZE,               packet_keep_alive},
+	{LOGIN_RESPONSE,         12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{HANDSHAKE,              10, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
+	{CHAT_MESSAGE,            3, STATE_IN_GAME,                          SOFT_SIZE,               packet_chat_message},
 	{TIME,                    9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_EQUIPMENT,       11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{SPAWN_POINT,            13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{PLAYER,                  2, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_player},
-	{PLAYER_POS,             34, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position},
-	{PLAYER_LOOK,            10, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_look},
-	{PLAYER_POS_LOOK,        42, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_position_and_look},
-	{PLAYER_DIGGING,         12, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_player_digging},
-	{PLAYER_BLOCK_PLACEMENT, 11, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_block_placement},
-	{HELD_ITEM_CHANGE,        3, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_held_item_change},
-	{ENTITY_ANIMATION,        6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_animation},
-	{ENTITY_ACTION,           6, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_entity_action},
+	{PLAYER,                  2, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE,               packet_player},
+	{PLAYER_POS,             34, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE,               packet_position},
+	{PLAYER_LOOK,            10, STATE_IN_GAME,                          HARD_SIZE,               packet_player_look},
+	{PLAYER_POS_LOOK,        42, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE,               packet_position_and_look},
+	{PLAYER_DIGGING,         12, STATE_IN_GAME,                          HARD_SIZE,               packet_player_digging},
+	{PLAYER_BLOCK_PLACEMENT, 13, STATE_IN_GAME,                          SOFT_SIZE,               packet_block_placement},
+	{HELD_ITEM_CHANGE,        3, STATE_IN_GAME,                          HARD_SIZE,               packet_held_item_change},
+	{ENTITY_ANIMATION,        6, STATE_IN_GAME,                          HARD_SIZE,               packet_entity_animation},
+	{ENTITY_ACTION,           6, STATE_IN_GAME,                          HARD_SIZE,               packet_entity_action},
 	{SPAWN_NAMED_ENTITY,     23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{SPAWN_DROPPED_ITEM,     25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{COLLECT_ITEM,            9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
@@ -44,14 +45,17 @@ struct packet_info packet_handlers[] = {
 	{ENTITY_TELEPORT,        19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_HEAD_LOOK,        6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_METADATA,         5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{MAP_COLUMN_ALLOCATION,  10, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{MAP_COLUMN,             22, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{BLOCK_CHANGE,           12, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{CLOSE_WINDOW,            2, STATE_AUTHENTICATED,                    HARD_SIZE,               packet_close_window},
-	{CLICK_WINDOW,            8, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_click_window},
+	{MAP_COLUMN,             17, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{BLOCK_CHANGE,           13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{MAP_COLUMN_BULK,         7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{CLOSE_WINDOW,            2, STATE_IN_GAME,                          HARD_SIZE,               packet_close_window},
+	{CLICK_WINDOW,            8, STATE_IN_GAME,                          SOFT_SIZE,               packet_click_window},
 	{SET_SLOT,                4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,     5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_LIST,             6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{CLIENT_STATUS,           2, STATE_LOGGED_IN | STATE_IN_GAME,        HARD_SIZE,               packet_client_status},
+	{ENCRYPTION_RESPONSE,     5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
+	{ENCRYPTION_REQUEST,      7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LIST_PING,               1, STATE_UNAUTHENTICATED,                  HARD_SIZE,               packet_list_ping},
 	{DISCONNECT,              3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
@@ -163,6 +167,20 @@ int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
 		}
 
 	return i;
+}
+
+void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)
+{
+	if (*offset <= ERROR_UNKNOWN)
+		return;
+	else if (*offset + dest_size > packet->length)
+	{
+		*offset = ERROR_EAGAIN;
+		return;
+	}
+
+	memcpy(dest, packet->data + *offset, dest_size);
+	*offset += dest_size;
 }
 
 void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)

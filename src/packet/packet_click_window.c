@@ -27,16 +27,11 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 	packet_read_int(p, &offset, &item_id, sizeof(item_id));
 	if (item_id != -1)
 	{
-		struct bedrock_item *item = item_find_or_create(item_id);
+		int16_t s;
 
 		packet_read_int(p, &offset, &item_count, sizeof(item_count));
 		packet_read_int(p, &offset, &item_metadata, sizeof(item_metadata));
-
-		if (item->flags & ITEM_FLAG_DAMAGABLE)
-		{
-			int16_t s;
-			packet_read_int(p, &offset, &s, sizeof(s));
-		}
+		packet_read_int(p, &offset, &s, sizeof(s));
 	}
 
 	if (window == WINDOW_INVENTORY)
