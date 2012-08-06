@@ -11,6 +11,8 @@
 #include "blocks/items.h"
 #include "server/oper.h"
 
+#include <openssl/evp.h>
+
 typedef enum
 {
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
@@ -35,8 +37,9 @@ typedef enum
 struct bedrock_client
 {
 	struct bedrock_fd fd;                /* fd for this client */
-	unsigned char key[BEDROCK_SHARED_SECRET_LEN]; /* During handshake this contains our authentication token.
-	                                               * After handshake this contains the shared secret. */
+
+	unsigned char auth_token[BEDROCK_VERIFY_TOKEN_LEN]; /* Contains our authentication token for handshake */
+	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
 	bedrock_client_authentication_state authenticated;

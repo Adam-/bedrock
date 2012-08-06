@@ -26,5 +26,6 @@ void packet_send_encryption_request(struct bedrock_client *client)
 
 	client_send_packet(client, &packet);
 
-	memcpy(client->key, verify_token, sizeof(verify_token));
+	bedrock_assert(sizeof(client->auth_token) == sizeof(verify_token), ;);
+	memcpy(client->auth_token, verify_token, sizeof(client->auth_token));
 }

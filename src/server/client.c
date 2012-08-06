@@ -40,6 +40,8 @@ static bedrock_list exiting_client_list;
 struct bedrock_client *client_create()
 {
 	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
+	EVP_CIPHER_CTX_init(&client->in_cipher_ctx);
+	EVP_CIPHER_CTX_init(&client->out_cipher_ctx);
 	client->id = ++entity_id;
 	client->authenticated = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
@@ -241,6 +243,10 @@ static void client_free(struct bedrock_client *client)
 
 	if (client->data != NULL)
 		nbt_free(client->data);
+
+	EVP_CIPHER_CTX_cleanup(&client->in_cipher_ctx);
+	EVP_CIPHER_CTX_cleanup(&client->out_cipher_ctx);
+
 	bedrock_list_clear(&client->out_buffer);
 	bedrock_free(client);
 }
@@ -295,7 +301,7 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 	}
 
 	if (client->authenticated >= STATE_LOGGED_IN)
-		i = crypto_aes_decrypt(client->key, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len);
+		i = crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len);
 	else
 		memcpy(client->in_buffer + client->in_buffer_len, buffer, i);
 
@@ -384,7 +390,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	if (client->authenticated >= STATE_LOGGED_IN)
 	{
 		bedrock_buffer_ensure_capacity(p, packet->capacity + 16); // XXX AES_BLOCKSIZE? EVP_CIPHER_CTX_block_size
-		p->length = crypto_aes_encrypt(client->key, packet->data, packet->length, p->data, p->capacity);
+		p->length = crypto_aes_encrypt(&client->out_cipher_ctx, packet->data, packet->length, p->data, p->capacity);
 
 		bedrock_free(packet->data);
 		packet->data = NULL;
