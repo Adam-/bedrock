@@ -13,7 +13,7 @@ void command_help(struct bedrock_client *client, int bedrock_attribute_unused ar
 
 		if (cmd->can_use(client, cmd))
 		{
-			command_reply(client, "  %-10s %-15s %s", cmd->name, cmd->syntax, cmd->desc);
+			command_reply(client, "%s%s%s - %s", cmd->name, *cmd->syntax ? " " : "", cmd->syntax, cmd->desc);
 			++count;
 		}
 	}

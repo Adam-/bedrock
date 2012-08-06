@@ -32,7 +32,7 @@ void command_time(struct bedrock_client *client, int argc, const char **argv)
 			errno = 0;
 			time = strtol(argv[2], &errptr, 10);
 			
-			if (errno || errptr)
+			if (errno || *errptr)
 			{
 				return;
 			}
