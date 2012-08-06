@@ -1,6 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
-#include "packet/packet_login_request.h"
+#include "packet/packet_login_response.h"
 
 enum
 {
@@ -19,7 +19,7 @@ int packet_client_status(struct bedrock_client *client, const bedrock_packet *p)
 	{
 		if (client->authenticated != STATE_LOGGED_IN)
 			return ERROR_UNEXPECTED;
-		packet_send_login_request(client);
+		packet_send_login_response(client);
 	}
 	else if (b == RESPAWN)
 		;

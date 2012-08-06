@@ -10,7 +10,7 @@ typedef bedrock_buffer bedrock_packet;
 enum
 {
 	KEEP_ALIVE                    = 0x00,
-	LOGIN_REQUEST                 = 0x01,
+	LOGIN_RESPONSE                = 0x01,
 	HANDSHAKE                     = 0x02,
 	CHAT_MESSAGE                  = 0x03,
 	TIME                          = 0x04,

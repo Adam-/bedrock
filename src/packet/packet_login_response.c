@@ -4,7 +4,7 @@
 #include "nbt/nbt.h"
 #include "config/config.h"
 
-void packet_send_login_request(struct bedrock_client *client)
+void packet_send_login_response(struct bedrock_client *client)
 {
 	bedrock_packet packet;
 	int32_t game_type, dimension;
@@ -13,9 +13,9 @@ void packet_send_login_request(struct bedrock_client *client)
 	nbt_copy(client->world->data, TAG_INT, &game_type, sizeof(game_type), 2, "Data", "GameType");
 	nbt_copy(client->data, TAG_INT, &dimension, sizeof(dimension), 1, "Dimension");
 
-	packet_init(&packet, LOGIN_REQUEST);
+	packet_init(&packet, LOGIN_RESPONSE);
 
-	packet_pack_header(&packet, LOGIN_REQUEST);
+	packet_pack_header(&packet, LOGIN_RESPONSE);
 	packet_pack_int(&packet, &client->id, sizeof(client->id)); /* Entity ID */
 	packet_pack_string(&packet, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Generator name */
 	b = game_type;

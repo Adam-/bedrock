@@ -47,7 +47,7 @@ void packet_send_entity_animation(struct bedrock_client *client, struct bedrock_
 {
 	bedrock_packet packet;
 
-	packet_init(&packet, LOGIN_REQUEST);
+	packet_init(&packet, LOGIN_RESPONSE);
 
 	packet_pack_header(&packet, ENTITY_ANIMATION);
 	packet_pack_int(&packet, &target->id, sizeof(target->id));

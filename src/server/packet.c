@@ -23,7 +23,7 @@
 
 struct packet_info packet_handlers[] = {
 	{KEEP_ALIVE,              5, STATE_BURSTING | STATE_AUTHENTICATED,   HARD_SIZE,               packet_keep_alive},
-	{LOGIN_REQUEST,          12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{LOGIN_RESPONSE,         12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{HANDSHAKE,              10, STATE_UNAUTHENTICATED,                  SOFT_SIZE,               packet_handshake},
 	{CHAT_MESSAGE,            3, STATE_AUTHENTICATED,                    SOFT_SIZE,               packet_chat_message},
 	{TIME,                    9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
