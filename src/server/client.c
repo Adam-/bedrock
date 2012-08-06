@@ -600,7 +600,6 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 
 static void client_update_column(struct bedrock_client *client, packet_column_bulk *columns, struct bedrock_column *column)
 {
-
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
 	packet_column_bulk_add(client, columns, column);
@@ -620,6 +619,7 @@ void client_update_columns(struct bedrock_client *client)
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
 	double player_x = x / BEDROCK_BLOCKS_PER_CHUNK, player_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 	packet_column_bulk columns = PACKET_COLUMN_BULK_INIT;
+	bool finish = false;
 
 	player_x = (int) (player_x >= 0 ? ceil(player_x) : floor(player_x));
 	player_z = (int) (player_z >= 0 ? ceil(player_z) : floor(player_z));
@@ -659,7 +659,7 @@ void client_update_columns(struct bedrock_client *client)
 
 			/* Loading the column the player is in on a bursting player, finish burst */
 			if (client->authenticated == STATE_BURSTING)
-				client_finish_login_sequence(client);
+				finish = true;
 		}
 
 	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
@@ -720,6 +720,9 @@ void client_update_columns(struct bedrock_client *client)
 	}
 
 	packet_send_column_bulk(client, &columns);
+
+	if (finish)
+		client_finish_login_sequence(client);
 }
 
 /* Called to update a players position */

@@ -87,8 +87,36 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 			chunk_decompress(chunk);
 
 			compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
+		}
+
+		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+		{
+			struct bedrock_chunk *chunk = column->chunks[i];
+
+			if (!chunk)
+				continue;
+
 			compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);
+		}
+
+
+		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+		{
+			struct bedrock_chunk *chunk = column->chunks[i];
+
+			if (!chunk)
+				continue;
+
 			compression_compress_deflate(buffer, chunk->blocklight, BEDROCK_DATA_LENGTH);
+		}
+
+		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
+		{
+			struct bedrock_chunk *chunk = column->chunks[i];
+
+			if (!chunk)
+				continue;
+
 			//compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
 			compression_compress_deflate(buffer, fake_light, BEDROCK_DATA_LENGTH);
 
