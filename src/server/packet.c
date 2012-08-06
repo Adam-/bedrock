@@ -23,42 +23,42 @@
 #include "packet/packet_disconnect.h"
 
 struct packet_info packet_handlers[] = {
-	{KEEP_ALIVE,               5, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE,               packet_keep_alive},
+	{KEEP_ALIVE,               5, STATE_BURSTING | STATE_IN_GAME,         NONE,                    packet_keep_alive},
 	{LOGIN_RESPONSE,          12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{HANDSHAKE,               10, STATE_UNAUTHENTICATED,                  SOFT_SIZE | CLIENT_ONLY, packet_handshake},
 	{CHAT_MESSAGE,             3, STATE_IN_GAME,                          SOFT_SIZE,               packet_chat_message},
-	{TIME,                     9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_EQUIPMENT,        11, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{SPAWN_POINT,             13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{PLAYER,                   2, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE | CLIENT_ONLY, packet_player},
-	{PLAYER_POS,              34, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE | CLIENT_ONLY, packet_position},
-	{PLAYER_LOOK,             10, STATE_IN_GAME,                          HARD_SIZE | CLIENT_ONLY, packet_player_look},
-	{PLAYER_POS_LOOK,         42, STATE_BURSTING | STATE_IN_GAME,         HARD_SIZE,               packet_position_and_look},
-	{PLAYER_DIGGING,          12, STATE_IN_GAME,                          HARD_SIZE | CLIENT_ONLY, packet_player_digging},
+	{TIME,                     9, 0,                                      SERVER_ONLY,             NULL},
+	{ENTITY_EQUIPMENT,        11, 0,                                      SERVER_ONLY,             NULL},
+	{SPAWN_POINT,             13, 0,                                      SERVER_ONLY,             NULL},
+	{PLAYER,                   2, STATE_BURSTING | STATE_IN_GAME,         CLIENT_ONLY,             packet_player},
+	{PLAYER_POS,              34, STATE_BURSTING | STATE_IN_GAME,         CLIENT_ONLY,             packet_position},
+	{PLAYER_LOOK,             10, STATE_IN_GAME,                          CLIENT_ONLY,             packet_player_look},
+	{PLAYER_POS_LOOK,         42, STATE_BURSTING | STATE_IN_GAME,         NONE,                    packet_position_and_look},
+	{PLAYER_DIGGING,          12, STATE_IN_GAME,                          CLIENT_ONLY,             packet_player_digging},
 	{PLAYER_BLOCK_PLACEMENT,  13, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_block_placement},
-	{HELD_ITEM_CHANGE,         3, STATE_IN_GAME,                          HARD_SIZE | CLIENT_ONLY, packet_held_item_change},
-	{ENTITY_ANIMATION,         6, STATE_IN_GAME,                          HARD_SIZE,               packet_entity_animation},
-	{ENTITY_ACTION,            6, STATE_IN_GAME,                          HARD_SIZE | CLIENT_ONLY, packet_entity_action},
+	{HELD_ITEM_CHANGE,         3, STATE_IN_GAME,                          CLIENT_ONLY,             packet_held_item_change},
+	{ENTITY_ANIMATION,         6, STATE_IN_GAME,                          NONE,                    packet_entity_animation},
+	{ENTITY_ACTION,            6, STATE_IN_GAME,                          CLIENT_ONLY,             packet_entity_action},
 	{SPAWN_NAMED_ENTITY,      23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{SPAWN_DROPPED_ITEM,      25, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{COLLECT_ITEM,             9, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{SPAWN_DROPPED_ITEM,      25, 0,                                      SERVER_ONLY,             NULL},
+	{COLLECT_ITEM,             9, 0,                                      SERVER_ONLY,             NULL},
 	{DESTROY_ENTITY,           6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_TELEPORT,         19, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
-	{ENTITY_HEAD_LOOK,         6, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{ENTITY_TELEPORT,         19, 0,                                      SERVER_ONLY,             NULL},
+	{ENTITY_HEAD_LOOK,         6, 0,                                      SERVER_ONLY,             NULL},
 	{ENTITY_METADATA,          5, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{MAP_COLUMN,              17, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{BLOCK_CHANGE,            13, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{BLOCK_CHANGE,            13, 0,                                      SERVER_ONLY,             NULL},
 	{MAP_COLUMN_BULK,          7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{CLOSE_WINDOW,             2, STATE_IN_GAME,                          HARD_SIZE,               packet_close_window},
+	{CLOSE_WINDOW,             2, STATE_IN_GAME,                          NONE,                    packet_close_window},
 	{CLICK_WINDOW,             8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
 	{SET_SLOT,                 4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{CONFIRM_TRANSACTION,      5, 0,                                      HARD_SIZE | SERVER_ONLY, NULL},
+	{CONFIRM_TRANSACTION,      5, 0,                                      SERVER_ONLY,             NULL},
 	{PLAYER_LIST,              6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{LOCALE_AND_VIEW_DISTANCE, 8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_locale_and_view_distance},
-	{CLIENT_STATUS,            2, STATE_LOGGED_IN | STATE_IN_GAME,        HARD_SIZE | CLIENT_ONLY, packet_client_status},
+	{CLIENT_STATUS,            2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
 	{ENCRYPTION_RESPONSE,      5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,       7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{LIST_PING,                1, STATE_UNAUTHENTICATED,                  HARD_SIZE | CLIENT_ONLY, packet_list_ping},
+	{LIST_PING,                1, STATE_UNAUTHENTICATED,                  CLIENT_ONLY,             packet_list_ping},
 	{DISCONNECT,               3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
@@ -160,7 +160,7 @@ int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
 		return -1;
 	}
 
-	if (handler->flags & HARD_SIZE)
+	if (!(handler->flags & SOFT_SIZE))
 		if (i != handler->len)
 		{
 			bedrock_log(LEVEL_WARN, "packet: Packet 0x%02x from client %s was handled improperly, expected %d and got %d - dropping client", id, client_get_ip(client), handler->len, i);

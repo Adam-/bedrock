@@ -50,10 +50,13 @@ enum
 
 enum
 {
+	NONE        = 0,
+	/* Size of this packet is not definite. Will be at least 'len' nutes */
 	SOFT_SIZE   = 1 << 0,
-	HARD_SIZE   = 1 << 1,
-	SERVER_ONLY = 1 << 2,
-	CLIENT_ONLY = 1 << 3
+	/* Only servers may send this packet */
+	SERVER_ONLY = 1 << 1,
+	/* Only clients may send this packet */
+	CLIENT_ONLY = 1 << 2
 };
 
 enum
