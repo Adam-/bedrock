@@ -301,7 +301,9 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 	}
 
 	if (client->authenticated >= STATE_LOGGED_IN)
-		i = crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len);
+	{
+		bedrock_assert(i == crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len), ;);
+	}
 	else
 		memcpy(client->in_buffer + client->in_buffer_len, buffer, i);
 
@@ -389,7 +391,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	if (client->authenticated >= STATE_LOGGED_IN)
 	{
-		bedrock_buffer_ensure_capacity(p, packet->capacity + 16); // XXX AES_BLOCKSIZE? EVP_CIPHER_CTX_block_size
+		bedrock_buffer_ensure_capacity(p, packet->capacity + EVP_CIPHER_CTX_block_size(&client->out_cipher_ctx));
 		p->length = crypto_aes_encrypt(&client->out_cipher_ctx, packet->data, packet->length, p->data, p->capacity);
 
 		bedrock_free(packet->data);

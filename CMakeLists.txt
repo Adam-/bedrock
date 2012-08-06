@@ -21,7 +21,7 @@ find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-# include the crap we need
+# Include library header files
 include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 
 # Generate the files for compile
@@ -31,7 +31,7 @@ BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y
 ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.c)
 ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
 
-# Get a list of folders from src/ and remove any CMake crap
+# Get a list of folders from src/ and remove any CMake generated build files
 file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*")
 list(REMOVE_ITEM SOURCE_FOLDERS "src/CMakeFiles")
 

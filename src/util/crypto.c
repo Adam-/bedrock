@@ -71,7 +71,6 @@ int crypto_aes_encrypt(EVP_CIPHER_CTX *context, const unsigned char *src, size_t
 {
 	int out_len = dest_len, final_len = 0;
 
-
 	if (!EVP_EncryptUpdate(context, dest, &out_len, src, src_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to update encryption context");
 	if (!EVP_EncryptFinal_ex(context, dest + out_len, &final_len))
