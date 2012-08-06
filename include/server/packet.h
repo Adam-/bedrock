@@ -52,7 +52,8 @@ enum
 {
 	SOFT_SIZE   = 1 << 0,
 	HARD_SIZE   = 1 << 1,
-	SERVER_ONLY = 1 << 2
+	SERVER_ONLY = 1 << 2,
+	CLIENT_ONLY = 1 << 3
 };
 
 enum

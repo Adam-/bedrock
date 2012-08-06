@@ -384,7 +384,10 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	pi = packet_find(*packet->data);
 	bedrock_assert(pi != NULL, bedrock_log(LEVEL_PACKET_DEBUG, "packet: Sending unknown packet 0x%02x", *packet->data));
 	if (pi != NULL)
+	{
 		bedrock_assert(pi->flags & HARD_SIZE ? packet->length == pi->len : packet->length >= pi->len, ;);
+		bedrock_assert((pi->flags & CLIENT_ONLY) == 0, ;);
+	}
 	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", *packet->data, *client->name ? client->name : "(unknown)", client_get_ip(client));
 
 	p = bedrock_malloc(sizeof(bedrock_packet));
