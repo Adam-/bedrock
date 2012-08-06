@@ -89,12 +89,9 @@ void packet_send_column(struct bedrock_client *client, struct bedrock_column *co
 
 	i = buffer->buffer->length;
 	packet_pack_int(&packet, &i, sizeof(i)); // length
-	i = 0;
-	packet_pack_int(&packet, &i, sizeof(i)); // not used
 
 	packet_pack(&packet, buffer->buffer->data, buffer->buffer->length);
 	
-
 	compression_compress_end(buffer);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)

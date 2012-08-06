@@ -10,8 +10,8 @@ static RSA *keypair;
 static unsigned char *pubkey_encoded;
 static int pubkey_len;
 
-static const EVP_CIPHER *cipher;
-static EVP_CIPHER_CTX cipher_ctx;
+//static const EVP_CIPHER *cipher;
+static EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx;
 
 void crypto_init()
 {
@@ -31,15 +31,17 @@ void crypto_init()
 		exit(-1);
 	}
 
-	cipher = EVP_aes_128_cfb8();
+//	cipher = EVP_aes_128_cfb8();
+//	printf("iv len %d\n", EVP_CIPHER_iv_length(cipher));
+	EVP_CIPHER_CTX_init(&in_cipher_ctx);
+	EVP_CIPHER_CTX_init(&out_cipher_ctx);
 
-	EVP_CIPHER_CTX_init(&cipher_ctx);
+//	EVP_CIPHER_CTX_set_padding(&in_cipher_ctx, 0);
+//	EVP_CIPHER_CTX_set_padding(&out_cipher_ctx, 0);
 }
 
 void crypto_shutdown()
 {
-	EVP_CIPHER_CTX_cleanup(&cipher_ctx);
-
 	free(pubkey_encoded);
 	RSA_free(keypair);
 }
@@ -74,12 +76,19 @@ int crypto_rsa_decrypt(const unsigned char *src, size_t src_len, unsigned char *
 int crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
 {
 	int out_len = dest_len, final_len = 0;
+	static int wtf = 0;
 
-	if (!EVP_EncryptInit_ex(&cipher_ctx, cipher, NULL, key, key))
-		bedrock_log(LEVEL_CRIT, "crypto: Unable to initialize encryption context");
-	if (!EVP_EncryptUpdate(&cipher_ctx, dest, &out_len, src, src_len))
+	if (!wtf)
+	{
+		wtf = 1;
+
+		if (!EVP_EncryptInit_ex(&out_cipher_ctx, EVP_aes_128_cfb8(), NULL, key, key))
+			bedrock_log(LEVEL_CRIT, "crypto: Unable to initialize encryption context");
+		printf("INIT encr\n");
+	}
+	if (!EVP_EncryptUpdate(&out_cipher_ctx, dest, &out_len, src, src_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to update encryption context");
-	if (!EVP_EncryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
+	if (!EVP_EncryptFinal_ex(&out_cipher_ctx, dest + out_len, &final_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize encryption context");
 	
 	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);
@@ -90,12 +99,19 @@ int crypto_aes_encrypt(const unsigned char *key, const unsigned char *src, size_
 int crypto_aes_decrypt(const unsigned char *key, const unsigned char *src, size_t src_len, unsigned char *dest, size_t dest_len)
 {
 	int out_len = dest_len, final_len = 0;
+	static int wtf;
 
-	if (!EVP_DecryptInit_ex(&cipher_ctx, cipher, NULL, key, key))
-		bedrock_log(LEVEL_CRIT, "crypto: Unable to initialize decryption context");
-	if (!EVP_DecryptUpdate(&cipher_ctx, dest, &out_len, src, src_len))
+	if (!wtf)
+	{
+		wtf = 1;
+
+		if (!EVP_DecryptInit_ex(&in_cipher_ctx, EVP_aes_128_cfb8(), NULL, key, key))
+			bedrock_log(LEVEL_CRIT, "crypto: Unable to initialize decryption context");
+		printf("INIT decr\n");
+	}
+	if (!EVP_DecryptUpdate(&in_cipher_ctx, dest, &out_len, src, src_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to update decryption context");
-	if (!EVP_DecryptFinal_ex(&cipher_ctx, dest + out_len, &final_len))
+	if (!EVP_DecryptFinal_ex(&in_cipher_ctx, dest + out_len, &final_len))
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to finalize decryption context");
 
 	bedrock_assert((size_t) (out_len + final_len) <= dest_len, ;);

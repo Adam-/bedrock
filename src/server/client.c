@@ -383,7 +383,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	if (client->authenticated >= STATE_LOGGED_IN)
 	{
-		bedrock_buffer_ensure_capacity(p, packet->capacity);
+		bedrock_buffer_ensure_capacity(p, packet->capacity + 16); // XXX AES_BLOCKSIZE? EVP_CIPHER_CTX_block_size
 		p->length = crypto_aes_encrypt(client->key, packet->data, packet->length, p->data, p->capacity);
 
 		bedrock_free(packet->data);
@@ -397,9 +397,9 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 		p->length = packet->length;
 		p->capacity = packet->capacity;
 
+		packet->data = NULL;
 		packet->length = 0;
 		packet->capacity = 0;
-		packet->data = NULL;
 	}
 
 	bedrock_list_add(&client->out_buffer, p);

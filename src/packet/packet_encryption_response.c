@@ -28,9 +28,11 @@ int packet_encryption_response(struct bedrock_client *client, const bedrock_pack
 	}
 
 	decrypted_shared_secret_len = crypto_rsa_decrypt(shared_secret, shared_secret_len, decrypted_shared_secret, sizeof(decrypted_shared_secret));
-	bedrock_assert(decrypted_shared_secret_len == BEDROCK_SHARED_SECRET_LEN, ;);
 
-	memcpy(&client->key, decrypted_shared_secret, sizeof(client->key));
+	bedrock_assert(decrypted_shared_secret_len == BEDROCK_SHARED_SECRET_LEN, ;);
+	bedrock_assert(decrypted_shared_secret_len == sizeof(client->key), ;);
+
+	memcpy(client->key, decrypted_shared_secret, sizeof(client->key));
 	client->authenticated = STATE_LOGGING_IN;
 
 	// Would check session.minecraft.net here
