@@ -25,6 +25,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	int16_t id;
 	uint8_t count = 0;
 	int16_t metadata = 0;
+	uint8_t cursor_x, cursor_y, cursor_z;
 
 	nbt_tag *weilded_item;
 	struct bedrock_item *item;
@@ -47,6 +48,9 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		packet_read_int(p, &offset, &metadata, sizeof(metadata));
 		packet_read_int(p, &offset, &s, sizeof(s));
 	}
+	packet_read_int(p, &offset, &cursor_x, sizeof(cursor_x));
+	packet_read_int(p, &offset, &cursor_y, sizeof(cursor_y));
+	packet_read_int(p, &offset, &cursor_z, sizeof(cursor_z));
 
 	real_x = x;
 	real_y = y;
