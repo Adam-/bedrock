@@ -33,6 +33,7 @@ void crypto_shutdown()
 {
 	OPENSSL_free(pubkey_encoded);
 	RSA_free(keypair);
+	CRYPTO_cleanup_all_ex_data();
 }
 
 int crypto_pubkey_len()
