@@ -31,7 +31,7 @@ void crypto_init()
 
 void crypto_shutdown()
 {
-	free(pubkey_encoded);
+	OPENSSL_free(pubkey_encoded);
 	RSA_free(keypair);
 }
 
