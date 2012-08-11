@@ -22,9 +22,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	int32_t x, z;
 	uint8_t y;
 	uint8_t d;
-	int16_t id;
-	uint8_t count = 0;
-	int16_t metadata = 0;
+	struct bedrock_item_stack slot_data;
 	uint8_t cursor_x, cursor_y, cursor_z;
 
 	nbt_tag *weilded_item;
@@ -40,14 +38,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	packet_read_int(p, &offset, &y, sizeof(y));
 	packet_read_int(p, &offset, &z, sizeof(z));
 	packet_read_int(p, &offset, &d, sizeof(d));
-	packet_read_int(p, &offset, &id, sizeof(id));
-	if (id != -1)
-	{
-		uint16_t s;
-		packet_read_int(p, &offset, &count, sizeof(count));
-		packet_read_int(p, &offset, &metadata, sizeof(metadata));
-		packet_read_int(p, &offset, &s, sizeof(s));
-	}
+	packet_read_slot(p, &offset, &slot_data);
 	packet_read_int(p, &offset, &cursor_x, sizeof(cursor_x));
 	packet_read_int(p, &offset, &cursor_y, sizeof(cursor_y));
 	packet_read_int(p, &offset, &cursor_z, sizeof(cursor_z));
@@ -100,7 +91,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	weilded_item = client_get_inventory_tag(client, client->selected_slot);
 	if (weilded_item == NULL)
 	{
-		if (id != -1)
+		if (slot_data.id != -1)
 			return ERROR_UNEXPECTED;
 		else
 			return offset;
@@ -204,7 +195,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			bedrock_log(LEVEL_DEBUG, "player building: Adjusting height map of %d,%d to %d", real_x, real_z, *height);
 		}
 
-		*being_placed = id;
+		*being_placed = slot_data.id;
 		real_chunk->modified = true;
 		column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
 
@@ -212,7 +203,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		LIST_FOREACH(&real_chunk->column->players, node)
 		{
 			struct bedrock_client *c = node->data;
-			packet_send_block_change(c, real_x, real_y, real_z, id, 0);
+			packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
 		}
 	}
 

@@ -243,6 +243,25 @@ void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest
 	*offset = ERROR_UNKNOWN;
 }
 
+void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct bedrock_item_stack *stack)
+{
+	packet_read_int(packet, offset, &stack->id, sizeof(stack->id));
+	if (stack->id != -1)
+	{
+		int16_t s;
+		packet_read_int(packet, offset, &stack->count, sizeof(stack->count));
+		packet_read_int(packet, offset, &stack->metadata, sizeof(stack->metadata));
+		packet_read_int(packet, offset, &s, sizeof(s));
+		if (s != -1)
+			*offset += s;
+	}
+	else
+	{
+		stack->count = 0;
+		stack->metadata = 0;
+	}
+}
+
 void packet_pack_header(bedrock_packet *packet, uint8_t header)
 {
 	packet_pack_int(packet, &header, sizeof(header));
@@ -283,6 +302,18 @@ void packet_pack_string(bedrock_packet *packet, const char *string)
 	{
 		packet->data[packet->length++] = 0;
 		packet->data[packet->length++] = *string++;
+	}
+}
+
+void packet_pack_slot(bedrock_packet *packet, struct bedrock_item_stack *stack)
+{
+	packet_pack_int(packet, &stack->id, sizeof(stack->id));
+	if (stack->id != -1)
+	{
+		int16_t s = -1;
+		packet_pack_int(packet, &stack->count, sizeof(stack->count));
+		packet_pack_int(packet, &stack->metadata, sizeof(stack->metadata));
+		packet_pack_int(packet, &s, sizeof(s));
 	}
 }
 

@@ -5,25 +5,18 @@
 void packet_send_set_slot(struct bedrock_client *client, uint8_t window_id, uint16_t slot, struct bedrock_item *item, uint8_t count, int16_t damage)
 {
 	bedrock_packet packet;
-	int16_t s = -1;
+	struct bedrock_item_stack slot_data;
+
+	slot_data.id = item->id;
+	slot_data.count = count;
+	slot_data.metadata = damage;
 
 	packet_init(&packet, SET_SLOT);
 
 	packet_pack_header(&packet, SET_SLOT);
 	packet_pack_int(&packet, &window_id, sizeof(window_id));
 	packet_pack_int(&packet, &slot, sizeof(slot));
-
-	if (item == NULL)
-	{
-		packet_pack_int(&packet, &s, sizeof(s));
-	}
-	else
-	{
-		packet_pack_int(&packet, &item->id, sizeof(item->id));
-		packet_pack_int(&packet, &count, sizeof(count));
-		packet_pack_int(&packet, &damage, sizeof(damage));
-		packet_pack_int(&packet, &s, sizeof(s));
-	}
+	packet_pack_slot(&packet, &slot_data);
 
 	client_send_packet(client, &packet);
 }

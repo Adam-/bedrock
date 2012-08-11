@@ -190,6 +190,15 @@ struct bedrock_item
 	enum bedrock_item_flags flags;
 };
 
+#define BEDROCK_ITEM_STACK_EMPTY { -1, 0, 0 }
+
+struct bedrock_item_stack
+{
+	int16_t id;
+	uint8_t count;
+	int16_t metadata;
+};
+
 extern struct bedrock_item bedrock_items[];
 
 extern struct bedrock_item *item_find(item_type id);

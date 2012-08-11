@@ -6,6 +6,7 @@
 typedef bedrock_buffer bedrock_packet;
 
 #include "server/client.h"
+#include "blocks/items.h"
 
 enum
 {
@@ -92,10 +93,12 @@ extern int packet_parse(struct bedrock_client *client, const bedrock_packet *pac
 extern void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size);
+extern void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct bedrock_item_stack *stack);
 
 extern void packet_pack_header(bedrock_packet *packet, uint8_t header);
 extern void packet_pack(bedrock_packet *packet, const void *data, size_t size);
 extern void packet_pack_int(bedrock_packet *packet, const void *data, size_t size);
 extern void packet_pack_string(bedrock_packet *packet, const char *string);
+extern void packet_pack_slot(bedrock_packet *packet, struct bedrock_item_stack *stack);
 
 #endif // BEDROCK_SERVER_PACKET_H

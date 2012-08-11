@@ -15,24 +15,14 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 	uint8_t right_click;
 	uint16_t action;
 	uint8_t shift;
-	int16_t item_id;
-	uint8_t item_count = 0;
-	int16_t item_metadata = 0;
+	struct bedrock_item_stack slot_data;
 
 	packet_read_int(p, &offset, &window, sizeof(window));
 	packet_read_int(p, &offset, &slot, sizeof(slot));
 	packet_read_int(p, &offset, &right_click, sizeof(right_click));
 	packet_read_int(p, &offset, &action, sizeof(action));
 	packet_read_int(p, &offset, &shift, sizeof(shift));
-	packet_read_int(p, &offset, &item_id, sizeof(item_id));
-	if (item_id != -1)
-	{
-		int16_t s;
-
-		packet_read_int(p, &offset, &item_count, sizeof(item_count));
-		packet_read_int(p, &offset, &item_metadata, sizeof(item_metadata));
-		packet_read_int(p, &offset, &s, sizeof(s));
-	}
+	packet_read_slot(p, &offset, &slot_data);
 
 	if (window == WINDOW_INVENTORY)
 	{
@@ -57,7 +47,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 			nbt_copy(tag, TAG_SHORT, &id, sizeof(id), 1, "id");
 			nbt_copy(tag, TAG_SHORT, &metadata, sizeof(metadata), 1, "Damage");
 
-			if (id != item_id || item_count != count)// || item_metadata != metadata) XXX I have no metadata tracking?
+			if (id != slot_data.id || slot_data.count != count)// || item_metadata != metadata) XXX I have no metadata tracking?
 				return ERROR_UNEXPECTED;
 
 			// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot.
