@@ -724,7 +724,8 @@ void client_update_columns(struct bedrock_client *client)
 		}
 	}
 
-	packet_send_column_bulk(client, &columns);
+	if (columns.count > 0)
+		packet_send_column_bulk(client, &columns);
 
 	if (finish)
 		client_finish_login_sequence(client);

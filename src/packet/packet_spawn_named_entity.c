@@ -12,6 +12,7 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	int8_t y, p;
 	nbt_tag *tag;
 	struct bedrock_item *item;
+	uint8_t count = 0, metadata = 0;
 	uint8_t b = 127;
 
 	tag = client_get_inventory_tag(c, c->selected_slot);
@@ -44,6 +45,8 @@ void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedroc
 	packet_pack_int(&packet, &y, sizeof(y));
 	packet_pack_int(&packet, &p, sizeof(p));
 	packet_pack_int(&packet, &item->id, sizeof(item->id));
+	packet_pack_int(&packet, &count, sizeof(count));
+	packet_pack_int(&packet, &metadata, sizeof(metadata));
 	packet_pack_int(&packet, &b, sizeof(b));
 
 	client_send_packet(client, &packet);
