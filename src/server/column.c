@@ -82,6 +82,22 @@ void column_free(struct bedrock_column *column)
 
 	if (column->data != NULL)
 		nbt_free(column->data);
+
+	/* If this is the last column in a region, free the region.
+	 * Because this column is being free'd it guarentees there are no pending
+	 * operations on this region, so region_free will not block.
+	 * Also be sure the region worker still exists. If it doesn't then the region
+	 * is being free'd right now and this column is being free'd as a result of it.
+	 */
+	if (column->region->columns.count == 0 && column->region->worker != NULL)
+	{
+		/* Be sure this won't block */
+		bedrock_mutex_lock(&column->region->operations_mutex);
+		bedrock_assert(column->region->operations.count == 0, ;);
+		bedrock_mutex_unlock(&column->region->operations_mutex);
+		region_free(column->region);
+	}
+
 	bedrock_free(column);
 }
 

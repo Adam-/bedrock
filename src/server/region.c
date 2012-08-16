@@ -457,6 +457,7 @@ void region_free(struct bedrock_region *region)
 	bedrock_thread_set_exit(region->worker);
 	bedrock_cond_wakeup(&region->worker_condition);
 	bedrock_thread_join(region->worker);
+	region->worker = NULL;
 	bedrock_cond_destroy(&region->worker_condition);
 
 	/* Now that this region's worker is shut down process the last worker results */
