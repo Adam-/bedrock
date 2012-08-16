@@ -397,6 +397,7 @@ static void region_operations_notify(struct bedrock_region *region)
 
 				bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d to %s", op->column->x, op->column->z, op->column->region->path);
 
+				/* Now that the write is finished, check if we want this column to be free'd */
 				if (op->column->flags & COLUMN_FLAG_EMPTY)
 				{
 					if (op->column->players.count == 0)

@@ -133,8 +133,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	{
 		uint8_t *placed_on;
 
-		chunk_decompress(target_chunk);
-
 		placed_on = chunk_get_block(target_chunk, x, y, z);
 		if (placed_on == NULL)
 			return ERROR_NOT_ALLOWED;
@@ -166,8 +164,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	{
 		uint8_t *being_placed;
 
-		chunk_decompress(real_chunk);
-
 		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
 
 		if (being_placed == NULL || *being_placed != BLOCK_AIR)
@@ -181,8 +177,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	{
 		uint8_t *being_placed;
 		bedrock_node *node;
-
-		chunk_decompress(real_chunk);
 
 		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
 		bedrock_assert(being_placed != NULL, return offset);
@@ -206,8 +200,6 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 			packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
 		}
 	}
-
-	chunk_compress(real_chunk);
 
 	return offset;
 }

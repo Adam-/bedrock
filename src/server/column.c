@@ -57,7 +57,6 @@ void column_load(struct bedrock_column *column, nbt_tag *data)
 
 		chunk_load(column, y, chunk_tag);
 	}
-	nbt_free(tag);
 
 	{
 		compression_buffer *buffer = compression_compress_init(DATA_CHUNK_SIZE);
@@ -118,7 +117,6 @@ uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, i
 	if (c == NULL)
 		return NULL;
 
-	chunk_decompress(c);
 	return chunk_get_block(c, x, y, z);
 }
 
@@ -258,8 +256,6 @@ void column_process_pending()
 					if (chunk == NULL)
 						continue;
 
-					chunk_decompress(chunk);
-
 					chunk_tag = nbt_add(sections, TAG_COMPOUND, "", NULL, 0);
 
 					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Data", chunk->data, BEDROCK_DATA_LENGTH);
@@ -267,8 +263,6 @@ void column_process_pending()
 					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
 					nbt_add(chunk_tag, TAG_BYTE, "Y", &chunk->y, sizeof(chunk->y));
 					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
-
-					chunk_compress(chunk);
 				}
 
 				buf = compression_decompress(BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);

@@ -232,7 +232,14 @@ static void client_free(struct bedrock_client *client)
 
 		/* Column is no longer in render distance of anything */
 		if (c->players.count == 0)
-			column_set_pending(c, COLUMN_FLAG_EMPTY);
+		{
+			/* No operations are pending on this column, delete it immediately */
+			if (c->flags == 0)
+				column_free(c);
+			else
+				/* Mark it as want free */
+				column_set_pending(c, COLUMN_FLAG_EMPTY);
+		}
 	}
 	bedrock_list_clear(&client->columns);
 
@@ -647,7 +654,14 @@ void client_update_columns(struct bedrock_client *client)
 
 			/* Column is no longer in render distance of anything */
 			if (c->players.count == 0)
-				column_set_pending(c, COLUMN_FLAG_EMPTY);
+			{
+				/* No operations are pending on this column, delete it immediately */
+				if (c->flags == 0)
+					column_free(c);
+				else
+					/* Mark it as want free */
+					column_set_pending(c, COLUMN_FLAG_EMPTY);
+			}
 		}
 	}
 

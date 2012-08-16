@@ -84,8 +84,6 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 			if (!chunk)
 				continue;
 
-			chunk_decompress(chunk);
-
 			compression_compress_deflate(buffer, chunk->blocks, BEDROCK_BLOCK_LENGTH);
 		}
 
@@ -119,8 +117,6 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 			//compression_compress_deflate(buffer, chunk->skylight, BEDROCK_DATA_LENGTH);
 			compression_compress_deflate(buffer, fake_light, BEDROCK_DATA_LENGTH);
-
-			chunk_compress(chunk);
 		}
 
 		{

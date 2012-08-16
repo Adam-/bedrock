@@ -131,14 +131,9 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		if (chunk == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		chunk_decompress(chunk);
-
 		block_id = chunk_get_block(chunk, x, y, z);
 		if (block_id == NULL)
-		{
-			chunk_compress(chunk);
 			return ERROR_NOT_ALLOWED;
-		}
 
 		block = block_find_or_create(*block_id);
 
@@ -148,10 +143,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 
 		// Special case, unmineable
 		if (delay < 0)
-		{
-			chunk_compress(chunk);
 			return offset;
-		}
 
 		client->digging_data.x = x;
 		client->digging_data.y = y;
@@ -165,8 +157,6 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 			++client->digging_data.end.tv_sec;
 			client->digging_data.end.tv_nsec -= 1000000000;
 		}
-
-		chunk_compress(chunk);
 	}
 	else if (status == FINISHED_DIGGING)
 	{
@@ -182,14 +172,9 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		if (chunk == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		chunk_decompress(chunk);
-
 		block_id = chunk_get_block(chunk, x, y, z);
 		if (block_id == NULL)
-		{
-			chunk_compress(chunk);
 			return ERROR_NOT_ALLOWED;
-		}
 
 		if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end.tv_sec == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
 		{
@@ -198,14 +183,12 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 					x, y, z, item->id, *block_id);
 
 			packet_send_block_change(client, x, y, z, *block_id, 0);
-			chunk_compress(chunk);
 			return offset;
 		}
 
 		if (bedrock_time.tv_sec < client->digging_data.end.tv_sec || (bedrock_time.tv_sec == client->digging_data.end.tv_sec && bedrock_time.tv_nsec < client->digging_data.end.tv_nsec))
 		{
 			packet_send_block_change(client, x, y, z, *block_id, 0);
-			chunk_compress(chunk);
 			return offset;
 		}
 
@@ -244,8 +227,6 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 				break;
 		if (i == BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK)
 			chunk_free(chunk);
-		else
-			chunk_compress(chunk);
 	}
 	else
 		bedrock_log(LEVEL_DEBUG, "player digging: Unrecognized dig status %d", status);

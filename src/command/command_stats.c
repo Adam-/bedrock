@@ -37,13 +37,9 @@ void command_stats(struct bedrock_client *client, int bedrock_attribute_unused a
 
 						++chunks;
 
-						chunk_decompress(chunk);
-
 						for (j = 0; j < BEDROCK_BLOCK_LENGTH; ++j)
 							if (chunk->blocks[j])
 								++blocks;
-
-						chunk_compress(chunk);
 					}
 				}
 			}
