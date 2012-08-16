@@ -33,8 +33,8 @@ struct bedrock_column
 	/* Chunks in this column */
 	struct bedrock_chunk *chunks[BEDROCK_CHUNKS_PER_COLUMN];
 
-	/* Compressed biome data */
-	bedrock_buffer *biomes;
+	/* Biome data, a pointer to the NBT structure */
+	uint8_t *biomes;
 
 	/* List of bedrock_dropped_item structures for dropped items within the column */
 	bedrock_list items;

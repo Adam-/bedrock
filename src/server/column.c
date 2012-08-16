@@ -58,22 +58,9 @@ void column_load(struct bedrock_column *column, nbt_tag *data)
 		chunk_load(column, y, chunk_tag);
 	}
 
-	{
-		compression_buffer *buffer = compression_compress_init(DATA_CHUNK_SIZE);
-
-		tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
-		byte_array = &tag->payload.tag_byte_array;
-		bedrock_assert(byte_array->length == BEDROCK_BIOME_LENGTH, ;);
-
-		compression_compress_deflate_finish(buffer, (const unsigned char *) byte_array->data, byte_array->length);
-		bedrock_buffer_resize(buffer->buffer, buffer->buffer->length);
-
-		column->biomes = buffer->buffer;
-		buffer->buffer = NULL;
-
-		nbt_free(tag);
-		compression_compress_end(buffer);
-	}
+	tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
+	byte_array = &tag->payload.tag_byte_array;
+	column->biomes = (uint8_t *) tag->payload.tag_byte_array.data;
 }
 
 void column_free(struct bedrock_column *column)
@@ -92,8 +79,6 @@ void column_free(struct bedrock_column *column)
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);
-
-	bedrock_buffer_free(column->biomes);
 
 	if (column->data != NULL)
 		nbt_free(column->data);
@@ -233,9 +218,6 @@ void column_process_pending()
 			else
 			{
 				struct region_operation *op = bedrock_malloc(sizeof(struct region_operation));
-				int i;
-				nbt_tag *level, *sections, *biomes;
-				compression_buffer *buf;
 
 				op->region = column->region;
 				op->operation = REGION_OP_WRITE;
@@ -243,38 +225,7 @@ void column_process_pending()
 
 				bedrock_log(LEVEL_COLUMN, "column: Starting save for column %d,%d", column->x, column->z);
 
-				level = nbt_get(column->data, TAG_COMPOUND, 1, "Level");
-				bedrock_assert(level != NULL, ;);
-
-				sections = nbt_add(level, TAG_LIST, "Sections", NULL, 0);
-
-				for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
-				{
-					struct bedrock_chunk *chunk = column->chunks[i];
-					nbt_tag *chunk_tag;
-
-					if (chunk == NULL)
-						continue;
-
-					chunk_tag = nbt_add(sections, TAG_COMPOUND, "", NULL, 0);
-
-					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Data", chunk->data, BEDROCK_DATA_LENGTH);
-					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "SkyLight", chunk->skylight, BEDROCK_DATA_LENGTH);
-					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "BlockLight", chunk->blocklight, BEDROCK_DATA_LENGTH);
-					nbt_add(chunk_tag, TAG_BYTE, "Y", &chunk->y, sizeof(chunk->y));
-					nbt_add(chunk_tag, TAG_BYTE_ARRAY, "Blocks", chunk->blocks, BEDROCK_BLOCK_LENGTH);
-				}
-
-				buf = compression_decompress(BEDROCK_BIOME_LENGTH, column->biomes->data, column->biomes->length);
-
-				biomes = nbt_add(level, TAG_BYTE_ARRAY, "Biomes", buf->buffer->data, buf->buffer->length);
-
-				compression_decompress_end(buf);
-
 				op->nbt_out = nbt_write(column->data);
-
-				nbt_free(sections);
-				nbt_free(biomes);
 
 				column->flags &= ~COLUMN_FLAG_DIRTY;
 				column->flags |= COLUMN_FLAG_WRITE;

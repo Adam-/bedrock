@@ -119,15 +119,10 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 			compression_compress_deflate(buffer, fake_light, BEDROCK_DATA_LENGTH);
 		}
 
-		{
-			compression_buffer *biomes = compression_decompress(BEDROCK_BUFFER_DEFAULT_SIZE, column->biomes->data, column->biomes->length);
-			bedrock_assert(biomes->buffer->length == BEDROCK_BIOME_LENGTH, ;);
-			if (node->next)
-				compression_compress_deflate(buffer, biomes->buffer->data, biomes->buffer->length);
-			else
-				compression_compress_deflate_finish(buffer, biomes->buffer->data, biomes->buffer->length);
-			compression_decompress_end(biomes);
-		}
+		if (node->next)
+			compression_compress_deflate(buffer, column->biomes, BEDROCK_BIOME_LENGTH);
+		else
+			compression_compress_deflate_finish(buffer, column->biomes, BEDROCK_BIOME_LENGTH);
 	}
 
 	size = buffer->buffer->length;
