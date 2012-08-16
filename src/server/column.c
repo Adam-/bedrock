@@ -233,7 +233,8 @@ void column_process_pending()
 				region_operation_schedule(op);
 			}
 		}
-		else if (column->flags & COLUMN_FLAG_EMPTY)
+		/* Column must be *only* empty */
+		else if (column->flags == COLUMN_FLAG_EMPTY)
 		{
 			if (column->players.count == 0)
 				column_free(column);

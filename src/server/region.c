@@ -299,7 +299,7 @@ static void region_worker_write(struct region_operation *op)
 	// Pad the end
 	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
 	bedrock_log(LEVEL_DEBUG, "column: Finished writing compressed NBT structure, file requires an additional %d bytes of padding", j);
-	memset(&padding, 0, j);
+	memset(padding, 0, j);
 	if (write(region->fd.fd, padding, j) != j)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to write padding for region file %s - %s", region->path, strerror(errno));
@@ -317,7 +317,13 @@ static void region_worker(struct bedrock_thread *thread, struct bedrock_region *
 {
 	bedrock_mutex_lock(&region->operations_mutex);
 
-	while ((region->operations.count > 0 || bedrock_cond_wait(&region->worker_condition, &region->operations_mutex)) && bedrock_thread_want_exit(thread) == false)
+	/* Yes, check for exit state both before and after waiting.
+	 * Note that region->operations.count > 0 short circuits this,
+	 * if there are pending operations we want them to run no matter what.
+	 * This can cause region_free to block upon join to this thread due to
+	 * pending operations!
+	 */
+	while (region->operations.count > 0 || (bedrock_thread_want_exit(thread) == false && bedrock_cond_wait(&region->worker_condition, &region->operations_mutex) && bedrock_thread_want_exit(thread) == false))
 	{
 		struct region_operation *op;
 
@@ -452,6 +458,9 @@ void region_free(struct bedrock_region *region)
 	bedrock_cond_wakeup(&region->worker_condition);
 	bedrock_thread_join(region->worker);
 	bedrock_cond_destroy(&region->worker_condition);
+
+	/* Now that this region's worker is shut down process the last worker results */
+	region_operations_notify(region);
 
 	bedrock_list_del(&region->world->regions, region);
 
