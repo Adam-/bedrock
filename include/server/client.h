@@ -38,7 +38,6 @@ struct bedrock_client
 {
 	struct bedrock_fd fd;                /* fd for this client */
 
-	unsigned char auth_token[BEDROCK_VERIFY_TOKEN_LEN]; /* Contains our authentication token for handshake */
 	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */

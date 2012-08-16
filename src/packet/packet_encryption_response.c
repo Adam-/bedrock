@@ -23,7 +23,7 @@ int packet_encryption_response(struct bedrock_client *client, const bedrock_pack
 	packet_read(p, &offset, verify_token, verify_token_len);
 
 	crypto_rsa_decrypt(verify_token, verify_token_len, decrypted_verify_token, sizeof(decrypted_verify_token));
-	if (memcmp(decrypted_verify_token, client->auth_token, BEDROCK_VERIFY_TOKEN_LEN))
+	if (memcmp(decrypted_verify_token, crypto_auth_token(), BEDROCK_VERIFY_TOKEN_LEN))
 	{
 		packet_send_disconnect(client, "Invalid verify token");
 		return -1;

@@ -9,9 +9,12 @@
 static RSA *keypair;
 static unsigned char *pubkey_encoded;
 static int pubkey_len;
+static unsigned char auth_token[BEDROCK_VERIFY_TOKEN_LEN]; /* Contains our authentication token for handshake */
 
 void crypto_init()
 {
+	int i;
+
 	keypair = RSA_generate_key(BEDROCK_CERT_BIT_SIZE, RSA_F4, NULL, NULL);
 	if (keypair == NULL)
 	{
@@ -27,6 +30,10 @@ void crypto_init()
 		bedrock_log(LEVEL_CRIT, "crypto: Unable to encode public key - %s", ERR_error_string(en, NULL));
 		exit(-1);
 	}
+
+	/* Generate authentication token */
+	for (i = 0; i < BEDROCK_VERIFY_TOKEN_LEN; ++i)
+		auth_token[i] = rand() % 0xFF;
 }
 
 void crypto_shutdown()
@@ -44,6 +51,11 @@ int crypto_pubkey_len()
 unsigned char *crypto_pubkey()
 {
 	return pubkey_encoded;
+}
+
+unsigned char *crypto_auth_token()
+{
+	return auth_token;
 }
 
 const EVP_CIPHER *crypto_cipher()

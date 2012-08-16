@@ -4,14 +4,9 @@
 
 void packet_send_encryption_request(struct bedrock_client *client)
 {
-	int i;
 	int16_t pubkey_len = crypto_pubkey_len();
-	unsigned char verify_token[BEDROCK_VERIFY_TOKEN_LEN];
 	int16_t verify_token_length = BEDROCK_VERIFY_TOKEN_LEN;
 	bedrock_packet packet;
-
-	for (i = 0; i < BEDROCK_VERIFY_TOKEN_LEN; ++i)
-		verify_token[i] = rand() % 0xFF;
 
 	packet_init(&packet, ENCRYPTION_REQUEST);
 
@@ -22,10 +17,7 @@ void packet_send_encryption_request(struct bedrock_client *client)
 	packet_pack(&packet, crypto_pubkey(), pubkey_len);
 
 	packet_pack_int(&packet, &verify_token_length, sizeof(verify_token_length));
-	packet_pack(&packet, verify_token, sizeof(verify_token));
+	packet_pack(&packet, crypto_auth_token(), BEDROCK_VERIFY_TOKEN_LEN);
 
 	client_send_packet(client, &packet);
-
-	bedrock_assert(sizeof(client->auth_token) == sizeof(verify_token), ;);
-	memcpy(client->auth_token, verify_token, sizeof(client->auth_token));
 }
