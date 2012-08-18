@@ -63,8 +63,7 @@ void ncurses_read()
 			wmove(win, max_y - 2, 0);
 			wprintw(win, "> ");
 			clrtoeol();
-
-			wrefresh(text_window);
+			wrefresh(win);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/command.h"
+#include "util/string.h"
 
 #include <time.h>
 
@@ -48,31 +49,31 @@ void command_uptime(struct bedrock_command_source *source, int bedrock_attribute
 	if (years)
 	{
 		snprintf(timebuf, sizeof(timebuf), "%d year%s ", years, years != 1 ? "s" : "");
-		strncat(agobuf, timebuf, sizeof(agobuf));
+		bedrock_strlcat(agobuf, timebuf, sizeof(agobuf));
 	}
 
 	if (days)
 	{
 		snprintf(timebuf, sizeof(timebuf), "%d day%s ", days, days != 1 ? "s" : "");
-		strncat(agobuf, timebuf, sizeof(agobuf));
+		bedrock_strlcat(agobuf, timebuf, sizeof(agobuf));
 	}
 
 	if (hours)
 	{
 		snprintf(timebuf, sizeof(timebuf), "%d hour%s ", hours, hours != 1 ? "s" : "");
-		strncat(agobuf, timebuf, sizeof(agobuf));
+		bedrock_strlcat(agobuf, timebuf, sizeof(agobuf));
 	}
 
 	if (minutes)
 	{
 		snprintf(timebuf, sizeof(timebuf), "%d minute%s ", minutes, minutes != 1 ? "s" : "");
-		strncat(agobuf, timebuf, sizeof(agobuf));
+		bedrock_strlcat(agobuf, timebuf, sizeof(agobuf));
 	}
 
 	if (!*agobuf)
 	{
 		snprintf(timebuf, sizeof(timebuf), "%ld second%s ", running, running != 1 ? "s" : "");
-		strncat(agobuf, timebuf, sizeof(timebuf));
+		bedrock_strlcat(agobuf, timebuf, sizeof(agobuf));
 	}
 
 	strftime(timebuf, sizeof(timebuf), "%b %d %H:%M:%S %Y %Z", &result);
