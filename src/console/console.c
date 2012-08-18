@@ -7,8 +7,6 @@ bool console_running = true;
 
 int main()
 {
-	int stdin_fd;
-
 	if (!socket_init())
 		return -1;
 
@@ -16,8 +14,6 @@ int main()
 
 	ncurses_print("Welcome to the bedrock console.\n");
 	ncurses_print("To exit type \"quit\"\n");
-
-	stdin_fd = fileno(stdin);
 
 	while (console_running)
 		socket_process();
