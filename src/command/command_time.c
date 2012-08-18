@@ -4,24 +4,39 @@
 
 #include <errno.h>
 
-static void update_time(struct bedrock_client *client, long time)
+static void update_time(struct bedrock_command_source *source, struct bedrock_world *world, long time)
 {
 	bedrock_node *node;
 
-	command_reply(client, "Time in %s changed to %ld", client->world->name, time);
-	client->world->time = time;
+	command_reply(source, "Time in %s changed to %ld", world->name, time);
+	world->time = time;
 	
 	LIST_FOREACH(&client_list, node)
 	{
 		struct bedrock_client *c = node->data;
 
-		if (c->world == client->world)
+		if (c->world == world)
 			packet_send_time(c);
 	}
 }
 
-void command_time(struct bedrock_client *client, int argc, const char **argv)
+void command_time(struct bedrock_command_source *source, int argc, const char **argv)
 {
+	struct bedrock_world *world;
+
+	if (source->user != NULL)
+		world = source->user->world;
+	else
+	{
+		if (world_list.count == 0)
+		{
+			command_reply(source, "There are no laoded worlds");
+			return;
+		}
+
+		world = world_list.head->data;
+	}
+
 	if (argc == 3)
 	{
 		if (!strcasecmp(argv[1], "set"))
@@ -34,25 +49,26 @@ void command_time(struct bedrock_client *client, int argc, const char **argv)
 			
 			if (errno || *errptr)
 			{
+				command_reply(source, "Invalid time");
 				return;
 			}
 			else
 			{
 				time %= 24000;
-				update_time(client, time);
+				update_time(source, world, time);
 			}
 		}
 	}
 	else if (argc == 2)
 	{
 		if (!strcasecmp(argv[1], "day") || !strcasecmp(argv[1], "noon"))
-			update_time(client, 6000);
+			update_time(source, world, 6000);
 		else if (!strcasecmp(argv[1], "night") || !strcasecmp(argv[1], "midnight"))
-			update_time(client, 18000);
+			update_time(source, world, 18000);
 		else if (!strcasecmp(argv[1], "dawn") || !strcasecmp(argv[1], "morning"))
-			update_time(client, 24000);
+			update_time(source, world, 24000);
 		else if (!strcasecmp(argv[1], "dusk") || !strcasecmp(argv[1], "evening"))
-			update_time(client, 12000);
+			update_time(source, world, 12000);
 	}
 	else
 	{
@@ -61,7 +77,7 @@ void command_time(struct bedrock_client *client, int argc, const char **argv)
 		LIST_FOREACH(&world_list, node)
 		{
 			struct bedrock_world *world = node->data;
-			command_reply(client, "Current time in %s is %ld", world->name, world->time);
+			command_reply(source, "Current time in %s is %ld", world->name, world->time);
 		}
 	}
 }

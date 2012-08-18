@@ -7,6 +7,7 @@
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
 #include "util/crypto.h"
+#include "protocol/console.h"
 
 #include <time.h>
 #include <errno.h>
@@ -80,19 +81,25 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 {
 	va_list args;
 	char buffer[512];
+	bedrock_node *node;
 
 	va_start(args, msg);
-	vsnprintf(buffer, sizeof(buffer), msg, args);
+	vsnprintf(buffer, sizeof(buffer) - 1, msg, args);
 	va_end(args);
+
+	strncat(buffer, "\n", 1);
 
 	if (bedrock_conf_log_level & level)
 	{
-		fprintf(stdout, "%s\n", buffer);
+		fprintf(stdout, "%s", buffer);
 
 		if (log_fd.open)
-		{
 			write(log_fd.fd, buffer, strlen(buffer));
-			write(log_fd.fd, "\n", 1);
+
+		LIST_FOREACH(&console_list, node)
+		{
+			struct bedrock_console_client *client = node->data;
+			console_write(client, buffer);
 		}
 	}
 }
@@ -230,6 +237,7 @@ int main(int argc, char **argv)
 	crypto_init();
 	io_init();
 	listener_init();
+	console_init();
 	bedrock_threadengine_start();
 
 	bedrock_timer_schedule(400, send_keepalive, NULL);
@@ -239,6 +247,7 @@ int main(int argc, char **argv)
 	{
 		io_process();
 		client_process_exits();
+		console_process_exits();
 	}
 
 	save(NULL);
@@ -250,6 +259,7 @@ int main(int argc, char **argv)
 
 	bedrock_timer_cancel_all_for(NULL);
 
+	console_shutdown();
 	listener_shutdown();
 	io_shutdown();
 	crypto_shutdown();

@@ -23,8 +23,13 @@ int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 
 	if (*message == '/')
 	{
+		struct bedrock_command_source source = {
+			.user = client,
+			.console = NULL
+		};
+
 		bedrock_log(LEVEL_INFO, "command: %s: %s", client->name, message + 1);
-		command_run(client, message + 1);
+		command_run(&source, message + 1);
 		return offset;
 	}
 

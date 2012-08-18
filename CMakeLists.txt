@@ -20,6 +20,7 @@ find_package(ZLIB REQUIRED)
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(Curses)
 
 # Include library header files
 include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
@@ -34,6 +35,8 @@ ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
 # Get a list of folders from src/ and remove any CMake generated build files
 file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*")
 list(REMOVE_ITEM SOURCE_FOLDERS "src/CMakeFiles")
+# The console is its own separate program
+list(REMOVE_ITEM SOURCE_FOLDERS "src/console")
 
 # Set an empty list for later
 set(BEDROCK_SOURCES)
@@ -53,4 +56,10 @@ set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
 target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES})
+
+if(CURSES_FOUND)
+  file(GLOB CONSOLE_SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/console/*.c")
+  add_executable(console ${CONSOLE_SOURCE_FILES})
+  target_link_libraries(console ${CURSES_LIBRARIES})
+endif(CURSES_FOUND)
 

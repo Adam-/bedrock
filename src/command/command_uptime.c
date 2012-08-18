@@ -9,7 +9,7 @@
 #define DAY HOUR * 24
 #define YEAR DAY * 365
 
-void command_uptime(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_uptime(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	struct tm result;
 	time_t running = time(NULL) - bedrock_start;
@@ -77,5 +77,5 @@ void command_uptime(struct bedrock_client *client, int bedrock_attribute_unused 
 
 	strftime(timebuf, sizeof(timebuf), "%b %d %H:%M:%S %Y %Z", &result);
 
-	command_reply(client, "Started on %s, which is %sago", timebuf, agobuf);
+	command_reply(source, "Started on %s, which is %sago", timebuf, agobuf);
 }

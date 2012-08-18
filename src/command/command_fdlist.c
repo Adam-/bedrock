@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-void command_fdlist(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	int engines = 0, files = 0, sockets = 0, pipes = 0, total = 0;
@@ -41,12 +41,12 @@ void command_fdlist(struct bedrock_client *client, int bedrock_attribute_unused 
 
 		++total;
 
-		command_reply(client, "#%d - %s - %s", fd->fd, type, fd->desc);
+		command_reply(source, "#%d - %s - %s", fd->fd, type, fd->desc);
 	}
 	bedrock_mutex_unlock(&fdlist_mutex);
 
-	command_reply(client, "Total: %d open FDs, %d engine, %d files, %d pipes, and %d sockets", total, engines, files, pipes, sockets);
+	command_reply(source, "Total: %d open FDs, %d engine, %d files, %d pipes, and %d sockets", total, engines, files, pipes, sockets);
 
 	if (!getrlimit(RLIMIT_NOFILE, &rlim))
-		command_reply(client, "Soft limit: %d, Hard limit: %d", rlim.rlim_cur, rlim.rlim_max);
+		command_reply(source, "Soft limit: %d, Hard limit: %d", rlim.rlim_cur, rlim.rlim_max);
 }

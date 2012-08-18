@@ -2,7 +2,7 @@
 #include "server/command.h"
 #include "server/column.h"
 
-void command_stats(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_stats(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node, *node2, *node3;
 	int i;
@@ -55,7 +55,7 @@ void command_stats(struct bedrock_client *client, int bedrock_attribute_unused a
 		++connections;
 	}
 
-	command_reply(client, "Worlds: %llu, Regions: %llu, Columns: %llu, Chunks: %llu, Blocks: %llu", worlds, regions, columns, chunks, blocks);
-	command_reply(client, "Players: %ld, Connections: %ld", players, connections);
+	command_reply(source, "Worlds: %llu, Regions: %llu, Columns: %llu, Chunks: %llu, Blocks: %llu", worlds, regions, columns, chunks, blocks);
+	command_reply(source, "Players: %ld, Console clients: %d, Connections: %ld", players, console_list.count, connections);
 
 }

@@ -1,6 +1,6 @@
 #include "server/command.h"
 
-void command_players(struct bedrock_client *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_players(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	int players = 0, clients = 0;
@@ -11,12 +11,12 @@ void command_players(struct bedrock_client *client, int bedrock_attribute_unused
 
 		if (c->authenticated & STATE_IN_GAME)
 		{
-			command_reply(client, "%s", c->name);
+			command_reply(source, "%s", c->name);
 			++players;
 		}
 
 		++clients;
 	}
 
-	command_reply(client, "Total players: %d, total clients: %d", players, clients);
+	command_reply(source, "Total players: %d, total clients: %d", players, clients);
 }

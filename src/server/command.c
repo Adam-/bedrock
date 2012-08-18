@@ -33,14 +33,14 @@ struct bedrock_command commands[] = {
 
 int command_count = sizeof(commands) / sizeof(struct bedrock_command);
 
-bool command_use_anyone(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_command bedrock_attribute_unused *command)
+bool command_use_anyone(struct bedrock_command_source bedrock_attribute_unused *source, struct bedrock_command bedrock_attribute_unused *command)
 {
 	return true;
 }
 
-bool command_use_oper(struct bedrock_client *client, struct bedrock_command *command)
+bool command_use_oper(struct bedrock_command_source *source, struct bedrock_command *command)
 {
-	return oper_has_command(client->oper, command->name);
+	return source->user == NULL || oper_has_command(source->user->oper, command->name);
 }
 
 static int command_compare(const char *name, const struct bedrock_command *command)
@@ -55,7 +55,7 @@ struct bedrock_command *command_find(const char *command)
 	return bsearch(command, commands, sizeof(commands) / sizeof(struct bedrock_command), sizeof(struct bedrock_command), (compare_func) command_compare);
 }
 
-void command_run(struct bedrock_client *client, const char *buf)
+void command_run(struct bedrock_command_source *source, const char *buf)
 {
 	char command_buf[BEDROCK_MAX_STRING_LENGTH];
 	char *front, *end;
@@ -95,11 +95,11 @@ void command_run(struct bedrock_client *client, const char *buf)
 
 	if (argc - 1 < command->min_parameters)
 	{
-		command_reply(client, "Syntax error, syntax is: %s", command->syntax);
+		command_reply(source, "Syntax error, syntax is: %s", command->syntax);
 		return;
 	}
 
-	if (!command->can_use(client, command))
+	if (!command->can_use(source, command))
 		return;
 
 	{
@@ -109,20 +109,33 @@ void command_run(struct bedrock_client *client, const char *buf)
 			bedrock_log(LEVEL_DEBUG, "command: parameter %d: %s", i, argv[i]);
 	}
 
-	command->handler(client, argc, (const char **) argv);
+	command->handler(source, argc, (const char **) argv);
 }
 
-void command_reply(struct bedrock_client *client, const char *fmt, ...)
+void command_reply(struct bedrock_command_source *source, const char *fmt, ...)
 {
 	va_list args;
 	char message[BEDROCK_MAX_STRING_LENGTH];
 
-	message[0] = (char) SPECIAL_CHAR;
-	message[1] = COLOR_GREY;
+	if (source->user != NULL)
+	{
+		message[0] = (char) SPECIAL_CHAR;
+		message[1] = COLOR_GREY;
 
-	va_start(args, fmt);
-	vsnprintf(message + 2, sizeof(message) - 2, fmt, args);
-	va_end(args);
+		va_start(args, fmt);
+		vsnprintf(message + 2, sizeof(message) - 2, fmt, args);
+		va_end(args);
 
-	packet_send_chat_message(client, "%s", message);
+		packet_send_chat_message(source->user, "%s", message);
+	}
+	else if (source->console != NULL)
+	{
+		va_start(args, fmt);
+		vsnprintf(message, sizeof(message) - 1, fmt, args);
+		va_end(args);
+
+		strncat(message, "\n", 1);
+
+		console_write(source->console, message);
+	}
 }

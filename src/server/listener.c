@@ -36,11 +36,11 @@ static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)
 	setsockopt(client_fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
 	client = client_create();
+
+	bedrock_fd_open(&client->fd, client_fd, FD_SOCKET, "client fd");
 	memcpy(&client->fd.addr, &addr, addrlen);
 
 	bedrock_log(LEVEL_DEBUG, "Accepted client from %s", client_get_ip(client));
-
-	bedrock_fd_open(&client->fd, client_fd, FD_SOCKET, "client fd");
 
 	client->fd.read_handler = client_event_read;
 	client->fd.write_handler = client_event_write;

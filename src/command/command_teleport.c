@@ -5,13 +5,13 @@
 
 #include <errno.h>
 
-void command_teleport(struct bedrock_client *client, int argc, const char **argv)
+void command_teleport(struct bedrock_command_source *source, int argc, const char **argv)
 {
-	struct bedrock_client *source = client_find(argv[1]);
+	struct bedrock_client *user_source = client_find(argv[1]);
 
 	if (source == NULL)
 	{
-		command_reply(client, "No such user: %s", argv[1]);
+		command_reply(source, "No such user: %s", argv[1]);
 		return;
 	}
 
@@ -21,24 +21,24 @@ void command_teleport(struct bedrock_client *client, int argc, const char **argv
 
 		if (target == NULL)
 		{
-			command_reply(client, "No such user: %s", argv[2]);
+			command_reply(source, "No such user: %s", argv[2]);
 			return;
 		}
-		else if (source == target)
+		else if (user_source == target)
 		{
-			command_reply(client, "Can not teleport a player to themself");
+			command_reply(source, "Can not teleport a player to themself");
 			return;
 		}
-		else if (source->world != target->world)
+		else if (user_source->world != target->world)
 		{
-			command_reply(client, "Can not teleport users across dimensions (yet!)");
+			command_reply(source, "Can not teleport users across dimensions (yet!)");
 			return;
 		}
 
-		command_reply(client, "Teleporting %s to %s", source->name, target->name);
+		command_reply(source, "Teleporting %s to %s", user_source->name, target->name);
 
-		client_update_position(source, *client_get_pos_x(target), *client_get_pos_y(target), *client_get_pos_z(target), *client_get_yaw(source), *client_get_pitch(source), target->stance, *client_get_on_ground(target));
-		packet_send_entity_teleport(source, source);
+		client_update_position(user_source, *client_get_pos_x(target), *client_get_pos_y(target), *client_get_pos_z(target), *client_get_yaw(user_source), *client_get_pitch(user_source), target->stance, *client_get_on_ground(target));
+		packet_send_entity_teleport(user_source, user_source);
 	}
 	else if (argc == 5)
 	{
@@ -50,7 +50,7 @@ void command_teleport(struct bedrock_client *client, int argc, const char **argv
 		long_x = strtol(argv[2], &errptr, 10);
 		if (errno || *errptr)
 		{
-			command_reply(client, "Invalid X coordinate");
+			command_reply(source, "Invalid X coordinate");
 			return;
 		}
 
@@ -59,7 +59,7 @@ void command_teleport(struct bedrock_client *client, int argc, const char **argv
 		long_y = strtol(argv[3], &errptr, 10);
 		if (errno || *errptr)
 		{
-			command_reply(client, "Invalid Y coordinate");
+			command_reply(source, "Invalid Y coordinate");
 			return;
 		}
 
@@ -68,18 +68,17 @@ void command_teleport(struct bedrock_client *client, int argc, const char **argv
 		long_z = strtol(argv[4], &errptr, 10);
 		if (errno || *errptr)
 		{
-			command_reply(client, "Invalid Z coordinate");
+			command_reply(source, "Invalid Z coordinate");
 			return;
 		}
 
-		command_reply(client, "Teleporting %s to %d, %d, %d", source->name, long_x, long_y, long_z);
+		command_reply(source, "Teleporting %s to %d, %d, %d", user_source->name, long_x, long_y, long_z);
 
-		client_update_position(source, long_x, long_y, long_z, *client_get_yaw(source), *client_get_pitch(source), source->stance, *client_get_on_ground(source));
-		packet_send_entity_teleport(source, source);
+		client_update_position(user_source, long_x, long_y, long_z, *client_get_yaw(user_source), *client_get_pitch(user_source), user_source->stance, *client_get_on_ground(user_source));
+		packet_send_entity_teleport(user_source, user_source);
 	}
 	else
 	{
-		command_reply(client, "Invalid usage, syntax: /%s <player1> [<player2> | <x> <y> <z>]", argv[0]);
-		return;
+		command_reply(source, "Invalid usage, syntax: /%s <player1> [<player2> | <x> <y> <z>]", argv[0]);
 	}
 }
