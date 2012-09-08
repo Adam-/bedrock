@@ -87,6 +87,14 @@ void io_timer_schedule(struct event *ev, uint64_t ticks_from_now, short events, 
 		bedrock_log(LEVEL_WARN, "io: error from event_add() scheduling timer");
 }
 
+void io_signal(struct event *ev, int signum, event_callback_fn callback)
+{
+	if (event_assign(ev, eb, signum, EV_PERSIST | EV_SIGNAL, callback, NULL) == -1)
+		bedrock_log(LEVEL_WARN, "io: error from event_assign() installing signal handler");
+	else if (event_add(ev, NULL) == -1)
+		bedrock_log(LEVEL_WARN, "io: error from event_add() installing signal handler");
+}
+
 void io_enable(struct event *ev)
 {
 	if (event_add(ev, NULL) == -1)

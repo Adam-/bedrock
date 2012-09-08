@@ -3,6 +3,7 @@
 #include "server/client.h"
 #include "server/column.h"
 #include "server/io.h"
+#include "server/signal.h"
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
 #include "util/crypto.h"
@@ -194,10 +195,8 @@ static void do_fork()
 	setpgid(0, 0);
 }
 
-#include <signal.h> // XXX
 int main(int argc, char **argv)
 {
-	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
 	struct event send_keepalive_timer, save_timer;
 
@@ -230,6 +229,7 @@ int main(int argc, char **argv)
 
 	crypto_init();
 	io_init();
+	signal_init();
 	listener_init();
 	console_init();
 	bedrock_threadengine_start();
@@ -245,6 +245,9 @@ int main(int argc, char **argv)
 		console_process_exits();
 	}
 
+	io_disable(&send_keepalive_timer);
+	io_disable(&save_timer);
+
 	save(-1, 0, NULL);
 
 	world_free(world);
@@ -256,6 +259,7 @@ int main(int argc, char **argv)
 
 	console_shutdown();
 	listener_shutdown();
+	signal_shutdown();
 	io_shutdown();
 	crypto_shutdown();
 
