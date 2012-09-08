@@ -255,8 +255,6 @@ int main(int argc, char **argv)
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();
 
-	//bedrock_timer_cancel_all_for(NULL);
-
 	console_shutdown();
 	listener_shutdown();
 	signal_shutdown();
