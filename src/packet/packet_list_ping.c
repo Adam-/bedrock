@@ -4,7 +4,7 @@
 #include "server/io.h"
 #include "packet/packet_chat_message.h"
 
-int packet_list_ping(struct bedrock_client *client, const unsigned char __attribute__((__unused__)) *buffer, size_t __attribute__((__unused__)) len)
+int packet_list_ping(struct bedrock_client *client, const unsigned char bedrock_attribute_unused *buffer, size_t __attribute__((__unused__)) len)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char string[BEDROCK_MAX_STRING_LENGTH];

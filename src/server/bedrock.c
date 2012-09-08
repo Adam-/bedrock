@@ -109,7 +109,7 @@ static void bedrock_log_close()
 	bedrock_fd_close(&log_fd);
 }
 
-static void send_keepalive(void __attribute__((__unused__)) *notused)
+static void send_keepalive(void bedrock_attribute_unused *notused)
 {
 	bedrock_node *n;
 	static uint32_t id = 1;
@@ -127,7 +127,7 @@ static void send_keepalive(void __attribute__((__unused__)) *notused)
 	bedrock_timer_schedule(400, send_keepalive, NULL);
 }
 
-static void save(void __attribute__((__unused__)) *notused)
+static void save(void bedrock_attribute_unused *notused)
 {
 	/* Save pending columns */
 	column_process_pending();
