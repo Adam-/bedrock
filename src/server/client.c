@@ -285,7 +285,7 @@ void client_process_exits()
 	bedrock_list_clear(&exiting_client_list);
 }
 
-void client_event_read(evutil_socket_t fd, short events, void *data)
+void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
@@ -304,6 +304,7 @@ void client_event_read(evutil_socket_t fd, short events, void *data)
 	i = recv(fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
+		printf("events.. %d\n", events);
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
@@ -337,7 +338,7 @@ void client_event_read(evutil_socket_t fd, short events, void *data)
 	}
 }
 
-void client_event_write(evutil_socket_t fd, short events, void *data)
+void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_node *node;

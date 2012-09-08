@@ -15,15 +15,18 @@ check_type_size(uint32_t UINT32_T)
 check_type_size(int64_t INT64_T)
 check_type_size(uint64_t UINT64_T)
 
+set(CMAKE_MODULE_PATH cmake)
+
 # required packages for compile
 find_package(ZLIB REQUIRED)
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(libevent REQUIRED)
 find_package(Curses)
 
 # Include library header files
-include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
+include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${EVENT_INCLUDE_DIR})
 
 # Generate the files for compile
 FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l
@@ -55,7 +58,7 @@ list(SORT BEDROCK_SOURCES)
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
 
 if(CURSES_FOUND)
   file(GLOB CONSOLE_SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/console/*.c")

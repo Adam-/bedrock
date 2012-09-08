@@ -27,7 +27,7 @@ uint16_t bedrock_conf_log_level = 0;
 
 static struct timespec last_tick;
 
-void bedrock_update_time()
+static void update_time()
 {
 	uint64_t diff;
 	uint16_t tick_diff;
@@ -58,8 +58,6 @@ void bedrock_update_time()
 			struct bedrock_world *world = node->data;
 			world->time += tick_diff;
 		}
-
-		bedrock_timer_process();
 	}
 }
 
@@ -109,7 +107,7 @@ static void bedrock_log_close()
 	bedrock_fd_close(&log_fd);
 }
 
-static void send_keepalive(void bedrock_attribute_unused *notused)
+static void send_keepalive(evutil_socket_t bedrock_attribute_unused fd, short bedrock_attribute_unused events, void bedrock_attribute_unused *data)
 {
 	bedrock_node *n;
 	static uint32_t id = 1;
@@ -123,11 +121,9 @@ static void send_keepalive(void bedrock_attribute_unused *notused)
 	}
 
 	while (++id == 0);
-
-	bedrock_timer_schedule(400, send_keepalive, NULL);
 }
 
-static void save(void bedrock_attribute_unused *notused)
+static void save(evutil_socket_t bedrock_attribute_unused fd, short bedrock_attribute_unused events, void bedrock_attribute_unused *data)
 {
 	/* Save pending columns */
 	column_process_pending();
@@ -137,8 +133,6 @@ static void save(void bedrock_attribute_unused *notused)
 
 	/* Save worlds (level.dat) */
 	world_save_all();
-
-	bedrock_timer_schedule(6000, save, NULL);
 }
 
 static void parse_cli_args(int argc, char **argv)
@@ -240,24 +234,25 @@ int main(int argc, char **argv)
 	console_init();
 	bedrock_threadengine_start();
 
-	bedrock_timer_schedule(400, send_keepalive, NULL);
-	bedrock_timer_schedule(6000, save, NULL);
+	io_timer_schedule(400, EV_PERSIST, send_keepalive, NULL);
+	io_timer_schedule(6000, EV_PERSIST, save, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{
 		io_process();
+		update_time();
 		client_process_exits();
 		console_process_exits();
 	}
 
-	save(NULL);
+	save(-1, 0, NULL);
 
 	world_free(world);
 
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();
 
-	bedrock_timer_cancel_all_for(NULL);
+	//bedrock_timer_cancel_all_for(NULL);
 
 	console_shutdown();
 	listener_shutdown();

@@ -27,7 +27,7 @@ static int mem_find(const unsigned char *mem, size_t len, unsigned char val)
 	return i;
 }
 
-static void console_client_read(evutil_socket_t fd, short events, void *data)
+static void console_client_read(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
 	struct bedrock_console_client *client = data;
 	int i;
@@ -71,7 +71,7 @@ static void console_client_read(evutil_socket_t fd, short events, void *data)
 	}
 }
 
-static void console_client_write(evutil_socket_t fd, short events, void *data)
+static void console_client_write(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
 	struct bedrock_console_client *client = data;
 	bedrock_node *node;
@@ -116,7 +116,7 @@ static void console_client_write(evutil_socket_t fd, short events, void *data)
 	}
 }
 
-static void accept_client(evutil_socket_t fd, short events, void bedrock_attribute_unused *data)
+static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused events, void bedrock_attribute_unused *data)
 {
 	int client_fd;
 	union

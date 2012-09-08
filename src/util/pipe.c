@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static void pipe_reader(evutil_socket_t fd, short events, void *data)
+static void pipe_reader(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
 	bedrock_pipe *p = data;
 	char buf[32];

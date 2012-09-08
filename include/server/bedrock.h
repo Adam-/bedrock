@@ -35,7 +35,6 @@ typedef enum
 
 extern uint16_t bedrock_conf_log_level;
 
-extern void bedrock_update_time();
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);
 
 #endif // SERVER_BEDROCK_H
