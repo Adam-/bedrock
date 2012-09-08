@@ -37,7 +37,7 @@ static void *thread_entry(void *data)
 	struct bedrock_thread *thread = data;
 	thread->entry(thread, thread->data);
 	bedrock_thread_set_exit(thread);
-	pthread_exit(0);
+	pthread_exit(NULL);
 }
 
 struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_thread_exit at_exit, void *data)

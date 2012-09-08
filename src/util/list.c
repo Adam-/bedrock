@@ -20,7 +20,7 @@ bedrock_node *bedrock_list_add(bedrock_list *list, void *data)
 {
 	bedrock_node *node;
 
-	bedrock_assert(list != NULL && data != NULL, return NULL);
+	bedrock_assert(list != NULL, return NULL);
 
 	node = bedrock_malloc(sizeof(bedrock_node));
 	bedrock_list_add_node(list, node, data);
@@ -35,7 +35,7 @@ bedrock_node *bedrock_list_add(bedrock_list *list, void *data)
  */
 void bedrock_list_add_node(bedrock_list *list, bedrock_node *node, void *data)
 {
-	bedrock_assert(list != NULL && node != NULL && data != NULL, return);
+	bedrock_assert(list != NULL && node != NULL, return);
 
 	node->data = data;
 
@@ -63,7 +63,7 @@ void bedrock_list_add_node(bedrock_list *list, bedrock_node *node, void *data)
  */
 void bedrock_list_add_node_after(bedrock_list *list, bedrock_node *node, bedrock_node *after, void *data)
 {
-	bedrock_assert(list != NULL && node != NULL && after != NULL && data != NULL, return);
+	bedrock_assert(list != NULL && node != NULL && after != NULL, return);
 
 	node->data = data;
 
@@ -88,7 +88,7 @@ void bedrock_list_add_node_after(bedrock_list *list, bedrock_node *node, bedrock
  */
 void bedrock_list_add_node_before(bedrock_list *list, bedrock_node *node, bedrock_node *before, void *data)
 {
-	bedrock_assert(list != NULL && node != NULL && before != NULL && data != NULL, return);
+	bedrock_assert(list != NULL && node != NULL && before != NULL, return);
 
 	node->data = data;
 
@@ -114,7 +114,7 @@ void *bedrock_list_del(bedrock_list *list, const void *data)
 {
 	bedrock_node *n;
 
-	bedrock_assert(list != NULL && data != NULL, return NULL);
+	bedrock_assert(list != NULL, return NULL);
 
 	if (!list->compare)
 		list->compare = bedrock_list_compare_regular;
@@ -174,7 +174,7 @@ bool bedrock_list_has_data(bedrock_list *list, const void *data)
 {
 	bedrock_node *n;
 
-	bedrock_assert(list != NULL && data != NULL, return false);
+	bedrock_assert(list != NULL, return false);
 
 	if (!list->compare)
 		list->compare = bedrock_list_compare_regular;

@@ -4,8 +4,53 @@
 
 static struct event_base *eb;
 
+#if 0
+#include "util/memory.h"
+
+static bedrock_list heap_list;
+
+static void *io_malloc(size_t sz)
+{
+	void *ptr = bedrock_malloc(sizeof(bedrock_node) + sz);
+	bedrock_list_add_node(&heap_list, ptr, NULL);
+	return (char *) ptr + sizeof(bedrock_node);
+}
+
+static void io_free(void *ptr)
+{
+	void *orig_ptr = (char *) ptr - sizeof(bedrock_node);
+	bedrock_list_del_node(&heap_list, orig_ptr);
+	bedrock_free(orig_ptr);
+}
+
+static void *io_realloc(void *ptr, size_t sz)
+{
+	if (ptr == NULL)
+		return io_malloc(sz);
+	else if (!sz)
+	{
+		io_free(ptr);
+		return NULL;
+	}
+
+	void *orig_ptr = (char *) ptr - sizeof(bedrock_node);
+
+	bedrock_list_del_node(&heap_list, orig_ptr);
+
+	ptr = bedrock_realloc(ptr, sizeof(bedrock_node) + sz);
+
+	bedrock_list_add_node(&heap_list, ptr, NULL);
+
+	return (char *) ptr + sizeof(bedrock_node);
+}
+#endif
+
 void io_init()
 {
+#if 0
+	event_set_mem_functions(io_malloc, io_realloc, io_free);
+#endif
+
 	eb = event_base_new();
 	if (eb == NULL)
 	{
