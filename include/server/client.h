@@ -101,8 +101,8 @@ extern void client_save_all();
 extern void client_exit(struct bedrock_client *client);
 extern void client_process_exits();
 
-extern void client_event_read(struct bedrock_fd *fd, void *data);
-extern void client_event_write(struct bedrock_fd *fd, void *data);
+extern void client_event_read(evutil_socket_t fd, short events, void *data);
+extern void client_event_write(evutil_socket_t fd, short events, void *data);
 
 extern void client_send_packet(struct bedrock_client *client, bedrock_packet *packet);
 

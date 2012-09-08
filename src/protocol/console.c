@@ -1,5 +1,5 @@
 #include "server/bedrock.h"
-#include "io/io.h"
+#include "server/io.h"
 #include "util/memory.h"
 #include "util/string.h"
 #include "protocol/console.h"
@@ -27,7 +27,7 @@ static int mem_find(const unsigned char *mem, size_t len, unsigned char val)
 	return i;
 }
 
-static void console_client_read(struct bedrock_fd *fd, void *data)
+static void console_client_read(evutil_socket_t fd, short events, void *data)
 {
 	struct bedrock_console_client *client = data;
 	int i;
@@ -36,16 +36,22 @@ static void console_client_read(struct bedrock_fd *fd, void *data)
 	if (client->in_buffer_len == sizeof(client->in_buffer))
 	{
 		bedrock_log(LEVEL_INFO, "Receive queue exceeded for console client - dropping client");
-		console_exit(client);
+
+		io_disable(&client->fd.event_read);
+		io_disable(&client->fd.event_write);
+
 		return;
 	}
 
-	i = recv(fd->fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	i = recv(fd, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from console client");
-		io_set(fd, 0, OP_READ | OP_WRITE);
+
+		io_disable(&client->fd.event_read);
+		io_disable(&client->fd.event_write);
+
 		console_exit(client);
 		return;
 	}
@@ -54,7 +60,7 @@ static void console_client_read(struct bedrock_fd *fd, void *data)
 	source.user = NULL;
 	source.console = client;
 
-	while (io_has(fd, OP_READ) && (i = mem_find(client->in_buffer, client->in_buffer_len, '\n')))
+	while (io_is_pending(&client->fd.event_read, EV_READ) && (i = mem_find(client->in_buffer, client->in_buffer_len, '\n')))
 	{
 		client->in_buffer[i] = 0;
 
@@ -65,7 +71,7 @@ static void console_client_read(struct bedrock_fd *fd, void *data)
 	}
 }
 
-static void console_client_write(struct bedrock_fd *fd, void *data)
+static void console_client_write(evutil_socket_t fd, short events, void *data)
 {
 	struct bedrock_console_client *client = data;
 	bedrock_node *node;
@@ -74,8 +80,9 @@ static void console_client_write(struct bedrock_fd *fd, void *data)
 
 	if (client->out_buffer.count == 0)
 	{
-		io_set(&client->fd, 0, OP_WRITE);
-		if (client->fd.ops == 0)
+		io_disable(&client->fd.event_write);
+
+		if (io_is_pending(&client->fd.event_read, EV_READ) == false)
 			console_exit(client);
 		return;
 	}
@@ -84,12 +91,15 @@ static void console_client_write(struct bedrock_fd *fd, void *data)
 	out_str = node->data;
 	out_str_len = strlen(out_str);
 
-	i = send(fd->fd, out_str, out_str_len, 0);
+	i = send(fd, out_str, out_str_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from console client");
-		io_set(fd, 0, OP_READ | OP_WRITE);
+
+		io_disable(&client->fd.event_read);
+		io_disable(&client->fd.event_write);
+
 		console_exit(client);
 		return;
 	}
@@ -99,14 +109,14 @@ static void console_client_write(struct bedrock_fd *fd, void *data)
 
 	if (client->out_buffer.count == 0)
 	{
-		io_set(&client->fd, 0, OP_WRITE);
+		io_disable(&client->fd.event_write);
 
-		if (client->fd.ops == 0)
+		if (io_is_pending(&client->fd.event_read, EV_READ) == false)
 			console_exit(client);
 	}
 }
 
-static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)) *unused)
+static void accept_client(evutil_socket_t fd, short events, void bedrock_attribute_unused *data)
 {
 	int client_fd;
 	union
@@ -118,7 +128,7 @@ static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)
 	socklen_t opt = 1;
 	struct bedrock_console_client *client;
 
-	client_fd = accept(fd->fd, &addr.addr, &addrlen);
+	client_fd = accept(fd, &addr.addr, &addrlen);
 	if (client_fd < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Error accepting client - %s", strerror(errno));
@@ -135,13 +145,10 @@ static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)
 	bedrock_fd_open(&client->fd, client_fd, FD_SOCKET, "client console fd");
 	memcpy(&client->fd.addr, &addr, addrlen);
 
-	client->fd.read_handler = console_client_read;
-	client->fd.write_handler = console_client_write;
+	io_assign(&client->fd.event_read, client->fd.fd, EV_PERSIST | EV_READ, console_client_read, client);
+	io_assign(&client->fd.event_write, client->fd.fd, EV_PERSIST | EV_WRITE, console_client_write, client);
 
-	client->fd.read_data = client;
-	client->fd.write_data = client;
-
-	io_set(&client->fd, OP_READ, 0);
+	io_enable(&client->fd.event_read);
 }
 
 void console_init()
@@ -179,9 +186,8 @@ void console_init()
 		abort();
 	}
 
-	fd.read_handler = accept_client;
-
-	io_set(&fd, OP_READ, 0);
+	io_assign(&fd.event_read, fd.fd, EV_PERSIST | EV_READ, accept_client, NULL);
+	io_enable(&fd.event_read);
 }
 
 void console_shutdown()
@@ -229,6 +235,6 @@ void console_process_exits()
 void console_write(struct bedrock_console_client *client, const char *string)
 {
 	bedrock_list_add(&client->out_buffer, bedrock_strdup(string));
-	io_set(&client->fd, OP_WRITE, 0);
+	io_enable(&client->fd.event_write);
 }
 

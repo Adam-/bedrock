@@ -3,12 +3,14 @@
 
 #include "util/util.h"
 
+#include <event2/event.h>
+#include <event2/event_struct.h>
+
 #include <netinet/in.h>
 #include <sys/un.h>
 
 typedef enum
 {
-	FD_ENGINE,
 	FD_FILE,
 	FD_SOCKET,
 	FD_PIPE
@@ -19,13 +21,11 @@ struct bedrock_fd
 	int fd;
 	bedrock_fd_type type;
 	char desc[32];
-	unsigned int ops;
 	bool open;
 
-	void (*read_handler)(struct bedrock_fd *, void *data);
-	void *read_data;
-	void (*write_handler)(struct bedrock_fd *, void *data);
-	void *write_data;
+	/* Events used for sockets and pipes */
+	struct event event_read;
+	struct event event_write;
 
 	union
 	{

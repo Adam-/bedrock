@@ -5,7 +5,7 @@
 
 bool console_running = true;
 
-int main()
+int main2() // XXX need a way to make eclipse shut up and not build this console...
 {
 	if (!socket_init())
 		return -1;

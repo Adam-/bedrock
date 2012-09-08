@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/column.h"
-#include "io/io.h"
+#include "server/io.h"
 #include "server/packet.h"
 #include "compression/compression.h"
 #include "util/endian.h"
@@ -245,7 +245,9 @@ static void client_free(struct bedrock_client *client)
 
 	bedrock_log(LEVEL_DEBUG, "client: Exiting client %s from %s", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
-	io_set(&client->fd, 0, ~0);
+	io_disable(&client->fd.event_read);
+	io_disable(&client->fd.event_write);
+
 	bedrock_fd_close(&client->fd);
 
 	bedrock_list_del(&client_list, client);
@@ -265,7 +267,7 @@ void client_exit(struct bedrock_client *client)
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 	{
 		bedrock_list_add(&exiting_client_list, client);
-		io_set(&client->fd, 0, OP_READ);
+		io_disable(&client->fd.event_read);
 	}
 }
 
@@ -283,7 +285,7 @@ void client_process_exits()
 	bedrock_list_clear(&exiting_client_list);
 }
 
-void client_event_read(struct bedrock_fd *fd, void *data)
+void client_event_read(evutil_socket_t fd, short events, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_packet packet;
@@ -299,12 +301,14 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 	}
 
 	bedrock_assert(sizeof(buffer) == sizeof(client->in_buffer), ;);
-	i = recv(fd->fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
+	i = recv(fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
-		io_set(fd, 0, OP_READ | OP_WRITE);
+
+		io_disable(&client->fd.event_write);
+
 		client_exit(client);
 		return;
 	}
@@ -322,7 +326,7 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 	packet.length = client->in_buffer_len;
 	packet.capacity = sizeof(client->in_buffer);
 
-	while (io_has(fd, OP_READ) && (i = packet_parse(client, &packet)) > 0)
+	while (io_is_pending(&client->fd.event_read, EV_READ) && (i = packet_parse(client, &packet)) > 0)
 	{
 		bedrock_assert((size_t) i <= client->in_buffer_len, break);
 
@@ -333,7 +337,7 @@ void client_event_read(struct bedrock_fd *fd, void *data)
 	}
 }
 
-void client_event_write(struct bedrock_fd *fd, void *data)
+void client_event_write(evutil_socket_t fd, short events, void *data)
 {
 	struct bedrock_client *client = data;
 	bedrock_node *node;
@@ -342,8 +346,9 @@ void client_event_write(struct bedrock_fd *fd, void *data)
 
 	if (client->out_buffer.count == 0)
 	{
-		io_set(&client->fd, 0, OP_WRITE);
-		if (client->fd.ops == 0)
+		io_disable(&client->fd.event_write);
+
+		if (io_is_pending(&client->fd.event_read, EV_READ) == false)
 			client_exit(client);
 		return;
 	}
@@ -351,12 +356,14 @@ void client_event_write(struct bedrock_fd *fd, void *data)
 	node = client->out_buffer.head;
 	packet = node->data;
 
-	i = send(fd->fd, packet->data, packet->length, 0);
+	i = send(fd, packet->data, packet->length, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
-		io_set(fd, 0, OP_READ | OP_WRITE);
+
+		io_disable(&client->fd.event_write);
+
 		client_exit(client);
 		return;
 	}
@@ -373,9 +380,9 @@ void client_event_write(struct bedrock_fd *fd, void *data)
 
 		if (client->out_buffer.count == 0)
 		{
-			io_set(&client->fd, 0, OP_WRITE);
+			io_disable(&client->fd.event_write);
 
-			if (client->fd.ops == 0)
+			if (io_is_pending(&client->fd.event_read, EV_READ) == false)
 				client_exit(client);
 		}
 	}
@@ -424,7 +431,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 
 	bedrock_list_add(&client->out_buffer, p);
 
-	io_set(&client->fd, OP_WRITE, 0);
+	io_enable(&client->fd.event_write);
 }
 
 const char *client_get_ip(struct bedrock_client *client)

@@ -1,17 +1,17 @@
 #include "server/bedrock.h"
-#include "io/io.h"
+#include "server/io.h"
 #include "util/memory.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-static void pipe_reader(struct bedrock_fd *fd, void *data)
+static void pipe_reader(evutil_socket_t fd, short events, void *data)
 {
 	bedrock_pipe *p = data;
 	char buf[32];
 
-	while (read(fd->fd, buf, sizeof(buf)) == sizeof(buf));
+	while (read(fd, buf, sizeof(buf)) == sizeof(buf));
 
 	p->on_notify(p->data);
 }
@@ -39,15 +39,13 @@ void bedrock_pipe_open(bedrock_pipe *p, const char *desc, bedrock_pipe_notify_fu
 	p->on_notify = on_notify;
 	p->data = data;
 
-	p->read_fd.read_handler = pipe_reader;
-	p->read_fd.read_data = p;
-
-	io_set(&p->read_fd, OP_READ, 0);
+	io_assign(&p->read_fd.event_read, fds[0], EV_PERSIST | EV_READ, pipe_reader, p);
+	io_enable(&p->read_fd.event_read);
 }
 
 void bedrock_pipe_close(bedrock_pipe *p)
 {
-	io_set(&p->read_fd, 0, ~0);
+	io_disable(&p->read_fd.event_read);
 	bedrock_fd_close(&p->read_fd);
 	bedrock_fd_close(&p->write_fd);
 }

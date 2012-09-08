@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "config/config.h"
-#include "io/io.h"
+#include "server/io.h"
 #include "packet/packet_chat_message.h"
 
 int packet_list_ping(struct bedrock_client *client, const unsigned char __attribute__((__unused__)) *buffer, size_t __attribute__((__unused__)) len)
@@ -19,7 +19,7 @@ int packet_list_ping(struct bedrock_client *client, const unsigned char __attrib
 
 	client_send_packet(client, &packet);
 
-	io_set(&client->fd, 0, OP_READ);
+	io_disable(&client->fd.event_read);
 
 	return offset;
 }

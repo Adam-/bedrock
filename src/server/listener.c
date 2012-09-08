@@ -1,5 +1,5 @@
 #include "server/bedrock.h"
-#include "io/io.h"
+#include "server/io.h"
 #include "server/client.h"
 #include "util/fd.h"
 #include "config/config.h"
@@ -11,7 +11,7 @@
 
 static struct bedrock_fd fd;
 
-static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)) *unused)
+static void accept_client(evutil_socket_t fd, short events, void bedrock_attribute_unused *data)
 {
 	struct bedrock_client *client;
 	int client_fd;
@@ -24,7 +24,7 @@ static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)
 	socklen_t addrlen = sizeof(addr);
 	socklen_t opt = 1;
 
-	client_fd = accept(fd->fd, &addr.addr, &addrlen);
+	client_fd = accept(fd, &addr.addr, &addrlen);
 	if (client_fd < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Error accepting client - %s", strerror(errno));
@@ -40,15 +40,12 @@ static void accept_client(struct bedrock_fd *fd, void __attribute__((__unused__)
 	bedrock_fd_open(&client->fd, client_fd, FD_SOCKET, "client fd");
 	memcpy(&client->fd.addr, &addr, addrlen);
 
+	io_assign(&client->fd.event_read, client->fd.fd, EV_PERSIST | EV_READ, client_event_read, client);
+	io_assign(&client->fd.event_write, client->fd.fd, EV_PERSIST | EV_WRITE, client_event_write, client);
+
+	io_enable(&client->fd.event_read);
+
 	bedrock_log(LEVEL_DEBUG, "Accepted client from %s", client_get_ip(client));
-
-	client->fd.read_handler = client_event_read;
-	client->fd.write_handler = client_event_write;
-
-	client->fd.read_data = client;
-	client->fd.write_data = client;
-
-	io_set(&client->fd, OP_READ, 0);
 }
 
 void listener_init()
@@ -89,9 +86,8 @@ void listener_init()
 		abort();
 	}
 
-	fd.read_handler = accept_client;
-
-	io_set(&fd, OP_READ, 0);
+	io_assign(&fd.event_read, fd.fd, EV_PERSIST | EV_READ, accept_client, NULL);
+	io_enable(&fd.event_read);
 }
 
 void listener_shutdown()

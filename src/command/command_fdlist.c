@@ -8,7 +8,7 @@
 void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
-	int engines = 0, files = 0, sockets = 0, pipes = 0, total = 0;
+	int files = 0, sockets = 0, pipes = 0, total = 0;
 	struct rlimit rlim;
 
 	bedrock_mutex_lock(&fdlist_mutex);
@@ -19,10 +19,6 @@ void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute
 
 		switch (fd->type)
 		{
-			case FD_ENGINE:
-				type = "FD Engine";
-				++engines;
-				break;
 			case FD_FILE:
 				type = "File";
 				++files;
@@ -45,7 +41,7 @@ void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute
 	}
 	bedrock_mutex_unlock(&fdlist_mutex);
 
-	command_reply(source, "Total: %d open FDs, %d engine, %d files, %d pipes, and %d sockets", total, engines, files, pipes, sockets);
+	command_reply(source, "Total: %d open FDs, %d files, %d pipes, and %d sockets", total, files, pipes, sockets);
 
 	if (!getrlimit(RLIMIT_NOFILE, &rlim))
 		command_reply(source, "Soft limit: %d, Hard limit: %d", rlim.rlim_cur, rlim.rlim_max);

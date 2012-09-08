@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 <storageModule moduleId="org.eclipse.cdt.core.settings">
 <cconfiguration id="cdt.managedbuild.config.gnu.exe.debug.1331135783">
 <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.1331135783" moduleId="org.eclipse.cdt.core.settings" name="Debug">
@@ -36,6 +34,10 @@
 <tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.523004919" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 <option id="gnu.c.link.option.libs.901466774" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 <listOptionValue builtIn="false" value="z"/>
+<listOptionValue builtIn="false" value="curses"/>
+<listOptionValue builtIn="false" value="ssl"/>
+<listOptionValue builtIn="false" value="crypto"/>
+<listOptionValue builtIn="false" value="event_core"/>
 <listOptionValue builtIn="false" value="m"/>
 <listOptionValue builtIn="false" value="rt"/>
 </option>
