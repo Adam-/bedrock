@@ -26,9 +26,8 @@ void io_assign(struct event *ev, evutil_socket_t fd, short events, event_callbac
 		bedrock_log(LEVEL_WARN, "io: error from event_assign()");
 }
 
-void io_timer_schedule(uint64_t ticks_from_now, short events, event_callback_fn callback, void *callback_arg)
+void io_timer_schedule(struct event *ev, uint64_t ticks_from_now, short events, event_callback_fn callback, void *callback_arg)
 {
-	struct event *ev;
 	struct timeval tv;
 
 	ticks_from_now *= BEDROCK_TICK_LENGTH; // To milliseconds
@@ -37,12 +36,10 @@ void io_timer_schedule(uint64_t ticks_from_now, short events, event_callback_fn 
 	tv.tv_sec = ticks_from_now / 1000000;
 	tv.tv_usec = ticks_from_now % 1000000;
 
-	ev = event_new(eb, -1, events, callback, callback_arg);
-	if (event_add(ev, &tv) == -1)
-	{
+	if (event_assign(ev, eb, -1, events, callback, callback_arg) == -1)
+		bedrock_log(LEVEL_WARN, "io: error from event_assign() scheduling timer");
+	else if (event_add(ev, &tv) == -1)
 		bedrock_log(LEVEL_WARN, "io: error from event_add() scheduling timer");
-		event_free(ev);
-	}
 }
 
 void io_enable(struct event *ev)

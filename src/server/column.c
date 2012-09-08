@@ -3,7 +3,6 @@
 #include "nbt/nbt.h"
 #include "util/memory.h"
 #include "util/endian.h"
-#include "util/timer.h"
 #include "compression/compression.h"
 #include "packet/packet_spawn_dropped_item.h"
 #include "packet/packet_destroy_entity.h"

@@ -5,7 +5,6 @@
 #include "util/memory.h"
 #include "server/world.h"
 #include "server/column.h"
-#include "util/timer.h"
 #include "server/client.h"
 
 #include <sys/types.h>

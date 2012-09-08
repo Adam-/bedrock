@@ -3,7 +3,6 @@
 #include "server/client.h"
 #include "server/column.h"
 #include "server/io.h"
-#include "util/timer.h"
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
 #include "util/crypto.h"
@@ -200,6 +199,7 @@ int main(int argc, char **argv)
 {
 	signal(SIGPIPE, SIG_IGN); // XXX
 	struct bedrock_world *world;
+	struct event send_keepalive_timer, save_timer;
 
 	srand(time(NULL));
 	bedrock_log_init();
@@ -234,8 +234,8 @@ int main(int argc, char **argv)
 	console_init();
 	bedrock_threadengine_start();
 
-	io_timer_schedule(400, EV_PERSIST, send_keepalive, NULL);
-	io_timer_schedule(6000, EV_PERSIST, save, NULL);
+	io_timer_schedule(&send_keepalive_timer, 400, EV_PERSIST, send_keepalive, NULL);
+	io_timer_schedule(&save_timer, 6000, EV_PERSIST, save, NULL);
 
 	while (bedrock_running || client_list.count > 0)
 	{
