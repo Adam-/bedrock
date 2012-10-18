@@ -304,7 +304,6 @@ void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events
 	i = recv(fd, buffer, sizeof(client->in_buffer) - client->in_buffer_len, 0);
 	if (i <= 0)
 	{
-		printf("events.. %d\n", events);
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
 			bedrock_log(LEVEL_INFO, "Lost connection from client %s (%s)", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
