@@ -1,6 +1,7 @@
 #include "server/bedrock.h"
 #include "server/region.h"
 #include "util/memory.h"
+#include "util/file.h"
 #include "compression/compression.h"
 #include "server/world.h"
 #include "nbt/nbt.h"
@@ -9,7 +10,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <errno.h>
 
 #define WORLD_BUFFER_SIZE 4096
@@ -29,8 +29,8 @@ bool world_load(struct bedrock_world *world)
 {
 	char path[PATH_MAX];
 	int fd;
-	struct stat file_info;
 	unsigned char *file_base;
+	size_t file_size;
 	compression_buffer *cb;
 	nbt_tag *tag;
 
@@ -43,25 +43,19 @@ bool world_load(struct bedrock_world *world)
 		return false;
 	}
 
-	if (fstat(fd, &file_info) != 0)
+	file_base = bedrock_file_read(fd, &file_size);
+	if (file_base == NULL)
 	{
-		bedrock_log(LEVEL_CRIT, "world: Unable to stat world information file %s - %s", path, strerror(errno));
+		bedrock_log(LEVEL_CRIT, "world: Unable to read world information file %s - %s", path, strerror(errno));
 		close(fd);
-		return false;
-	}
-
-	file_base = mmap(NULL, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (file_base == MAP_FAILED)
-	{
-		bedrock_log(LEVEL_CRIT, "world: Unable to map world information file %s - %s", path, strerror(errno));
-		close(fd);
+		bedrock_free(file_base);
 		return false;
 	}
 
 	close(fd);
 
-	cb = compression_decompress(WORLD_BUFFER_SIZE, file_base, file_info.st_size);
-	munmap(file_base, file_info.st_size);
+	cb = compression_decompress(WORLD_BUFFER_SIZE, file_base, file_size);
+	bedrock_free(file_base);
 	if (cb == NULL)
 	{
 		bedrock_log(LEVEL_CRIT, "world: Unable to inflate world information file %s", path);
@@ -95,7 +89,7 @@ static void world_save_entry(struct bedrock_thread bedrock_attribute_unused *thr
 	int fd;
 	compression_buffer *buffer;
 
-	fd = open(wi->path, O_WRONLY | O_TRUNC);
+	fd = open(wi->path, O_WRONLY | O_TRUNC | _O_BINARY);
 	if (fd == -1)
 	{
 		bedrock_log(LEVEL_WARN, "world: Unable to open world %s - %s", wi->name, strerror(errno));

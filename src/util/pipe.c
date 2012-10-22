@@ -2,6 +2,10 @@
 #include "server/io.h"
 #include "util/memory.h"
 
+#ifdef WIN32
+#include "pipe.h"
+#endif
+
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -11,7 +15,11 @@ static void pipe_reader(evutil_socket_t fd, short bedrock_attribute_unused event
 	bedrock_pipe *p = data;
 	char buf[32];
 
+#ifdef WIN32
+	while (recv(fd, buf, sizeof(buf), 0) == sizeof(buf));
+#else
 	while (read(fd, buf, sizeof(buf)) == sizeof(buf));
+#endif
 
 	p->on_notify(p->data);
 }
@@ -27,8 +35,8 @@ void bedrock_pipe_open(bedrock_pipe *p, const char *desc, bedrock_pipe_notify_fu
 		return;
 	}
 
-	fcntl(fds[0], F_SETFL, fcntl(fds[0], F_GETFL, 0) | O_NONBLOCK);
-	fcntl(fds[1], F_SETFL, fcntl(fds[1], F_GETFL, 0) | O_NONBLOCK);
+	evutil_make_socket_nonblocking(fds[0]);
+	evutil_make_socket_nonblocking(fds[1]);
 
 	snprintf(fulldesc, sizeof(fulldesc), "read pipe - %s", desc);
 	bedrock_fd_open(&p->read_fd, fds[0], FD_PIPE, fulldesc);
@@ -53,5 +61,9 @@ void bedrock_pipe_close(bedrock_pipe *p)
 void bedrock_pipe_notify(bedrock_pipe *p)
 {
 	char dummy = '*';
+#ifdef WIN32
+	bedrock_assert(send(p->write_fd.fd, &dummy, 1, 0) == 1, ;);
+#else
 	bedrock_assert(write(p->write_fd.fd, &dummy, 1) == 1, ;);
+#endif
 }

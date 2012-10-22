@@ -11,6 +11,10 @@
 #include "blocks/items.h"
 #include "server/oper.h"
 
+#ifdef WIN32
+#include "windows_time.h"
+#endif
+
 #include <openssl/evp.h>
 
 typedef enum

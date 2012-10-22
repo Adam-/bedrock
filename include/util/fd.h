@@ -7,7 +7,6 @@
 #include <event2/event_struct.h>
 
 #include <netinet/in.h>
-#include <sys/un.h>
 
 typedef enum
 {
@@ -32,7 +31,6 @@ struct bedrock_fd
 		struct sockaddr in;
 		struct sockaddr_in in4;
 		struct sockaddr_in6 in6;
-		struct sockaddr_un un;
 	} addr;
 };
 

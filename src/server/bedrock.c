@@ -154,7 +154,9 @@ static void parse_cli_args(int argc, char **argv)
 				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
 				fprintf(stdout, "usage:\n");
 				fprintf(stdout, " -h         shows this help\n");
+#ifndef WIN32
 				fprintf(stdout, " -f         run in foreground\n");
+#endif
 				fprintf(stdout, " -v         shows version\n");
 				fprintf(stdout, "\n");
 				exit(0);
@@ -174,6 +176,7 @@ static void parse_cli_args(int argc, char **argv)
 
 static void do_fork()
 {
+#ifndef WIN32
 	int i;
 
 	if (foreground)
@@ -193,6 +196,7 @@ static void do_fork()
 	freopen("/dev/null", "w", stderr);
 
 	setpgid(0, 0);
+#endif
 }
 
 int main(int argc, char **argv)

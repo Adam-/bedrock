@@ -3,6 +3,7 @@
 #include "nbt/nbt.h"
 #include "compression/compression.h"
 #include "util/memory.h"
+#include "util/file.h"
 #include "server/world.h"
 #include "server/column.h"
 #include "server/client.h"
@@ -67,7 +68,7 @@ static void region_worker_read(struct region_operation *op)
 		return;
 	}
 
-	if (read(op->region->fd.fd, &read_offset, sizeof(read_offset)) != sizeof(read_offset))
+	if (bedrock_file_read_buf(op->region->fd.fd, &read_offset, sizeof(read_offset)) == false)
 	{
 		bedrock_mutex_unlock(&op->region->fd_mutex);
 		bedrock_log(LEVEL_WARN, "Unable to read %s to get compressed data offset - %s", op->region->path, strerror(errno));
@@ -90,7 +91,7 @@ static void region_worker_read(struct region_operation *op)
 		return;
 	}
 
-	if (read(op->region->fd.fd, &compressed_len, sizeof(compressed_len)) != sizeof(compressed_len))
+	if (bedrock_file_read_buf(op->region->fd.fd, &compressed_len, sizeof(compressed_len)) == false)
 	{
 		bedrock_mutex_unlock(&op->region->fd_mutex);
 		bedrock_log(LEVEL_WARN, "Unable to read %s to get compressed data length - %s", op->region->path, strerror(errno));
@@ -98,7 +99,7 @@ static void region_worker_read(struct region_operation *op)
 	}
 	convert_endianness((unsigned char *) &compressed_len, sizeof(compressed_len));
 
-	if (read(op->region->fd.fd, &compression_type, sizeof(compression_type)) != sizeof(compression_type))
+	if (bedrock_file_read_buf(op->region->fd.fd, &compression_type, sizeof(compression_type)) == false)
 	{
 		bedrock_mutex_unlock(&op->region->fd_mutex);
 		bedrock_log(LEVEL_WARN, "Unable to read %s to get compression type - %s", op->region->path, strerror(errno));
@@ -106,7 +107,7 @@ static void region_worker_read(struct region_operation *op)
 	}
 
 	buffer = bedrock_malloc(compressed_len);
-	if (read(op->region->fd.fd, buffer, compressed_len) != compressed_len)
+	if (bedrock_file_read_buf(op->region->fd.fd, buffer, compressed_len) == false)
 	{
 		bedrock_mutex_unlock(&op->region->fd_mutex);
 		bedrock_free(buffer);
@@ -168,7 +169,7 @@ static void region_worker_write(struct region_operation *op)
 		return;
 	}
 
-	if (read(region->fd.fd, &structure_start, sizeof(structure_start)) != sizeof(structure_start))
+	if (bedrock_file_read_buf(region->fd.fd, &structure_start, sizeof(structure_start)) == false)
 	{
 		bedrock_log(LEVEL_WARN, "column: Unable to read column structure offset in file %s to get file offset - %s", region->path, strerror(errno));
 		bedrock_mutex_unlock(&region->fd_mutex);
@@ -431,7 +432,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	snprintf(region->path, sizeof(region->path), BEDROCK_REGIION_PATH, world->path, x, z);
 
 	bedrock_mutex_init(&region->fd_mutex, "region fd mutex");
-	fd = open(region->path, O_RDWR);
+	fd = open(region->path, O_RDWR | _O_BINARY);
 	if (fd == -1)
 		bedrock_log(LEVEL_WARN, "region: Unable to open region file %s - %s", region->path, strerror(errno));
 	else

@@ -51,6 +51,11 @@ void io_init()
 	event_set_mem_functions(io_malloc, io_realloc, io_free);
 #endif
 
+#ifdef WIN32
+	WSADATA wsadata;
+	WSAStartup(MAKEWORD(2, 2), &wsadata);
+#endif
+
 	eb = event_base_new();
 	if (eb == NULL)
 	{
@@ -63,6 +68,10 @@ void io_shutdown()
 {
 	event_base_free(eb);
 	eb = NULL;
+
+#ifdef WIN32
+	WSACleanup();
+#endif
 }
 
 void io_assign(struct event *ev, evutil_socket_t fd, short events, event_callback_fn callback, void *callback_arg)

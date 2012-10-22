@@ -10,14 +10,21 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
-#define SOCKET_NAME "./bedrock.console.socket"
-
 bedrock_list console_list = LIST_INIT;
 
 static struct bedrock_fd fd;
 static bedrock_list exiting_client_list;
 
+static void console_exit(struct bedrock_console_client *client);
 static void console_free(struct bedrock_console_client *client);
+
+static struct bedrock_console_client *console_client_create()
+{
+	struct bedrock_console_client *client = bedrock_malloc(sizeof(struct bedrock_console_client));
+	client->out_buffer.free = bedrock_free;
+	bedrock_list_add(&console_list, client);
+	return client;
+}
 
 static int mem_find(const unsigned char *mem, size_t len, unsigned char val)
 {
@@ -126,7 +133,11 @@ static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused eve
 	union
 	{
 		struct sockaddr addr;
+#ifndef WIN32
 		struct sockaddr_un un;
+#else
+		struct sockaddr_in in;
+#endif
 	} addr;
 	socklen_t addrlen = sizeof(addr);
 	socklen_t opt = 1;
@@ -139,7 +150,7 @@ static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused eve
 		return;
 	}
 
-	fcntl(client_fd, F_SETFL, fcntl(client_fd, F_GETFL, 0) | O_NONBLOCK);
+	evutil_make_socket_nonblocking(client_fd);
 
 	setsockopt(client_fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
@@ -160,8 +171,6 @@ void console_init()
 	int listen_fd;
 	socklen_t opt = 1;
 
-	unlink(SOCKET_NAME);
-
 	listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_fd < 0)
 	{
@@ -171,7 +180,7 @@ void console_init()
 
 	bedrock_fd_open(&fd, listen_fd, FD_SOCKET, "console listen fd");
 
-	fcntl(fd.fd, F_SETFL, fcntl(fd.fd, F_GETFL, 0) | O_NONBLOCK);
+	evutil_make_socket_nonblocking(fd.fd);
 
 	setsockopt(fd.fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
@@ -204,18 +213,9 @@ void console_shutdown()
 	bedrock_list_clear(&console_list);
 
 	bedrock_fd_close(&fd);
-	unlink(SOCKET_NAME);
 }
 
-struct bedrock_console_client *console_client_create()
-{
-	struct bedrock_console_client *client = bedrock_malloc(sizeof(struct bedrock_console_client));
-	client->out_buffer.free = bedrock_free;
-	bedrock_list_add(&console_list, client);
-	return client;
-}
-
-void console_exit(struct bedrock_console_client *client)
+static void console_exit(struct bedrock_console_client *client)
 {
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 		bedrock_list_add(&exiting_client_list, client);

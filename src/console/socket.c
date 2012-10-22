@@ -4,11 +4,17 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <event.h>
+#ifndef WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#else
+#include <windows.h>
+#define sleep(x) Sleep(x * 1000)
+#endif
 
 static int socket_fd;
 static int stdin_fd;
@@ -36,6 +42,11 @@ static void socket_read()
 
 bool socket_init()
 {
+#ifdef WIN32
+	WSADATA wsadata;
+	WSAStartup(MAKEWORD(2, 2), &wsadata);
+#endif
+
 	union
 	{
 		struct sockaddr sa;
@@ -66,7 +77,11 @@ bool socket_init()
 
 void socket_shutdown()
 {
-	close(socket_fd);
+	evutil_closesocket(socket_fd);
+
+#ifdef WIN32
+	WSACleanup();
+#endif
 }
 
 void socket_process()

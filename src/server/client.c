@@ -6,6 +6,7 @@
 #include "compression/compression.h"
 #include "util/endian.h"
 #include "util/crypto.h"
+#include "util/file.h"
 #include "nbt/nbt.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
@@ -25,7 +26,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <errno.h>
 #include <arpa/inet.h>
 #include <ctype.h>
@@ -69,8 +69,8 @@ bool client_load(struct bedrock_client *client)
 {
 	char path[PATH_MAX];
 	int fd;
-	struct stat file_info;
 	unsigned char *file_base;
+	size_t file_size;
 	compression_buffer *cb;
 	nbt_tag *tag;
 
@@ -85,25 +85,19 @@ bool client_load(struct bedrock_client *client)
 		return false;
 	}
 
-	if (fstat(fd, &file_info) != 0)
+	file_base = bedrock_file_read(fd, &file_size);
+	if (file_base == NULL)
 	{
-		bedrock_log(LEVEL_CRIT, "client: Unable to stat player information file %s - %s", path, strerror(errno));
+		bedrock_log(LEVEL_CRIT, "client: Unable to read player information file %s", path);
 		close(fd);
-		return false;
-	}
-
-	file_base = mmap(NULL, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (file_base == MAP_FAILED)
-	{
-		bedrock_log(LEVEL_CRIT, "client: Unable to map player information file %s - %s", path, strerror(errno));
-		close(fd);
+		bedrock_free(file_base);
 		return false;
 	}
 
 	close(fd);
 
-	cb = compression_decompress(PLAYER_BUFFER_SIZE, file_base, file_info.st_size);
-	munmap(file_base, file_info.st_size);
+	cb = compression_decompress(PLAYER_BUFFER_SIZE, file_base, file_size);
+	bedrock_free(file_base);
 	if (cb == NULL)
 	{
 		bedrock_log(LEVEL_CRIT, "client: Unable to inflate player information file %s", path);
@@ -136,7 +130,7 @@ static void client_save_entry(struct bedrock_thread bedrock_attribute_unused *th
 	int fd;
 	compression_buffer *buffer;
 	
-	fd = open(ci->path, O_WRONLY | O_TRUNC);
+	fd = open(ci->path, O_WRONLY | O_TRUNC | _O_BINARY);
 	if (fd == -1)
 	{
 		bedrock_log(LEVEL_WARN, "client: Unable to open client file for %s - %s", ci->name, strerror(errno));

@@ -1,7 +1,6 @@
 
-find_path(EVENT_INCLUDE_DIR event.h
+find_path(EVENT_INCLUDE_DIR event2/event.h
   PATHS /usr/include
-  PATH_SUFFIXES event2
 )
 
 find_library(EVENT_LIBRARY

@@ -3,13 +3,17 @@
 #include "util/fd.h"
 
 #include <sys/time.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 
 void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	int files = 0, sockets = 0, pipes = 0, total = 0;
+#ifndef WIN32
 	struct rlimit rlim;
+#endif
 
 	bedrock_mutex_lock(&fdlist_mutex);
 	LIST_FOREACH(&fdlist, node)
@@ -43,6 +47,8 @@ void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute
 
 	command_reply(source, "Total: %d open FDs, %d files, %d pipes, and %d sockets", total, files, pipes, sockets);
 
+#ifndef WIN32
 	if (!getrlimit(RLIMIT_NOFILE, &rlim))
 		command_reply(source, "Soft limit: %d, Hard limit: %d", rlim.rlim_cur, rlim.rlim_max);
+#endif
 }

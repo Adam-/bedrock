@@ -9,15 +9,11 @@ typedef struct
 	char desc[32];
 } bedrock_mutex;
 
-#define BEDROCK_MUTEX_INIT(desc) { PTHREAD_MUTEX_INITIALIZER, desc }
-
 typedef struct
 {
 	pthread_cond_t cond;
 	char desc[32];
 } bedrock_cond;
-
-#define BEDROCK_COND_INIT(desc) { PTHREAD_MUTEX_INITIALIZER, desc, PTHREAD_COND_INITIALIZER }
 
 #include "util/list.h"
 #include "util/pipe.h"

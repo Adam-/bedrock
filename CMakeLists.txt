@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 project(bedrock C)
 
+if(WIN32)
+  add_definitions(-DWIN32)
+endif(WIN32)
+
 # include cmake stuff for checking various system specific defines
 include(CheckTypeSize)
 
@@ -23,16 +27,22 @@ find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(libevent REQUIRED)
-find_package(Curses)
+if(WIN32)
+  find_package(libpthread REQUIRED)
+endif(WIN32)
+if(NOT WIN32)
+  find_package(Curses)
+endif(NOT WIN32)
 
 # Include library header files
 include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${EVENT_INCLUDE_DIR})
+if(WIN32)
+  include_directories(win32 ${PTHREAD_INCLUDE_DIR})
+endif(WIN32)
 
 # Generate the files for compile
-FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l
-${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.c)
-BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y
-${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.c)
+FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.l ${CMAKE_CURRENT_SOURCE_DIR}/src/config/lexer.c)
+BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.y ${CMAKE_CURRENT_SOURCE_DIR}/src/config/parser.c)
 ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
 
 # Get a list of folders from src/ and remove any CMake generated build files
@@ -52,17 +62,35 @@ foreach(SOURCE_FOLDER ${SOURCE_FOLDERS})
   endif(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
 endforeach(SOURCE_FOLDER ${SOURCE_FOLDERS})
 
+if(WIN32)
+  file(GLOB SOURCE_FOLDERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "win32/*")
+
+  foreach(SOURCE_FOLDER ${SOURCE_FOLDERS})
+    if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
+      file(GLOB SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SOURCE_FOLDER}/*.c")
+      list(APPEND BEDROCK_SOURCES ${SOURCE_FILES})
+    else(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
+      list(APPEND BEDROCK_SOURCES ${SOURCE_FOLDER})
+    endif(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FOLDER}")
+  endforeach(SOURCE_FOLDER ${SOURCE_FOLDERS})
+endif(WIN32)
+
 # Sort the sources
 list(SORT BEDROCK_SOURCES)
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock m rt pthread ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
+target_link_libraries(bedrock ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
+if(WIN32)
+  target_link_libraries(bedrock ws2_32 ${PTHREAD_LIBRARY})
+else(WIN32)
+  target_link_libraries(bedrock m rt pthread)
+endif(WIN32)
 
-if(CURSES_FOUND)
+if(NOT WIN32 AND CURSES_FOUND)
   file(GLOB CONSOLE_SOURCE_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/console/*.c")
   add_executable(console ${CONSOLE_SOURCE_FILES})
-  target_link_libraries(console ${CURSES_LIBRARIES})
-endif(CURSES_FOUND)
+  target_link_libraries(console ${CURSES_LIBRARIES} ${EVENT_LIBRARY})
+endif(NOT WIN32 AND CURSES_FOUND)
 

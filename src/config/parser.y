@@ -21,7 +21,7 @@ static struct bedrock_oper *oper;
 	char *sval;
 }
 
-%token <ival> INT
+%token <ival> CINT
 %token <sval> STRING
 
 /* World */
@@ -92,7 +92,7 @@ server_description: DESCRIPTION '=' STRING ';'
 	strncpy(server_desc, yylval.sval, sizeof(server_desc));
 };
 
-server_maxusers: MAXUSERS '=' INT ';'
+server_maxusers: MAXUSERS '=' CINT ';'
 {
 	server_maxusers = yylval.ival;
 };
@@ -102,7 +102,7 @@ server_ip: IP '=' STRING ';'
 	strncpy(server_ip, yylval.sval, sizeof(server_ip));
 };
 
-server_port: PORT '=' INT ';'
+server_port: PORT '=' CINT ';'
 {
 	server_port = yylval.ival;
 };

@@ -31,7 +31,7 @@ static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused eve
 		return;
 	}
 
-	fcntl(client_fd, F_SETFL, fcntl(client_fd, F_GETFL, 0) | O_NONBLOCK);
+	evutil_make_socket_nonblocking(client_fd);
 
 	setsockopt(client_fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 
@@ -62,7 +62,7 @@ void listener_init()
 
 	bedrock_fd_open(&fd, listen_fd, FD_SOCKET, "listen fd");
 
-	fcntl(fd.fd, F_SETFL, fcntl(fd.fd, F_GETFL, 0) | O_NONBLOCK);
+	evutil_make_socket_nonblocking(fd.fd);
 
 	setsockopt(fd.fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 

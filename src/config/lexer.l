@@ -41,7 +41,7 @@ commands        { return COMMANDS; }
 
 [ \t]			{ }
 \n			{ ++config_line_num; }
-[0-9]+			{ yylval.ival = atoi(yytext); return INT; }
+[0-9]+			{ yylval.ival = atoi(yytext); return CINT; }
 \"[^\"\n]*[\"\n]	{ yytext[yyleng - 1] = 0; yylval.sval = yytext + 1; return STRING; }
 #.*                     { }
 .			{ return yytext[0]; }

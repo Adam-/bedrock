@@ -20,8 +20,6 @@ struct bedrock_console_client
 
 extern void console_init();
 extern void console_shutdown();
-extern struct bedrock_console_client *console_client_create();
-extern void console_exit(struct bedrock_console_client *client);
 extern void console_process_exits();
 extern void console_write(struct bedrock_console_client *client, const char *string);
 
