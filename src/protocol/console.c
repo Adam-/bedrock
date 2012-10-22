@@ -133,11 +133,7 @@ static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused eve
 	union
 	{
 		struct sockaddr addr;
-#ifndef WIN32
-		struct sockaddr_un un;
-#else
 		struct sockaddr_in in;
-#endif
 	} addr;
 	socklen_t addrlen = sizeof(addr);
 	socklen_t opt = 1;
