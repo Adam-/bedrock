@@ -6,9 +6,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 static int socket_fd;
 static int stdin_fd;
@@ -39,18 +39,19 @@ bool socket_init()
 	union
 	{
 		struct sockaddr sa;
-		struct sockaddr_un un;
+		struct sockaddr_in in;
 	} addr;
 
-	socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd < 0)
 	{
 		fprintf(stderr, "Unable to create socket - %s\n", strerror(errno));
 		return false;
 	}
 
-	addr.un.sun_family = AF_UNIX;
-	strncpy(addr.un.sun_path, SOCKET_NAME, sizeof(addr.un.sun_path));
+	addr.in.sin_family = AF_INET;
+	addr.in.sin_port = htons(23934);
+	inet_pton(AF_INET, "127.0.0.1", &addr.in.sin_addr);
 
 	if (connect(socket_fd, &addr.sa, sizeof(addr)) < 0)
 	{

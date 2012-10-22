@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 
 #define SOCKET_NAME "./bedrock.console.socket"
 
@@ -20,11 +21,11 @@ static void console_free(struct bedrock_console_client *client);
 
 static int mem_find(const unsigned char *mem, size_t len, unsigned char val)
 {
-	size_t i;
-	for (i = 0; i < len; ++i)
+	int i;
+	for (i = 0; (unsigned) i < len; ++i)
 		if (mem[i] == val)
-			break;
-	return i;
+			return i;
+	return -1;
 }
 
 static void console_client_read(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
@@ -60,9 +61,12 @@ static void console_client_read(evutil_socket_t fd, short bedrock_attribute_unus
 	source.user = NULL;
 	source.console = client;
 
-	while (io_is_pending(&client->fd.event_read, EV_READ) && (i = mem_find(client->in_buffer, client->in_buffer_len, '\n')))
+	while (io_is_pending(&client->fd.event_read, EV_READ) && (i = mem_find(client->in_buffer, client->in_buffer_len, '\n')) > 0)
 	{
 		client->in_buffer[i] = 0;
+
+		if (client->in_buffer[i - 1] == '\r')
+			client->in_buffer[i - 1] = 0;
 
 		command_run(&source, (char *) client->in_buffer);
 
@@ -158,7 +162,7 @@ void console_init()
 
 	unlink(SOCKET_NAME);
 
-	listen_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (listen_fd < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Unable to create console socket - %s", strerror(errno));
@@ -171,10 +175,12 @@ void console_init()
 
 	setsockopt(fd.fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-	fd.addr.un.sun_family = AF_UNIX;
-	strncpy(fd.addr.un.sun_path, SOCKET_NAME, sizeof(fd.addr.un.sun_path));
+	fd.addr.in4.sin_family = AF_INET;
+	fd.addr.in4.sin_port = htons(23934); /* Random port, should write to a file and have the console read it? */
+	inet_pton(AF_INET, "127.0.0.1", &fd.addr.in4.sin_addr);
+	opt = sizeof(struct sockaddr_in);
 
-	if (bind(fd.fd, &fd.addr.in, sizeof(fd.addr.un)) < 0)
+	if (bind(fd.fd, &fd.addr.in, opt) < 0)
 	{
 		bedrock_log(LEVEL_CRIT, "Unable to bind console listener - %s", strerror(errno));
 		abort();
