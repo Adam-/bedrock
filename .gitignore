@@ -2,7 +2,8 @@ CMakeCache.txt
 CMakeFiles
 Makefile
 bedrock
+console
 cmake_install.cmake
-src/config/lexer.c
-src/config/parser.c
-src/config/parser.h
+src/server/config/lexer.c
+src/server/config/parser.c
+src/server/config/parser.h
