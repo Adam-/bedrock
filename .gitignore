@@ -7,3 +7,9 @@ cmake_install.cmake
 src/server/config/lexer.c
 src/server/config/parser.c
 src/server/config/parser.h
+*.so
+*.a
+*.exe
+*.dll
+*.lib
+*.o
