@@ -1,4 +1,10 @@
 
+# Include library header files
+include_directories(../../include ../../include/server ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${EVENT_INCLUDE_DIR})
+if(WIN32)
+  include_directories(win32 ${PTHREAD_INCLUDE_DIR})
+endif(WIN32)
+
 # Generate the files for compile
 FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.l ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.c)
 BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/config/parser.y ${CMAKE_CURRENT_SOURCE_DIR}/config/parser.c)
@@ -35,7 +41,7 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
+target_link_libraries(bedrock nbt ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
 if(WIN32)
   target_link_libraries(bedrock ws2_32 ${PTHREAD_LIBRARY})
 else(WIN32)

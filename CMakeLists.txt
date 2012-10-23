@@ -36,11 +36,5 @@ endif(NOT WIN32)
 
 set(CMAKE_C_FLAGS "-g -pipe -Wall -Wextra -std=gnu99 -pedantic")
 
-# Include library header files
-include_directories(include ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${EVENT_INCLUDE_DIR})
-if(WIN32)
-  include_directories(win32 ${PTHREAD_INCLUDE_DIR})
-endif(WIN32)
-
 add_subdirectory(src)
 
