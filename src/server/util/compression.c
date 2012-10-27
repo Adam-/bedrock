@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
-#include "compression/compression.h"
 #include "util/util.h"
+#include "util/compression.h"
 #include "util/memory.h"
 
 compression_buffer *compression_compress_init(size_t buffer_size)

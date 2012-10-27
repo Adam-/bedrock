@@ -1,9 +1,9 @@
 #include "server/column.h"
 #include "server/client.h"
 #include "nbt/nbt.h"
-#include "util/memory.h"
+#include "util/compression.h"
 #include "util/endian.h"
-#include "compression/compression.h"
+#include "util/memory.h"
 #include "packet/packet_spawn_dropped_item.h"
 #include "packet/packet_destroy_entity.h"
 

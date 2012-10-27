@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
 #include "util/endian.h"
 #include "nbt/nbt.h"
-#include "compression/compression.h"
+#include "util/compression.h"
 #include "util/memory.h"
 #include "util/file.h"
 #include "server/world.h"

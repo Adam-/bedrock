@@ -3,9 +3,9 @@
 #include "server/column.h"
 #include "server/chunk.h"
 #include "packet/packet_column_bulk.h"
-#include "compression/compression.h"
 #include "packet/packet_spawn_named_entity.h"
 #include "packet/packet_spawn_dropped_item.h"
+#include "util/compression.h"
 
 #define COLUMN_BULK_MAX 100
 #define COLUMN_BUFFER_SIZE 8192

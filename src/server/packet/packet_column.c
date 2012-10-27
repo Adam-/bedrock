@@ -1,11 +1,11 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "server/column.h"
-#include "compression/compression.h"
 #include "nbt/nbt.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_spawn_dropped_item.h"
 #include "packet/packet_spawn_named_entity.h"
+#include "util/compression.h"
 
 #define COLUMN_BUFFER_SIZE 8192
 

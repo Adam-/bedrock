@@ -1,6 +1,6 @@
 #include "server/column.h"
+#include "util/compression.h"
 #include "util/util.h"
-#include "compression/compression.h"
 #include "util/memory.h"
 #include "config/hard.h"
 #include "nbt/nbt.h"
