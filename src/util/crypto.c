@@ -1,6 +1,5 @@
-#include "server/bedrock.h"
 #include "util/memory.h"
-#include "config/hard.h"
+#include "server/config/hard.h"
 
 #include <openssl/rsa.h>
 #include <openssl/err.h>

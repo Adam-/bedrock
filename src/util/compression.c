@@ -1,4 +1,3 @@
-#include "server/bedrock.h"
 #include "util/util.h"
 #include "util/compression.h"
 #include "util/memory.h"

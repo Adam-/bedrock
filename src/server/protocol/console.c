@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
-#include "server/io.h"
 #include "util/memory.h"
 #include "util/string.h"
+#include "util/io.h"
 #include "protocol/console.h"
 #include "server/command.h"
 

@@ -1,4 +1,3 @@
-#include "server/bedrock.h"
 #include "nbt/nbt.h"
 #include "util/memory.h"
 #include "util/endian.h"

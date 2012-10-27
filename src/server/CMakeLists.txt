@@ -1,6 +1,6 @@
 
 # Include library header files
-include_directories(../../include ../../include/server ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR} ${EVENT_INCLUDE_DIR})
+include_directories(../../include ../../include/server)
 if(WIN32)
   include_directories(win32 ${PTHREAD_INCLUDE_DIR})
 endif(WIN32)
@@ -41,10 +41,10 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock nbt ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} ${EVENT_LIBRARY})
+target_link_libraries(bedrock nbt util)
 if(WIN32)
-  target_link_libraries(bedrock ws2_32 ${PTHREAD_LIBRARY})
+  target_link_libraries(bedrock ws2_32)
 else(WIN32)
-  target_link_libraries(bedrock m rt pthread)
+  target_link_libraries(bedrock m rt)
 endif(WIN32)
 

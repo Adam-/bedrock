@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
-#include "server/io.h"
 #include "server/client.h"
 #include "util/fd.h"
+#include "util/io.h"
 #include "config/config.h"
 
 #include <arpa/inet.h>

@@ -2,11 +2,11 @@
 #include "server/listener.h"
 #include "server/client.h"
 #include "server/column.h"
-#include "server/io.h"
 #include "server/signal.h"
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
 #include "util/crypto.h"
+#include "util/io.h"
 #include "protocol/console.h"
 
 #include <time.h>

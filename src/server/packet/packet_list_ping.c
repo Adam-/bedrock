@@ -1,8 +1,8 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "config/config.h"
-#include "server/io.h"
 #include "packet/packet_chat_message.h"
+#include "util/io.h"
 
 int packet_list_ping(struct bedrock_client *client, const unsigned char bedrock_attribute_unused *buffer, size_t __attribute__((__unused__)) len)
 {

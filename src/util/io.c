@@ -1,6 +1,5 @@
-#include "server/bedrock.h"
-#include "server/io.h"
-#include "config/hard.h"
+#include "util/io.h"
+#include "server/config/hard.h"
 
 static struct event_base *eb;
 

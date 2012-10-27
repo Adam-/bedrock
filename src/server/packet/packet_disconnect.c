@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "server/bedrock.h"
-#include "server/io.h"
+#include "util/io.h"
 
 int packet_disconnect(struct bedrock_client *client, const bedrock_packet *p)
 {

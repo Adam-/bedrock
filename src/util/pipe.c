@@ -1,5 +1,4 @@
-#include "server/bedrock.h"
-#include "server/io.h"
+#include "util/io.h"
 #include "util/memory.h"
 
 #ifdef WIN32
