@@ -27,7 +27,7 @@ struct packet_info packet_handlers[] = {
 	{LOGIN_RESPONSE,          12, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{HANDSHAKE,               10, STATE_UNAUTHENTICATED,                  SOFT_SIZE | CLIENT_ONLY, packet_handshake},
 	{CHAT_MESSAGE,             3, STATE_IN_GAME,                          SOFT_SIZE,               packet_chat_message},
-	{TIME,                     9, 0,                                      SERVER_ONLY,             NULL},
+	{TIME,                    17, 0,                                      SERVER_ONLY,             NULL},
 	{ENTITY_EQUIPMENT,        11, 0,                                      SERVER_ONLY,             NULL},
 	{SPAWN_POINT,             13, 0,                                      SERVER_ONLY,             NULL},
 	{PLAYER,                   2, STATE_BURSTING | STATE_IN_GAME,         CLIENT_ONLY,             packet_player},
