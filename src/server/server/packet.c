@@ -16,7 +16,7 @@
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_click_window.h"
-#include "packet/packet_locale_and_view_distance.h"
+#include "packet/packet_client_settings.h"
 #include "packet/packet_client_status.h"
 #include "packet/packet_encryption_response.h"
 #include "packet/packet_list_ping.h"
@@ -54,7 +54,7 @@ struct packet_info packet_handlers[] = {
 	{SET_SLOT,                 4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,      5, 0,                                      SERVER_ONLY,             NULL},
 	{PLAYER_LIST,              6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{LOCALE_AND_VIEW_DISTANCE, 8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_locale_and_view_distance},
+	{CLIENT_SETTINGS,          7, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_client_settings},
 	{CLIENT_STATUS,            2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
 	{ENCRYPTION_RESPONSE,      5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,       7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
