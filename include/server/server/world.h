@@ -13,6 +13,7 @@ struct bedrock_world
 	nbt_tag *data;
 	bedrock_list regions;
 
+	int64_t creation;
 	int64_t time;
 };
 

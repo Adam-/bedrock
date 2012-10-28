@@ -57,6 +57,7 @@ static void update_time()
 		{
 			struct bedrock_world *world = node->data;
 			world->time += tick_diff;
+			world->creation += tick_diff;
 		}
 	}
 }
