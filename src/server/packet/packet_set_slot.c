@@ -7,7 +7,7 @@ void packet_send_set_slot(struct bedrock_client *client, uint8_t window_id, uint
 	bedrock_packet packet;
 	struct bedrock_item_stack slot_data;
 
-	slot_data.id = item->id;
+	slot_data.id = item != NULL ? item->id : -1;
 	slot_data.count = count;
 	slot_data.metadata = damage;
 

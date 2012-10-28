@@ -4,11 +4,13 @@
 #include "blocks/blocks.h"
 #include "nbt/nbt.h"
 #include "packet/packet_block_change.h"
+#include "packet/packet_set_slot.h"
 
 enum
 {
 	STARTED_DIGGING,
-	FINISHED_DIGGING = 2
+	FINISHED_DIGGING = 2,
+	DROP_ITEM = 4
 };
 
 static struct bedrock_item *get_weilded_item(struct bedrock_client *client)
@@ -114,9 +116,6 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 	packet_read_int(p, &offset, &z, sizeof(z));
 	packet_read_int(p, &offset, &face, sizeof(face));
 
-	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
-		return ERROR_NOT_ALLOWED;
-
 	if (status == STARTED_DIGGING)
 	{
 		struct bedrock_chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
@@ -124,6 +123,9 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		struct bedrock_block *block;
 		double delay;
 		struct bedrock_item *item = get_weilded_item(client);
+
+		if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
+			return ERROR_NOT_ALLOWED;
 
 		// Reset dig state
 		memset(&client->digging_data, 0, sizeof(client->digging_data));
@@ -167,6 +169,9 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		int32_t *height;
 		bedrock_node *node;
 		int i;
+
+		if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
+			return ERROR_NOT_ALLOWED;
 
 		chunk = find_chunk_which_contains(client->world, x, y, z);
 		if (chunk == NULL)
@@ -227,6 +232,50 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 				break;
 		if (i == BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK)
 			chunk_free(chunk);
+	}
+	else if (status == DROP_ITEM)
+	{
+		/* Dropping currently held item */
+		nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
+		if (tag != NULL)
+		{
+			uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id"), *data = nbt_read(tag, TAG_SHORT, 1, "Damage");
+			uint8_t *count = nbt_read(tag, TAG_BYTE, 1, "Count");
+
+			struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+			struct bedrock_column *col;
+
+			di->item = item_find_or_create(*id);
+			di->count = 1;
+			di->data = *data;
+			di->x = *client_get_pos_x(client);
+			di->y = *client_get_pos_y(client);
+			di->z = *client_get_pos_z(client);
+
+			// XXX put in the direction the user is facing
+			di->x += rand() % 4;
+			di->z += rand() % 4;
+
+			col = find_column_from_world_which_contains(client->world, di->x, di->z);
+			if (col != NULL)
+				column_add_item(client->column, di);
+			else
+				bedrock_free(di);
+
+			bedrock_log(LEVEL_DEBUG, "player digging: %s drops a block of %s", client->name, item_find_or_create(*id)->name);
+
+			--(*count);
+			if (*count)
+			{
+				packet_send_set_slot(client, WINDOW_INVENTORY, client->selected_slot + 36, item_find_or_create(*id), *count, *data);
+			}
+			else
+			{
+				/* Item goes away */
+				packet_send_set_slot(client, WINDOW_INVENTORY, client->selected_slot + 36, NULL, 0, 0);
+				nbt_free(tag);
+			}
+		}
 	}
 	else
 		bedrock_log(LEVEL_DEBUG, "player digging: Unrecognized dig status %d", status);
