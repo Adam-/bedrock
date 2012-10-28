@@ -1,5 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
+#include "server/column.h"
 #include "server/packet.h"
 #include "packet/packet_set_slot.h" // XXX for WINDOW_
 #include "packet/packet_confirm_transaction.h"
@@ -11,7 +12,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t window;
-	uint16_t slot;
+	int16_t slot;
 	uint8_t right_click;
 	uint16_t action;
 	uint8_t shift;
@@ -26,15 +27,19 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 
 	if (window == WINDOW_INVENTORY)
 	{
-		nbt_tag *tag;
+		nbt_tag *tag = NULL;
 
-		if (slot < 9 || slot > 44)
+		if (slot == -999)
+			; // Outside of the window
+		else if (slot >= 9 && slot <= 44)
+		{
+			if (slot >= 36)
+				slot -= 36;
+
+			tag = client_get_inventory_tag(client, slot);
+		}
+		else
 			return ERROR_NOT_ALLOWED;
-
-		if (slot >= 36)
-			slot -= 36;
-
-		tag = client_get_inventory_tag(client, slot);
 
 		if (tag != NULL)
 		{
@@ -125,8 +130,41 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 		}
 		else
 		{
+			// Dropping items on the ground
+			if (slot == -999)
+			{
+				if (client->window_drag_data.id)
+				{
+					/* Spawn dropped item */
+					struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+					struct bedrock_column *col;
+
+					di->item = item_find_or_create(client->window_drag_data.id);
+					di->count = client->window_drag_data.count;
+					di->data = client->window_drag_data.metadata;
+					di->x = *client_get_pos_x(client);
+					di->y = *client_get_pos_y(client);
+					di->z = *client_get_pos_z(client);
+
+					// XXX put in the direction the user is facing
+					di->x += rand() % 4;
+					di->z += rand() % 4;
+
+					col = find_column_from_world_which_contains(client->world, di->x, di->z);
+					if (col != NULL)
+						column_add_item(client->column, di);
+					else
+						bedrock_free(di);
+
+					bedrock_log(LEVEL_DEBUG, "click window: %s drops %d blocks of %s", client->name, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name);
+				}
+
+				client->window_drag_data.id = 0;
+				client->window_drag_data.count = 0;
+				client->window_drag_data.metadata = 0;
+			}
 			// Clicked an empty slot, might be placing blocks there
-			if (client->window_drag_data.id)
+			else if (client->window_drag_data.id)
 			{
 				bedrock_node *node;
 				// Create the new inventory entry

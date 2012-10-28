@@ -62,6 +62,7 @@ extern uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8
 extern int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z);
 /* Finds the column which contains the point x and z */
 extern struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z);
+extern struct bedrock_column *find_column_from_world_which_contains(struct bedrock_world *world, double x, double z);
 
 extern void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag flag);
 extern void column_process_pending();

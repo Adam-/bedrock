@@ -200,6 +200,11 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	return column;
 }
 
+struct bedrock_column *find_column_from_world_which_contains(struct bedrock_world *world, double x, double z)
+{
+	return find_column_which_contains(find_region_which_contains(world, x, z), x, z);
+}
+
 void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag flag)
 {
 	struct pending_column_update *pc;

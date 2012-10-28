@@ -40,7 +40,7 @@ struct packet_info packet_handlers[] = {
 	{ENTITY_ANIMATION,         6, STATE_IN_GAME,                          NONE,                    packet_entity_animation},
 	{ENTITY_ACTION,            6, STATE_IN_GAME,                          CLIENT_ONLY,             packet_entity_action},
 	{SPAWN_NAMED_ENTITY,      23, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{SPAWN_DROPPED_ITEM,      25, 0,                                      SERVER_ONLY,             NULL},
+	{SPAWN_DROPPED_ITEM,      20, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{COLLECT_ITEM,             9, 0,                                      SERVER_ONLY,             NULL},
 	{DESTROY_ENTITY,           6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{ENTITY_TELEPORT,         19, 0,                                      SERVER_ONLY,             NULL},
