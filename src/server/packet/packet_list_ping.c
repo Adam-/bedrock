@@ -1,3 +1,4 @@
+#include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
 #include "config/config.h"
@@ -19,8 +20,8 @@ int packet_list_ping(struct bedrock_client *client, const bedrock_packet *p)
 	string[len++] = 0;
 	string[len++] = BEDROCK_PROTOCOL_VERSION;
 	string[len++] = 0;
-	strncpy(string + len, BEDROCK_SERVER_VERSION, sizeof(string) - len);
-	len += strlen(BEDROCK_SERVER_VERSION) + 1;
+	len += snprintf(string + len, sizeof(string) - len, "bedrock-%d.%d%s", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
+	string[len++] = 0;
 	strncpy(string + len, server_desc, sizeof(string) - len);
 	len += strlen(server_desc) + 1;
 	len += snprintf(string + len, sizeof(string) - len, "%d", authenticated_client_count);
