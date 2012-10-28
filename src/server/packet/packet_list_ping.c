@@ -4,18 +4,33 @@
 #include "packet/packet_chat_message.h"
 #include "util/io.h"
 
-int packet_list_ping(struct bedrock_client *client, const unsigned char bedrock_attribute_unused *buffer, size_t __attribute__((__unused__)) len)
+int packet_list_ping(struct bedrock_client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
+	uint8_t b;
 	char string[BEDROCK_MAX_STRING_LENGTH];
+	int len = 0;
 	bedrock_packet packet;
 
-	snprintf(string, sizeof(string), "%s%c%d%c%d", server_desc, SPECIAL_CHAR, authenticated_client_count, SPECIAL_CHAR, server_maxusers);
+	packet_read_int(p, &offset, &b, sizeof(b));
+
+	string[len++] = (char) SPECIAL_CHAR;
+	string[len++] = '1';
+	string[len++] = 0;
+	string[len++] = BEDROCK_PROTOCOL_VERSION;
+	string[len++] = 0;
+	strncpy(string + len, BEDROCK_SERVER_VERSION, sizeof(string) - len);
+	len += strlen(BEDROCK_SERVER_VERSION) + 1;
+	strncpy(string + len, server_desc, sizeof(string) - len);
+	len += strlen(server_desc) + 1;
+	len += snprintf(string + len, sizeof(string) - len, "%d", authenticated_client_count);
+	string[len++] = 0;
+	len += snprintf(string + len, sizeof(string) - len, "%d", server_maxusers);
 
 	packet_init(&packet, DISCONNECT);
 
 	packet_pack_header(&packet, DISCONNECT);
-	packet_pack_string(&packet, string);
+	packet_pack_string_len(&packet, string, len);
 
 	client_send_packet(client, &packet);
 

@@ -58,7 +58,7 @@ struct packet_info packet_handlers[] = {
 	{CLIENT_STATUS,            2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
 	{ENCRYPTION_RESPONSE,      5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,       7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{LIST_PING,                1, STATE_UNAUTHENTICATED,                  CLIENT_ONLY,             packet_list_ping},
+	{LIST_PING,                2, STATE_UNAUTHENTICATED,                  CLIENT_ONLY,             packet_list_ping},
 	{DISCONNECT,               3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
@@ -288,11 +288,15 @@ void packet_pack_int(bedrock_packet *packet, const void *data, size_t size)
 
 void packet_pack_string(bedrock_packet *packet, const char *string)
 {
-	uint16_t len, i;
+	bedrock_assert(packet != NULL && string != NULL, return);
+	packet_pack_string_len(packet, string, strlen(string));
+}
+
+void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len)
+{
+	uint16_t i;
 
 	bedrock_assert(packet != NULL && string != NULL, return);
-
-	len = strlen(string);
 
 	packet_pack_int(packet, &len, sizeof(len));
 

@@ -14,7 +14,9 @@
 #define BEDROCK_VIEW_LENGTH 10
 
 /* Protocol version we support */
-#define BEDROCK_PROTOCOL_VERSION 39
+#define BEDROCK_PROTOCOL_VERSION 47
+/* Server version we emulate */
+#define BEDROCK_SERVER_VERSION "1.4.1-bedrock"
 
 /* Size of the initial buffer for clients */
 #define BEDROCK_CLIENT_SEND_SIZE 4096
