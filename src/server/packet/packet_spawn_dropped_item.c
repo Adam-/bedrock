@@ -6,6 +6,7 @@
 void packet_send_spawn_dropped_item(struct bedrock_client *client, struct bedrock_dropped_item *di)
 {
 	bedrock_packet packet;
+	struct bedrock_item_stack stack;
 	int32_t a_x, a_y, a_z;
 	uint8_t b;
 
@@ -13,9 +14,11 @@ void packet_send_spawn_dropped_item(struct bedrock_client *client, struct bedroc
 
 	packet_pack_header(&packet, SPAWN_DROPPED_ITEM);
 	packet_pack_int(&packet, &di->eid, sizeof(di->eid));
-	packet_pack_int(&packet, &di->item->id, sizeof(di->item->id));
-	packet_pack_int(&packet, &di->count, sizeof(di->count));
-	packet_pack_int(&packet, &di->data, sizeof(di->data));
+
+	stack.id = di->item->id;
+	stack.count = di->count;
+	stack.metadata = di->data;
+	packet_pack_slot(&packet, &stack);
 
 	a_x = (int) di->x * 32;
 	a_y = (int) di->y * 32;
