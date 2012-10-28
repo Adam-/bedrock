@@ -1,3 +1,5 @@
+#include "util/util.h"
+
 #ifndef WIN32
 #define _O_BINARY 0
 #endif

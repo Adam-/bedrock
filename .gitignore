@@ -3,6 +3,7 @@ CMakeFiles
 Makefile
 bedrock
 console
+editor
 cmake_install.cmake
 src/server/config/lexer.c
 src/server/config/parser.c

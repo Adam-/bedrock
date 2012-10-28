@@ -13,5 +13,3 @@ extern char *nbt_read_string(nbt_tag *tag, size_t size, ...);
 
 extern void nbt_set(nbt_tag *tag, nbt_tag_type type, const void *src, size_t src_size, size_t size, ...);
 extern nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *src, size_t src_size);
-
-extern void nbt_ascii_dump(nbt_tag *tag);
