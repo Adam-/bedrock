@@ -3,10 +3,10 @@
 static void recursive_dump_tag(FILE *out, nbt_tag *t, int level)
 {
 	int r;
+	const char *name = t->name ? t->name : "";
+
 	for (r = 0; r < level; ++r)
 		fprintf(out, "	");
-
-	const char *name = t->name ? t->name : "";
 
 	switch (t->type)
 	{
@@ -43,6 +43,7 @@ static void recursive_dump_tag(FILE *out, nbt_tag *t, int level)
 		}
 		case TAG_LIST:
 		{
+			bedrock_node *n;
 			struct nbt_tag_list *tl = &t->payload.tag_list;
 
 			bedrock_assert((size_t) tl->length == tl->list.count, ;);
@@ -52,7 +53,6 @@ static void recursive_dump_tag(FILE *out, nbt_tag *t, int level)
 				fprintf(out, "	");
 			fprintf(out, "{\n");
 
-			bedrock_node *n;
 			LIST_FOREACH(&t->payload.tag_list.list, n)
 			{
 				nbt_tag *t2 = n->data;
@@ -66,12 +66,13 @@ static void recursive_dump_tag(FILE *out, nbt_tag *t, int level)
 		}
 		case TAG_COMPOUND:
 		{
+			bedrock_node *n;
+
 			fprintf(out, "TAG_Compound(%s): length %ld\n", name, t->payload.tag_compound.count);
 			for (r = 0; r < level; ++r)
 				fprintf(out, "	");
 			fprintf(out, "{\n");
 
-			bedrock_node *n;
 			LIST_FOREACH(&t->payload.tag_compound, n)
 			{
 				nbt_tag *t2 = n->data;

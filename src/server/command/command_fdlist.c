@@ -2,8 +2,8 @@
 #include "server/command.h"
 #include "util/fd.h"
 
-#include <sys/time.h>
 #ifndef WIN32
+#include <sys/time.h>
 #include <sys/resource.h>
 #endif
 

@@ -10,7 +10,9 @@ int server_port;
 
 extern FILE *yyin;
 extern int yyparse();
+#ifndef WIN32
 extern void yylex_destroy();
+#endif
 extern int config_line_num;
 
 int config_parse(const char *config)
@@ -29,7 +31,9 @@ int config_parse(const char *config)
 
 	fclose(fd);
 
+#ifndef WIN32
 	yylex_destroy();
+#endif
 
 	return ret;
 }

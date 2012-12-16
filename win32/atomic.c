@@ -12,7 +12,7 @@ static inline void init_mutex()
 	}
 }
 
-long long __sync_fetch_and_add_8(long long *ptr, long long value)
+long long __sync_fetch_and_add(long long *ptr, long long value)
 {
 	init_mutex();
 	pthread_mutex_lock(&mutex);
@@ -21,7 +21,7 @@ long long __sync_fetch_and_add_8(long long *ptr, long long value)
 	return *ptr;
 }
 
-long long __sync_fetch_and_sub_8(long long *ptr, long long value)
+long long __sync_fetch_and_sub(long long *ptr, long long value)
 {
 	init_mutex();
 	pthread_mutex_lock(&mutex);
@@ -30,7 +30,7 @@ long long __sync_fetch_and_sub_8(long long *ptr, long long value)
 	return *ptr;
 }
 
-long long __sync_and_and_fetch_8(long long *ptr, long long value)
+long long __sync_and_and_fetch(long long *ptr, long long value)
 {
 	init_mutex();
 	pthread_mutex_lock(&mutex);
@@ -39,7 +39,7 @@ long long __sync_and_and_fetch_8(long long *ptr, long long value)
 	return *ptr;
 }
 
-long long __sync_or_and_fetch_8(long long *ptr, long long value)
+long long __sync_or_and_fetch(long long *ptr, long long value)
 {
 	init_mutex();
 	pthread_mutex_lock(&mutex);

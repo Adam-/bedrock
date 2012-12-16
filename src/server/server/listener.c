@@ -4,7 +4,9 @@
 #include "util/io.h"
 #include "config/config.h"
 
+#ifndef WIN32
 #include <arpa/inet.h>
+#endif
 #include <errno.h>
 #include <fcntl.h>
 

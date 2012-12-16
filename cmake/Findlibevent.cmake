@@ -16,3 +16,4 @@ find_package_handle_standard_args(EVENT
   EVENT_LIBRARY
 )
 
+include_directories(${EVENT_INCLUDE_DIR})

@@ -1,5 +1,10 @@
+#ifndef WIN32
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else
+#include "util/util.h"
+typedef int socklen_t;
+#endif
 #include <event2/util.h>
 
 int pipe(int fds[2])
@@ -15,7 +20,7 @@ int pipe(int fds[2])
 	localhost.sin_port = 0;
 
 	lfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (cfd == -1 || lfd == -1)
+	if (lfd == -1)
 	{
 		evutil_closesocket(lfd);
 		return -1;

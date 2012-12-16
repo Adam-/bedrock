@@ -27,7 +27,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#ifndef WIN32
 #include <arpa/inet.h>
+#endif
 #include <ctype.h>
 #include <math.h>
 
@@ -544,15 +546,20 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	int i = -1;
 	nbt_tag *c, *item_tag;
 	uint8_t pos;
+	uint16_t d;
+	uint8_t b;
 
 	bedrock_log(LEVEL_DEBUG, "client: Adding item %s to %s's inventory", item->name, client->name);
 
 	LIST_FOREACH(list, node)
 	{
+		uint16_t *id;
+		uint8_t *count, *slot;
+
 		c = node->data;
-		uint16_t *id = nbt_read(c, TAG_SHORT, 1, "id");
-		uint8_t *count = nbt_read(c, TAG_BYTE, 1, "Count");
-		uint8_t *slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+		id = nbt_read(c, TAG_SHORT, 1, "id");
+		count = nbt_read(c, TAG_BYTE, 1, "Count");
+		slot = nbt_read(c, TAG_BYTE, 1, "Slot");
 
 		++i;
 
@@ -584,9 +591,9 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	item_tag->type = TAG_COMPOUND;
 
 	nbt_add(item_tag, TAG_SHORT, "id", &item->id, sizeof(item->id));
-	uint16_t d = 0; // XXX
+	d = 0; // XXX
 	nbt_add(item_tag, TAG_SHORT, "Damage", &d, sizeof(d));
-	uint8_t b = 1;
+	b = 1;
 	nbt_add(item_tag, TAG_BYTE, "Count", &b, sizeof(b));
 	b = i;
 	nbt_add(item_tag, TAG_BYTE, "Slot", &b, sizeof(b));
@@ -594,8 +601,10 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	// Insert slot i
 	LIST_FOREACH(list, node)
 	{
+		uint8_t *slot;
+
 		c = node->data;
-		uint8_t *slot = nbt_read(c, TAG_BYTE, 1, "Slot");
+		slot = nbt_read(c, TAG_BYTE, 1, "Slot");
 
 		if (*slot > i)
 		{

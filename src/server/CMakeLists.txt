@@ -1,9 +1,6 @@
 
 # Include library header files
-include_directories(../../include ../../include/server)
-if(WIN32)
-  include_directories(win32 ${PTHREAD_INCLUDE_DIR})
-endif(WIN32)
+include_directories(../../include ../../include/server ${OPENSSL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
 
 # Generate the files for compile
 FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.l ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.c)

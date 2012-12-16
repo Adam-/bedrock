@@ -4,7 +4,10 @@
 
 compression_buffer *compression_compress_init(size_t buffer_size)
 {
-	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
+	int i;
+	compression_buffer *buffer;
+	
+	buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_COMPRESS;
 	buffer->buffer_size = buffer_size;
@@ -13,7 +16,7 @@ compression_buffer *compression_compress_init(size_t buffer_size)
 	buffer->stream.zfree = Z_NULL;
 	buffer->stream.opaque = Z_NULL;
 
-	int i = deflateInit2(&buffer->stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15, 8, Z_DEFAULT_STRATEGY);
+	i = deflateInit2(&buffer->stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15, 8, Z_DEFAULT_STRATEGY);
 	if (i != Z_OK)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error initializing deflate stream - error code %d", i);
@@ -95,7 +98,10 @@ void compression_compress_deflate_finish(compression_buffer *buffer, const unsig
 
 compression_buffer *compression_decompress_init(size_t buffer_size)
 {
-	compression_buffer *buffer = bedrock_malloc(sizeof(compression_buffer));
+	int i;
+	compression_buffer *buffer;
+	
+	buffer = bedrock_malloc(sizeof(compression_buffer));
 
 	buffer->type = ZLIB_DECOMPRESS;
 	buffer->buffer_size = buffer_size;
@@ -104,7 +110,7 @@ compression_buffer *compression_decompress_init(size_t buffer_size)
 	buffer->stream.zfree = Z_NULL;
 	buffer->stream.opaque = Z_NULL;
 
-	int i = inflateInit2(&buffer->stream, 15 + 32);
+	i = inflateInit2(&buffer->stream, 15 + 32);
 	if (i != Z_OK)
 	{
 		bedrock_log(LEVEL_CRIT, "zlib: Error initializing deflate stream - error code %d", i);

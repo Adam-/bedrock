@@ -47,9 +47,10 @@ void bedrock_fd_close(struct bedrock_fd *f)
 
 struct bedrock_fd *bedrock_fd_find(int fd)
 {
-	mutex_init();
 	bedrock_node *node;
 	struct bedrock_fd *bfd = NULL;
+
+	mutex_init();
 
 	bedrock_mutex_lock(&fdlist_mutex);
 

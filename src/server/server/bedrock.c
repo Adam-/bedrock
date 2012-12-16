@@ -65,7 +65,11 @@ static struct bedrock_fd log_fd;
 
 static void bedrock_log_init()
 {
+#ifndef WIN32
 	int fd = open("server.log", O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
+#else
+	int fd = open("server.log", _O_WRONLY | _O_CREAT | _O_APPEND, _S_IWRITE);
+#endif
 	if (fd == -1)
 	{
 		bedrock_log(LEVEL_CRIT, "Unable to open log file: %s", strerror(errno));

@@ -6,7 +6,9 @@
 #include <event2/event.h>
 #include <event2/event_struct.h>
 
+#ifndef WIN32
 #include <netinet/in.h>
+#endif
 
 typedef enum
 {

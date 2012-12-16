@@ -7,7 +7,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#ifndef WIN32
 #include <arpa/inet.h>
+#endif
 
 bedrock_list console_list = LIST_INIT;
 

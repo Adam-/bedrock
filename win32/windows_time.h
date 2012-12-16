@@ -1,5 +1,9 @@
 
-#include <pthread.h>
+struct timespec
+{
+	long tv_sec;
+	long tv_nsec;
+};
 
 extern struct tm *localtime_r(const time_t *timep, struct tm *result);
 

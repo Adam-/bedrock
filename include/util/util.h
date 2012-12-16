@@ -7,7 +7,20 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
+
+#ifndef WIN32
+# include <unistd.h>
+#else
+# define _WINSOCKAPI_
+# include <windows.h>
+# include <Ws2tcpip.h>
+# define PATH_MAX MAX_PATH
+# define snprintf _snprintf
+# define strcasecmp stricmp
+# define write _write
+# define lseek _lseek
+# define inline
+#endif
 
 typedef enum bool_ { false, true } bool;
 
