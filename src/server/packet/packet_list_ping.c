@@ -18,7 +18,7 @@ int packet_list_ping(struct bedrock_client *client, const bedrock_packet *p)
 	string[len++] = (char) SPECIAL_CHAR;
 	string[len++] = '1';
 	string[len++] = 0;
-	string[len++] = BEDROCK_PROTOCOL_VERSION;
+	len += snprintf(string + len, sizeof(string) - len, "%d", BEDROCK_PROTOCOL_VERSION);
 	string[len++] = 0;
 	len += snprintf(string + len, sizeof(string) - len, "bedrock-%d.%d%s", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 	string[len++] = 0;
