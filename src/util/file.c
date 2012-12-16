@@ -3,7 +3,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 /* Read everything from 'fd' into memory and return it */
 unsigned char *bedrock_file_read(int fd, size_t *file_size)

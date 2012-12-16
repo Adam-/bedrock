@@ -6,7 +6,6 @@
 #include "server/command.h"
 
 #include <errno.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
 

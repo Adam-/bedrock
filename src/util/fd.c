@@ -2,8 +2,6 @@
 #include "util/memory.h"
 #include "util/list.h"
 
-#include <unistd.h>
-
 bedrock_mutex fdlist_mutex;
 bedrock_list fdlist = LIST_INIT;
 

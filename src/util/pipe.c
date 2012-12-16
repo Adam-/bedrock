@@ -7,7 +7,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 static void pipe_reader(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {

@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 typedef enum bool_ { false, true } bool;
 
