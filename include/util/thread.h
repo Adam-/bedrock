@@ -15,6 +15,12 @@ typedef struct
 	char desc[32];
 } bedrock_cond;
 
+typedef struct
+{
+	pthread_spinlock_t spinlock;
+	char desc[32];
+} bedrock_spinlock;
+
 #include "util/list.h"
 #include "util/pipe.h"
 
@@ -53,5 +59,10 @@ extern void bedrock_cond_init(bedrock_cond *cond, const char *desc);
 extern void bedrock_cond_destroy(bedrock_cond *cond);
 extern void bedrock_cond_wakeup(bedrock_cond *cond);
 extern bool bedrock_cond_wait(bedrock_cond *cond, bedrock_mutex *mutex);
+
+extern void bedrock_spinlock_init(bedrock_spinlock *lock, const char *desc);
+extern void bedrock_spinlock_destroy(bedrock_spinlock *lock);
+extern void bedrock_spinlock_lock(bedrock_spinlock *lock);
+extern void bedrock_spinlock_unlock(bedrock_spinlock *lock);
 
 #endif // BEDROCK_UTIL_THREAD_H

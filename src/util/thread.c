@@ -123,6 +123,7 @@ void bedrock_mutex_init(bedrock_mutex *mutex, const char *desc)
 void bedrock_mutex_destroy(bedrock_mutex *mutex)
 {
 	int i;
+
 	bedrock_assert(mutex != NULL, return);
 
 	i = pthread_mutex_destroy(&mutex->mutex);
@@ -184,3 +185,56 @@ bool bedrock_cond_wait(bedrock_cond *cond, bedrock_mutex *mutex)
 {
 	return pthread_cond_wait(&cond->cond, &mutex->mutex) == 0;
 }
+
+void bedrock_spinlock_init(bedrock_spinlock *lock, const char *desc)
+{
+	int i;
+
+	strncpy(lock->desc, desc, sizeof(lock->desc));
+
+	i = pthread_spin_init(&lock->spinlock, PTHREAD_PROCESS_PRIVATE);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to initialize spinlock %s - %s", desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_THREAD, "thread: Successfully initialized spinlock %s", desc);
+}
+
+void bedrock_spinlock_destroy(bedrock_spinlock *lock)
+{
+	int i;
+
+	bedrock_assert(lock != NULL, return);
+
+	i = pthread_spin_destroy(&lock->spinlock);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to destroy spinlock %s - %s", lock->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_THREAD, "thread: Successfully destroyed spinlock %s", lock->desc);
+}
+
+void bedrock_spinlock_lock(bedrock_spinlock *lock)
+{
+	int i;
+
+	bedrock_assert(lock != NULL, return);
+
+	i = pthread_spin_lock(&lock->spinlock);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to lock spinlock %s - %s", lock->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_THREAD, "thread: Successfully locked spinlock %s", lock->desc);
+}
+
+void bedrock_spinlock_unlock(bedrock_spinlock *lock)
+{
+	int i;
+
+	bedrock_assert(lock != NULL, return);
+
+	i = pthread_spin_unlock(&lock->spinlock);
+	if (i)
+		bedrock_log(LEVEL_CRIT, "thread: Unable to unlock spinlock %s - %s", lock->desc, strerror(errno));
+	else
+		bedrock_log(LEVEL_THREAD, "thread: Successfully unlocked spinlock %s", lock->desc);
+}
+

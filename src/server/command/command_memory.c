@@ -6,7 +6,10 @@ void command_memory(struct bedrock_command_source *source, int bedrock_attribute
 {
 	long double memory;
 
-	memory = __sync_or_and_fetch(&memory_size, 0);
+	bedrock_spinlock_lock(&memory_lock);
+	memory = memory_size;
+	bedrock_spinlock_unlock(&memory_lock);
+
 	memory = memory / 1024.0 / 1024.0;
 
 	command_reply(source, "Total memory: %0.2LfMB", memory);
