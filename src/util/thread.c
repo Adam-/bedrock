@@ -57,6 +57,7 @@ struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_
 		bedrock_log(LEVEL_CRIT, "thread: Unable to create thread - %s", strerror(errno));
 		bedrock_list_del(&thread_list, thread);
 		bedrock_free(thread);
+		thread = NULL;
 	}
 	else
 		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", thread->handle);
