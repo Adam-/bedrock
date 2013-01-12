@@ -16,16 +16,16 @@
 
 bedrock_list world_list = LIST_INIT;
 
-struct bedrock_world *world_create(const char *name, const char *path)
+struct world *world_create(const char *name, const char *path)
 {
-	struct bedrock_world *world = bedrock_malloc(sizeof(struct bedrock_world));
+	struct world *world = bedrock_malloc(sizeof(struct world));
 	strncpy(world->name, name, sizeof(world->name));
 	strncpy(world->path, path, sizeof(world->path));
 	bedrock_list_add(&world_list, world);
 	return world;
 }
 
-bool world_load(struct bedrock_world *world)
+bool world_load(struct world *world)
 {
 	char path[PATH_MAX];
 	int fd;
@@ -116,7 +116,7 @@ static void world_save_exit(struct world_save_info *wi)
 	bedrock_free(wi);
 }
 
-void world_save(struct bedrock_world *world)
+void world_save(struct world *world)
 {
 	struct world_save_info *wi = bedrock_malloc(sizeof(struct world_save_info));
 
@@ -135,13 +135,13 @@ void world_save_all()
 
 	LIST_FOREACH(&world_list, node)
 	{
-		struct bedrock_world *world = node->data;
+		struct world *world = node->data;
 
 		world_save(world);
 	}
 }
 
-void world_free(struct bedrock_world *world)
+void world_free(struct world *world)
 {
 	if (bedrock_running)
 		world_save(world);
@@ -155,13 +155,13 @@ void world_free(struct bedrock_world *world)
 	bedrock_free(world);
 }
 
-struct bedrock_world *world_find(const char *name)
+struct world *world_find(const char *name)
 {
 	bedrock_node *n;
 
 	LIST_FOREACH(&world_list, n)
 	{
-		struct bedrock_world *world = n->data;
+		struct world *world = n->data;
 
 		if (!strcmp(world->name, name))
 			return world;

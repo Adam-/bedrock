@@ -5,9 +5,9 @@
 
 #include <errno.h>
 
-void command_teleport(struct bedrock_command_source *source, int argc, const char **argv)
+void command_teleport(struct command_source *source, int argc, const char **argv)
 {
-	struct bedrock_client *user_source = client_find(argv[1]);
+	struct client *user_source = client_find(argv[1]);
 
 	if (source == NULL)
 	{
@@ -17,7 +17,7 @@ void command_teleport(struct bedrock_command_source *source, int argc, const cha
 
 	if (argc == 3)
 	{
-		struct bedrock_client *target = client_find(argv[2]);
+		struct client *target = client_find(argv[2]);
 
 		if (target == NULL)
 		{

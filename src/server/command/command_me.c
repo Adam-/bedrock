@@ -3,7 +3,7 @@
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 
-void command_me(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char **argv)
+void command_me(struct command_source *source, int bedrock_attribute_unused argc, const char **argv)
 {
 	char final_message[BEDROCK_MAX_STRING_LENGTH];
 	const char *message = argv[1];
@@ -24,7 +24,7 @@ void command_me(struct bedrock_command_source *source, int bedrock_attribute_unu
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		if (c->authenticated & STATE_IN_GAME)
 		{

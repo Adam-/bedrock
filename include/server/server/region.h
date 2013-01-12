@@ -13,17 +13,17 @@ enum region_op
 /* A pending operation on a region */
 struct region_operation
 {
-	struct bedrock_region *region;
+	struct region *region;
 	unsigned int operation:2;
-	struct bedrock_column *column;
+	struct column *column;
 	
 	/* Used for REGION_OP_WRITE, contains NBT data to write in binary form. */
 	bedrock_buffer *nbt_out;
 };
 
-struct bedrock_region
+struct region
 {
-	struct bedrock_world *world;
+	struct world *world;
 	int x;
 	int z;
 	char path[PATH_MAX];
@@ -55,7 +55,7 @@ struct bedrock_region
 
 extern void region_operation_free(struct region_operation *op);
 extern void region_operation_schedule(struct region_operation *op);
-extern struct bedrock_region *region_create(struct bedrock_world *world, int x, int z);
-extern void region_free(struct bedrock_region *region);
+extern struct region *region_create(struct world *world, int x, int z);
+extern void region_free(struct region *region);
 /* Finds the region which contains the point x and z */
-extern struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z);
+extern struct region *find_region_which_contains(struct world *world, double x, double z);

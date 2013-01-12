@@ -2,7 +2,7 @@
 #include "blocks/items.h"
 #include "blocks/blocks.h"
 
-struct bedrock_item bedrock_items[] = {
+struct item items[] = {
 	{ITEM_NONE,               "",                   ITEM_FLAG_NONE},
 	{ITEM_IRON_SHOVEL,        "Iron shovel",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
 	{ITEM_IRON_PICKAXE,       "Iron pickaxe",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
@@ -55,7 +55,7 @@ struct bedrock_item bedrock_items[] = {
 	{ITEM_SHEARS,             "Shears",             ITEM_FLAG_DAMAGABLE}
 };
 
-static int item_compare(const item_type *id, const struct bedrock_item *item)
+static int item_compare(const item_type *id, const struct item *item)
 {
 	if (*id < item->id)
 		return -1;
@@ -66,14 +66,14 @@ static int item_compare(const item_type *id, const struct bedrock_item *item)
 
 typedef int (*compare_func)(const void *, const void *);
 
-struct bedrock_item *item_find(item_type id)
+struct item *item_find(item_type id)
 {
-	static struct bedrock_item i;
-	struct bedrock_item *item = bsearch(&id, bedrock_items, sizeof(bedrock_items) / sizeof(struct bedrock_item), sizeof(struct bedrock_item), (compare_func) item_compare);
+	static struct item i;
+	struct item *item = bsearch(&id, items, sizeof(items) / sizeof(struct item), sizeof(struct item), (compare_func) item_compare);
 
 	if (item == NULL)
 	{
-		struct bedrock_block *block = block_find(id);
+		struct block *block = block_find(id);
 
 		if (block != NULL)
 		{
@@ -88,10 +88,10 @@ struct bedrock_item *item_find(item_type id)
 	return item;
 }
 
-struct bedrock_item *item_find_or_create(item_type id)
+struct item *item_find_or_create(item_type id)
 {
-	static struct bedrock_item i;
-	struct bedrock_item *item = item_find(id);
+	static struct item i;
+	struct item *item = item_find(id);
 
 	if (item == NULL)
 	{

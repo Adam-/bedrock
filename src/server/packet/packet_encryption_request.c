@@ -2,7 +2,7 @@
 #include "server/packet.h"
 #include "util/crypto.h"
 
-void packet_send_encryption_request(struct bedrock_client *client)
+void packet_send_encryption_request(struct client *client)
 {
 	int16_t pubkey_len = crypto_pubkey_len();
 	int16_t verify_token_length = BEDROCK_VERIFY_TOKEN_LEN;

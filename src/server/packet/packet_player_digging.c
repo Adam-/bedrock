@@ -13,7 +13,7 @@ enum
 	DROP_ITEM = 4
 };
 
-static struct bedrock_item *get_weilded_item(struct bedrock_client *client)
+static struct item *get_weilded_item(struct client *client)
 {
 	nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
 	if (tag != NULL)
@@ -32,7 +32,7 @@ static double modulus(double x, double y)
 }
 
 /* Is the given item a weakness for the given block? */
-static bool is_weakness(struct bedrock_block *block, struct bedrock_item *item)
+static bool is_weakness(struct block *block, struct item *item)
 {
 	bool has_tool_requirement, has_type_requirement;
 
@@ -47,7 +47,7 @@ static bool is_weakness(struct bedrock_block *block, struct bedrock_item *item)
 }
 
 /* Can the given item harvest the given block? */
-static bool can_harvest(struct bedrock_block *block, struct bedrock_item *item)
+static bool can_harvest(struct block *block, struct item *item)
 {
 	bool has_tool_requirement, has_type_requirement;
 
@@ -64,7 +64,7 @@ static bool can_harvest(struct bedrock_block *block, struct bedrock_item *item)
 /* Calculate how long a block should take to mine using the given item.
  * See: http://www.minecraftwiki.net/wiki/Digging
  */
-static double calculate_block_time(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_block *block, struct bedrock_item *item)
+static double calculate_block_time(struct client bedrock_attribute_unused *client, struct block *block, struct item *item)
 {
 	// Start with the time, in seconds, it takes to mine the block for no harvest
 	double delay = block->no_harvest_time;
@@ -101,7 +101,7 @@ static double calculate_block_time(struct bedrock_client bedrock_attribute_unuse
 	return delay;
 }
 
-int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p)
+int packet_player_digging(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t status;
@@ -118,11 +118,11 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 
 	if (status == STARTED_DIGGING)
 	{
-		struct bedrock_chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
+		struct chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
 		uint8_t *block_id;
-		struct bedrock_block *block;
+		struct block *block;
 		double delay;
-		struct bedrock_item *item = get_weilded_item(client);
+		struct item *item = get_weilded_item(client);
 
 		if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
 			return ERROR_NOT_ALLOWED;
@@ -162,10 +162,10 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 	}
 	else if (status == FINISHED_DIGGING)
 	{
-		struct bedrock_item *item = get_weilded_item(client);
-		struct bedrock_chunk *chunk;
+		struct item *item = get_weilded_item(client);
+		struct chunk *chunk;
 		uint8_t *block_id;
-		struct bedrock_block *block;
+		struct block *block;
 		int32_t *height;
 		bedrock_node *node;
 		int i;
@@ -218,7 +218,7 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 		// Notify players in render distance of the column to remove the block
 		LIST_FOREACH(&chunk->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			packet_send_block_change(c, x, y, z, BLOCK_AIR, 0);
 		}
@@ -242,8 +242,8 @@ int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p
 			uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id"), *data = nbt_read(tag, TAG_SHORT, 1, "Damage");
 			uint8_t *count = nbt_read(tag, TAG_BYTE, 1, "Count");
 
-			struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
-			struct bedrock_column *col;
+			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
+			struct column *col;
 
 			di->item = item_find_or_create(*id);
 			di->count = 1;

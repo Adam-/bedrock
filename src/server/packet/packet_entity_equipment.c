@@ -2,10 +2,10 @@
 #include "server/packet.h"
 #include "blocks/items.h"
 
-void packet_send_entity_equipment(struct bedrock_client *client, struct bedrock_client *c, uint16_t slot, struct bedrock_item *item, uint16_t damage)
+void packet_send_entity_equipment(struct client *client, struct client *c, uint16_t slot, struct item *item, uint16_t damage)
 {
 	bedrock_packet packet;
-	struct bedrock_item_stack stack;
+	struct item_stack stack;
 
 	stack.id = item->id;
 	stack.count = 1;

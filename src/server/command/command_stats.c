@@ -2,7 +2,7 @@
 #include "server/command.h"
 #include "server/column.h"
 
-void command_stats(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_stats(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node, *node2, *node3;
 	int i;
@@ -11,25 +11,25 @@ void command_stats(struct bedrock_command_source *source, int bedrock_attribute_
 
 	LIST_FOREACH(&world_list, node)
 	{
-		struct bedrock_world *world = node->data;
+		struct world *world = node->data;
 
 		++worlds;
 
 		LIST_FOREACH(&world->regions, node2)
 		{
-			struct bedrock_region *region = node2->data;
+			struct region *region = node2->data;
 
 			++regions;
 
 			LIST_FOREACH(&region->columns, node3)
 			{
-				struct bedrock_column *column = node3->data;
+				struct column *column = node3->data;
 
 				++columns;
 
 				for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 				{
-					struct bedrock_chunk *chunk = column->chunks[i];
+					struct chunk *chunk = column->chunks[i];
 
 					if (chunk != NULL)
 					{
@@ -48,7 +48,7 @@ void command_stats(struct bedrock_command_source *source, int bedrock_attribute_
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *client = node->data;
+		struct client *client = node->data;
 
 		if (client->authenticated & STATE_IN_GAME)
 			++players;

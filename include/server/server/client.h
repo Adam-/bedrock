@@ -26,7 +26,7 @@ typedef enum
 	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
 	STATE_IN_GAME         = 1 << 5,     /* In the game, eg logon sequence is complete */
 	STATE_ANY             = ~0,         /* Any state */
-} bedrock_client_authentication_state;
+} client_authentication_state;
 
 typedef enum
 {
@@ -36,16 +36,16 @@ typedef enum
 	ACTION_LEAVE_BED,
 	ACTION_START_SPRINTING,
 	ACTION_STOP_SPRINTING
-} bedrock_client_entity_action;
+} client_entity_action;
 
-struct bedrock_client
+struct client
 {
 	struct bedrock_fd fd;                /* fd for this client */
 
 	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
-	bedrock_client_authentication_state authenticated;
+	client_authentication_state authenticated;
 
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
@@ -55,11 +55,11 @@ struct bedrock_client
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
 
-	struct bedrock_oper *oper;            /* set if this player is an operator */
+	struct oper *oper;            /* set if this player is an operator */
 
 	nbt_tag *data;                        /* player's .dat file */
-	struct bedrock_world *world;          /* world this player is in */
-	struct bedrock_column *column;        /* column this player is in, can be NULL if it an unloaded column! */
+	struct world *world;          /* world this player is in */
+	struct column *column;        /* column this player is in, can be NULL if it an unloaded column! */
 
 	bedrock_list columns;                 /* columns this player knows about */
 
@@ -68,7 +68,7 @@ struct bedrock_client
 	uint16_t ping;                        /* ping in ms */
 
 	int16_t selected_slot;                /* slot the player has selected (weilded item), 0-8 */
-	bedrock_client_entity_action action;  /* action the player is doing */
+	client_entity_action action;  /* action the player is doing */
 
 	double stance;                         /* players's stance */
 
@@ -97,39 +97,39 @@ struct bedrock_client
 extern bedrock_list client_list;
 extern int authenticated_client_count;
 
-extern struct bedrock_client *client_create();
-extern struct bedrock_client *client_find(const char *name);
-extern bool client_load(struct bedrock_client *client);
-extern void client_save(struct bedrock_client *client);
+extern struct client *client_create();
+extern struct client *client_find(const char *name);
+extern bool client_load(struct client *client);
+extern void client_save(struct client *client);
 extern void client_save_all();
-extern void client_exit(struct bedrock_client *client);
+extern void client_exit(struct client *client);
 extern void client_process_exits();
 
 extern void client_event_read(evutil_socket_t fd, short events, void *data);
 extern void client_event_write(evutil_socket_t fd, short events, void *data);
 
-extern void client_send_packet(struct bedrock_client *client, bedrock_packet *packet);
+extern void client_send_packet(struct client *client, bedrock_packet *packet);
 
-extern const char *client_get_ip(struct bedrock_client *client);
+extern const char *client_get_ip(struct client *client);
 
 extern bool client_valid_username(const char *name);
 
-extern double *client_get_pos_x(struct bedrock_client *client);
-extern double *client_get_pos_y(struct bedrock_client *client);
-extern double *client_get_pos_z(struct bedrock_client *client);
-extern float *client_get_yaw(struct bedrock_client *client);
-extern float *client_get_pitch(struct bedrock_client *client);
-extern uint8_t *client_get_on_ground(struct bedrock_client *client);
+extern double *client_get_pos_x(struct client *client);
+extern double *client_get_pos_y(struct client *client);
+extern double *client_get_pos_z(struct client *client);
+extern float *client_get_yaw(struct client *client);
+extern float *client_get_pitch(struct client *client);
+extern uint8_t *client_get_on_ground(struct client *client);
 
-extern nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot);
-extern bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
-extern void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item);
+extern nbt_tag *client_get_inventory_tag(struct client *client, uint8_t slot);
+extern bool client_can_add_inventory_item(struct client *client, struct item *item);
+extern void client_add_inventory_item(struct client *client, struct item *item);
 
-extern void client_update_columns(struct bedrock_client *client);
-extern void client_update_players(struct bedrock_client *client);
-extern void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground);
+extern void client_update_columns(struct client *client);
+extern void client_update_players(struct client *client);
+extern void client_update_position(struct client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground);
 
-extern void client_start_login_sequence(struct bedrock_client *client);
-extern void client_finish_login_sequence(struct bedrock_client *client);
+extern void client_start_login_sequence(struct client *client);
+extern void client_finish_login_sequence(struct client *client);
 
 #endif // BEDROCK_SERVER_CLIENT_H

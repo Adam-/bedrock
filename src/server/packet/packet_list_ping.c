@@ -5,7 +5,7 @@
 #include "packet/packet_chat_message.h"
 #include "util/io.h"
 
-int packet_list_ping(struct bedrock_client *client, const bedrock_packet *p)
+int packet_list_ping(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t b;

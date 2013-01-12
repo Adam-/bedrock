@@ -4,7 +4,7 @@
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 
-int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
+int packet_chat_message(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char message[BEDROCK_MAX_STRING_LENGTH], final_message[BEDROCK_MAX_STRING_LENGTH];
@@ -23,7 +23,7 @@ int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 
 	if (*message == '/')
 	{
-		struct bedrock_command_source source;
+		struct command_source source;
 		
 		source.user = client;
 		source.console = NULL;
@@ -39,7 +39,7 @@ int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		if (c->authenticated & STATE_IN_GAME)
 		{
@@ -50,7 +50,7 @@ int packet_chat_message(struct bedrock_client *client, const bedrock_packet *p)
 	return offset;
 }
 
-void packet_send_chat_message(struct bedrock_client *client, const char *buf, ...)
+void packet_send_chat_message(struct client *client, const char *buf, ...)
 {
 	bedrock_packet packet;
 	va_list args;

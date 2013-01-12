@@ -7,7 +7,7 @@
 #include <sys/resource.h>
 #endif
 
-void command_fdlist(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_fdlist(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	bedrock_node *node;
 	int files = 0, sockets = 0, pipes = 0, total = 0;

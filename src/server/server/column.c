@@ -24,11 +24,11 @@ static bedrock_list pending_updates = LIST_INIT;
 
 struct pending_column_update
 {
-	struct bedrock_column *column;
+	struct column *column;
 	bedrock_buffer *nbt_out;
 };
 
-void column_load(struct bedrock_column *column, nbt_tag *data)
+void column_load(struct column *column, nbt_tag *data)
 {
 	int32_t *x, *z;
 	nbt_tag *tag;
@@ -50,7 +50,7 @@ void column_load(struct bedrock_column *column, nbt_tag *data)
 		uint8_t y;
 
 		nbt_copy(chunk_tag, TAG_BYTE, &y, sizeof(y), 1, "Y");
-		bedrock_assert(y < sizeof(column->chunks) / sizeof(struct bedrock_chunk *), continue);
+		bedrock_assert(y < sizeof(column->chunks) / sizeof(struct chunk *), continue);
 
 		bedrock_assert(column->chunks[y] == NULL, continue);
 
@@ -62,7 +62,7 @@ void column_load(struct bedrock_column *column, nbt_tag *data)
 	column->biomes = (uint8_t *) tag->payload.tag_byte_array.data;
 }
 
-void column_free(struct bedrock_column *column)
+void column_free(struct column *column)
 {
 	int i;
 
@@ -100,11 +100,11 @@ void column_free(struct bedrock_column *column)
 	bedrock_free(column);
 }
 
-uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, int32_t z)
+uint8_t *column_get_block(struct column *column, int32_t x, uint8_t y, int32_t z)
 {
 	uint8_t chunk = y / BEDROCK_BLOCKS_PER_CHUNK;
 	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
-	struct bedrock_chunk *c;
+	struct chunk *c;
 
 	column_x = floor(column_x);
 	column_z = floor(column_z);
@@ -120,7 +120,7 @@ uint8_t *column_get_block(struct bedrock_column *column, int32_t x, uint8_t y, i
 	return chunk_get_block(c, x, y, z);
 }
 
-int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t z)
+int32_t *column_get_height_for(struct column *column, int32_t x, int32_t z)
 {
 	struct nbt_tag_int_array *tia = &nbt_get(column->data, TAG_INT_ARRAY, 2, "Level", "HeightMap")->payload.tag_int_array;
 	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
@@ -145,12 +145,12 @@ int32_t *column_get_height_for(struct bedrock_column *column, int32_t x, int32_t
 	return &tia->data[offset];
 }
 
-struct bedrock_column *find_column_which_contains(struct bedrock_region *region, double x, double z)
+struct column *find_column_which_contains(struct region *region, double x, double z)
 {
 	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 	int region_x, region_z;
-	struct bedrock_column *column = NULL;
+	struct column *column = NULL;
 
 	if (region == NULL)
 		return NULL;
@@ -166,7 +166,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 
 	LIST_FOREACH(&region->columns, n)
 	{
-		struct bedrock_column *c = n->data;
+		struct column *c = n->data;
 
 		if (c->x == column_x && c->z == column_z)
 		{
@@ -178,7 +178,7 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	if (column == NULL)
 	{
 		struct region_operation *op = bedrock_malloc(sizeof(struct region_operation));
-		column = bedrock_malloc(sizeof(struct bedrock_column));
+		column = bedrock_malloc(sizeof(struct column));
 		column->region = region;
 		column->x = column_x;
 		column->z = column_z;
@@ -200,12 +200,12 @@ struct bedrock_column *find_column_which_contains(struct bedrock_region *region,
 	return column;
 }
 
-struct bedrock_column *find_column_from_world_which_contains(struct bedrock_world *world, double x, double z)
+struct column *find_column_from_world_which_contains(struct world *world, double x, double z)
 {
 	return find_column_which_contains(find_region_which_contains(world, x, z), x, z);
 }
 
-void column_set_pending(struct bedrock_column *column, enum bedrock_column_flag flag)
+void column_set_pending(struct column *column, enum column_flag flag)
 {
 	struct pending_column_update *pc;
 
@@ -227,7 +227,7 @@ void column_process_pending()
 	LIST_FOREACH_SAFE(&pending_updates, node, node2)
 	{
 		struct pending_column_update *dc = node->data;
-		struct bedrock_column *column = dc->column;
+		struct column *column = dc->column;
 
 		if (column->flags & COLUMN_FLAG_DIRTY)
 		{
@@ -268,7 +268,7 @@ void column_process_pending()
 	}
 }
 
-void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item *di)
+void column_add_item(struct column *column, struct dropped_item *di)
 {
 	bedrock_node *node;
 
@@ -283,13 +283,13 @@ void column_add_item(struct bedrock_column *column, struct bedrock_dropped_item 
 	/* Send out this item to nearby players */
 	LIST_FOREACH(&column->players, node)
 	{
-		struct bedrock_client *client = node->data;
+		struct client *client = node->data;
 
 		packet_send_spawn_dropped_item(client, di);
 	}
 }
 
-void column_free_dropped_item(struct bedrock_dropped_item *item)
+void column_free_dropped_item(struct dropped_item *item)
 {
 	bedrock_node *node;
 
@@ -298,7 +298,7 @@ void column_free_dropped_item(struct bedrock_dropped_item *item)
 	/* Delete this item from nearby players */
 	LIST_FOREACH(&item->column->players, node)
 	{
-		struct bedrock_client *client = node->data;
+		struct client *client = node->data;
 
 		packet_send_destroy_entity_dropped_item(client, item);
 	}

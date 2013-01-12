@@ -98,7 +98,7 @@ void packet_free(bedrock_packet *packet)
 /** Parse a packet. Returns -1 if the packet is invalid or unexpected, 0 if there is not
  * enough data yet, or the amount of data read from buffer.
  */
-int packet_parse(struct bedrock_client *client, const bedrock_packet *packet)
+int packet_parse(struct client *client, const bedrock_packet *packet)
 {
 	uint8_t id = *packet->data;
 	int i;
@@ -243,7 +243,7 @@ void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest
 	*offset = ERROR_UNKNOWN;
 }
 
-void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct bedrock_item_stack *stack)
+void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct item_stack *stack)
 {
 	packet_read_int(packet, offset, &stack->id, sizeof(stack->id));
 	if (stack->id != -1)
@@ -309,7 +309,7 @@ void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t
 	}
 }
 
-void packet_pack_slot(bedrock_packet *packet, struct bedrock_item_stack *stack)
+void packet_pack_slot(bedrock_packet *packet, struct item_stack *stack)
 {
 	packet_pack_int(packet, &stack->id, sizeof(stack->id));
 	if (stack->id != -1)

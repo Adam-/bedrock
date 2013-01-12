@@ -2,7 +2,7 @@
 #include "server/packet.h"
 #include "packet/packet_disconnect.h"
 
-int packet_position_and_look(struct bedrock_client *client, const bedrock_packet *p)
+int packet_position_and_look(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	double x, y, stance, z;
@@ -28,7 +28,7 @@ int packet_position_and_look(struct bedrock_client *client, const bedrock_packet
 	return offset;
 }
 
-void packet_send_position_and_look(struct bedrock_client *client)
+void packet_send_position_and_look(struct client *client)
 {
 	bedrock_packet packet;
 

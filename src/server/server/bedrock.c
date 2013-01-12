@@ -54,7 +54,7 @@ static void update_time()
 
 		LIST_FOREACH(&world_list, node)
 		{
-			struct bedrock_world *world = node->data;
+			struct world *world = node->data;
 			world->time += tick_diff;
 			world->creation += tick_diff;
 		}
@@ -100,7 +100,7 @@ void bedrock_log(bedrock_log_level level, const char *msg, ...)
 
 		LIST_FOREACH(&console_list, node)
 		{
-			struct bedrock_console_client *client = node->data;
+			struct console_client *client = node->data;
 			console_write(client, buffer);
 		}
 	}
@@ -118,7 +118,7 @@ static void send_keepalive(evutil_socket_t bedrock_attribute_unused fd, short be
 
 	LIST_FOREACH(&client_list, n)
 	{
-		struct bedrock_client *client = n->data;
+		struct client *client = n->data;
 
 		if ((client->authenticated & STATE_IN_GAME) && !(client->authenticated & STATE_BURSTING))
 			packet_send_keep_alive(client, id);
@@ -205,7 +205,7 @@ static void do_fork()
 
 int main(int argc, char **argv)
 {
-	struct bedrock_world *world;
+	struct world *world;
 	struct event send_keepalive_timer, save_timer;
 
 	srand(time(NULL));

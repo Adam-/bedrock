@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-void packet_send_time(struct bedrock_client *client)
+void packet_send_time(struct client *client)
 {
 	bedrock_packet packet;
 

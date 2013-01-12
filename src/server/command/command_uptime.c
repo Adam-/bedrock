@@ -10,7 +10,7 @@
 #define DAY HOUR * 24
 #define YEAR DAY * 365
 
-void command_uptime(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_uptime(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	struct tm result;
 	time_t running = time(NULL) - bedrock_start;

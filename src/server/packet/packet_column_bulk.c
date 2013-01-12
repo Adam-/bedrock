@@ -10,14 +10,14 @@
 #define COLUMN_BULK_MAX 100
 #define COLUMN_BUFFER_SIZE 8192
 
-static void packet_column_bulk_send_players(struct bedrock_client *client, struct bedrock_column *column)
+static void packet_column_bulk_send_players(struct client *client, struct column *column)
 {
 	bedrock_node *node;
 
 	/* Tell this client about any clients in this column */
 	LIST_FOREACH(&column->players, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		// Don't send a spawn for ourself
 		if (client == c)
@@ -33,19 +33,19 @@ static void packet_column_bulk_send_players(struct bedrock_client *client, struc
 	}
 }
 
-static void packet_column_bulk_send_items(struct bedrock_client *client, struct bedrock_column *column)
+static void packet_column_bulk_send_items(struct client *client, struct column *column)
 {
 	bedrock_node *node;
 
 	/* Send any items in this column */
 	LIST_FOREACH(&column->items, node)
 	{
-		struct bedrock_dropped_item *item = node->data;
+		struct dropped_item *item = node->data;
 		packet_send_spawn_dropped_item(client, item);
 	}
 }
 
-void packet_column_bulk_add(struct bedrock_client *client, packet_column_bulk *columns, struct bedrock_column *column)
+void packet_column_bulk_add(struct client *client, packet_column_bulk *columns, struct column *column)
 {
 	bedrock_list_add(columns, column);
 
@@ -53,7 +53,7 @@ void packet_column_bulk_add(struct bedrock_client *client, packet_column_bulk *c
 		packet_send_column_bulk(client, columns);
 }
 
-void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *columns)
+void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 {
 	compression_buffer *buffer;
 	bedrock_packet packet;
@@ -75,11 +75,11 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 	LIST_FOREACH(columns, node)
 	{
-		struct bedrock_column *column = node->data;
+		struct column *column = node->data;
 
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
-			struct bedrock_chunk *chunk = column->chunks[i];
+			struct chunk *chunk = column->chunks[i];
 
 			if (!chunk)
 				continue;
@@ -89,7 +89,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
-			struct bedrock_chunk *chunk = column->chunks[i];
+			struct chunk *chunk = column->chunks[i];
 
 			if (!chunk)
 				continue;
@@ -100,7 +100,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
-			struct bedrock_chunk *chunk = column->chunks[i];
+			struct chunk *chunk = column->chunks[i];
 
 			if (!chunk)
 				continue;
@@ -110,7 +110,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
-			struct bedrock_chunk *chunk = column->chunks[i];
+			struct chunk *chunk = column->chunks[i];
 
 			if (!chunk)
 				continue;
@@ -134,7 +134,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 	LIST_FOREACH(columns, node)
 	{
-		struct bedrock_column *column = node->data;
+		struct column *column = node->data;
 		uint16_t bitmask = 0;
 
 		packet_pack_int(&packet, &column->x, sizeof(column->x));
@@ -142,7 +142,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
-			struct bedrock_chunk *chunk = column->chunks[i];
+			struct chunk *chunk = column->chunks[i];
 
 			if (!chunk)
 				continue;
@@ -159,7 +159,7 @@ void packet_send_column_bulk(struct bedrock_client *client, packet_column_bulk *
 
 	LIST_FOREACH(columns, node)
 	{
-		struct bedrock_column *column = node->data;
+		struct column *column = node->data;
 
 		packet_column_bulk_send_players(client, column);
 		packet_column_bulk_send_items(client, column);

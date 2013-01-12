@@ -152,7 +152,7 @@ typedef enum
 	ITEM_11_DISC                 /* 2266 */
 } item_type;
 
-enum bedrock_item_flags
+enum item_flags
 {
 	ITEM_FLAG_NONE,
 	/* Is damagable (pickaxe, axe, most tools) */
@@ -183,25 +183,25 @@ enum bedrock_item_flags
 	TOOL_TYPE_MASK_GOLD    = ITEM_FLAG_GOLD    | TOOL_TYPE_MASK_DIAMOND
 };
 
-struct bedrock_item
+struct item
 {
 	uint16_t id;
 	const char *name;
-	enum bedrock_item_flags flags;
+	enum item_flags flags;
 };
 
 #define BEDROCK_ITEM_STACK_EMPTY { -1, 0, 0 }
 
-struct bedrock_item_stack
+struct item_stack
 {
 	int16_t id;
 	uint8_t count;
 	int16_t metadata;
 };
 
-extern struct bedrock_item bedrock_items[];
+extern struct item items[];
 
-extern struct bedrock_item *item_find(item_type id);
-extern struct bedrock_item *item_find_or_create(item_type id);
+extern struct item *item_find(item_type id);
+extern struct item *item_find_or_create(item_type id);
 
 #endif // BEDROCK_BLOCKS_ITEMS_H

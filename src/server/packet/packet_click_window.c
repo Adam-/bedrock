@@ -8,7 +8,7 @@
 
 #include <math.h>
 
-int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
+int packet_click_window(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t window;
@@ -16,7 +16,7 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 	uint8_t right_click;
 	uint16_t action;
 	uint8_t shift;
-	struct bedrock_item_stack slot_data;
+	struct item_stack slot_data;
 
 	packet_read_int(p, &offset, &window, sizeof(window));
 	packet_read_int(p, &offset, &slot, sizeof(slot));
@@ -136,8 +136,8 @@ int packet_click_window(struct bedrock_client *client, const bedrock_packet *p)
 				if (client->window_drag_data.id)
 				{
 					/* Spawn dropped item */
-					struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
-					struct bedrock_column *col;
+					struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
+					struct column *col;
 
 					di->item = item_find_or_create(client->window_drag_data.id);
 					di->count = client->window_drag_data.count;

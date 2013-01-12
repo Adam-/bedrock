@@ -4,10 +4,10 @@
 #include "packet/packet_disconnect.h"
 #include "packet/packet_encryption_request.h"
 
-int packet_handshake(struct bedrock_client *client, const bedrock_packet *p)
+int packet_handshake(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
-	struct bedrock_world *world;
+	struct world *world;
 	uint8_t protocol;
 	char username[BEDROCK_USERNAME_MAX];
 	char server_host[64];

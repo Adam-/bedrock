@@ -1,6 +1,6 @@
 #include "server/command.h"
 
-void command_help(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_help(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	int i, count;
 
@@ -9,7 +9,7 @@ void command_help(struct bedrock_command_source *source, int bedrock_attribute_u
 	count = 0;
 	for (i = 0; i < command_count; ++i)
 	{
-		struct bedrock_command *cmd = &commands[i];
+		struct command *cmd = &commands[i];
 
 		if (cmd->can_use(source, cmd))
 		{

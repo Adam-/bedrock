@@ -4,14 +4,14 @@
 #include "nbt/nbt.h"
 #include "packet/packet_entity_head_look.h"
 
-void packet_send_spawn_named_entity(struct bedrock_client *client, struct bedrock_client *c)
+void packet_send_spawn_named_entity(struct client *client, struct client *c)
 {
 	bedrock_packet packet;
 	uint32_t abs_x, abs_y, abs_z;
 	float yaw, pitch;
 	int8_t y, p;
 	nbt_tag *tag;
-	struct bedrock_item *item;
+	struct item *item;
 	uint8_t count = 0, metadata = 0;
 	uint8_t b = 127;
 

@@ -130,8 +130,8 @@ static void region_worker_read(struct region_operation *op)
 
 static void region_worker_write(struct region_operation *op)
 {
-	struct bedrock_column *column = op->column;
-	struct bedrock_region *region = op->region;
+	struct column *column = op->column;
+	struct region *region = op->region;
 	int32_t column_x, column_z;
 	int offset;
 	uint8_t sectors;
@@ -313,7 +313,7 @@ static void region_worker_write(struct region_operation *op)
 	compression_compress_end(cb);
 }
 
-static void region_worker(struct bedrock_thread *thread, struct bedrock_region *region)
+static void region_worker(struct bedrock_thread *thread, struct region *region)
 {
 	bedrock_mutex_lock(&region->operations_mutex);
 
@@ -359,7 +359,7 @@ static void region_worker(struct bedrock_thread *thread, struct bedrock_region *
 	bedrock_mutex_unlock(&region->operations_mutex);
 }
 
-static void region_operations_notify(struct bedrock_region *region)
+static void region_operations_notify(struct region *region)
 {
 	bedrock_node *node, *node2;
 
@@ -388,7 +388,7 @@ static void region_operations_notify(struct bedrock_region *region)
 
 					LIST_FOREACH(&client_list, node)
 					{
-						struct bedrock_client *client = node->data;
+						struct client *client = node->data;
 
 						if (client->authenticated >= STATE_BURSTING)
 						{
@@ -421,9 +421,9 @@ static void region_operations_notify(struct bedrock_region *region)
 	bedrock_mutex_unlock(&region->finished_operations_mutex);
 }
 
-struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
+struct region *region_create(struct world *world, int x, int z)
 {
-	struct bedrock_region *region = bedrock_malloc(sizeof(struct bedrock_region));
+	struct region *region = bedrock_malloc(sizeof(struct region));
 	int fd;
 
 	region->world = world;
@@ -452,7 +452,7 @@ struct bedrock_region *region_create(struct bedrock_world *world, int x, int z)
 	return region;
 }
 
-void region_free(struct bedrock_region *region)
+void region_free(struct region *region)
 {
 	bedrock_thread_set_exit(region->worker);
 	bedrock_cond_wakeup(&region->worker_condition);
@@ -492,12 +492,12 @@ void region_free(struct bedrock_region *region)
 	bedrock_free(region);
 }
 
-struct bedrock_region *find_region_which_contains(struct bedrock_world *world, double x, double z)
+struct region *find_region_which_contains(struct world *world, double x, double z)
 {
 	double column_x, column_z;
 	double region_x, region_z;
 	bedrock_node *n;
-	struct bedrock_region *region;
+	struct region *region;
 
 	column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 	column_x = floor(column_x);

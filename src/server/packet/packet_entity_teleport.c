@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-void packet_send_entity_teleport(struct bedrock_client *client, struct bedrock_client *targ)
+void packet_send_entity_teleport(struct client *client, struct client *targ)
 {
 	bedrock_packet packet;
 	double x = *client_get_pos_x(targ), y = *client_get_pos_y(targ), z = *client_get_pos_z(targ);

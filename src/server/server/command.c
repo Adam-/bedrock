@@ -16,7 +16,7 @@
 
 #define MAX_PARAMETERS 15
 
-struct bedrock_command commands[] = {
+struct command commands[] = {
 	{"FDLIST",   "",                                    "shows file descriptors",                         0, 0, command_use_oper,   command_fdlist},
 	{"HELP",     "",                                    "shows this message",                             0, 0, command_use_anyone, command_help},
 	{"ME",       "<action>",                            "performs an action",                             1, 1, command_use_anyone, command_me},
@@ -31,35 +31,35 @@ struct bedrock_command commands[] = {
 	{"VERSION",  "",                                    "shows server version",                           0, 0, command_use_anyone, command_version}
 };
 
-int command_count = sizeof(commands) / sizeof(struct bedrock_command);
+int command_count = sizeof(commands) / sizeof(struct command);
 
-bool command_use_anyone(struct bedrock_command_source bedrock_attribute_unused *source, struct bedrock_command bedrock_attribute_unused *command)
+bool command_use_anyone(struct command_source bedrock_attribute_unused *source, struct command bedrock_attribute_unused *command)
 {
 	return true;
 }
 
-bool command_use_oper(struct bedrock_command_source *source, struct bedrock_command *command)
+bool command_use_oper(struct command_source *source, struct command *command)
 {
 	return source->user == NULL || oper_has_command(source->user->oper, command->name);
 }
 
-static int command_compare(const char *name, const struct bedrock_command *command)
+static int command_compare(const char *name, const struct command *command)
 {
 	return strcasecmp(name, command->name);
 }
 
 typedef int (*compare_func)(const void *, const void *);
 
-struct bedrock_command *command_find(const char *command)
+struct command *command_find(const char *command)
 {
-	return bsearch(command, commands, sizeof(commands) / sizeof(struct bedrock_command), sizeof(struct bedrock_command), (compare_func) command_compare);
+	return bsearch(command, commands, sizeof(commands) / sizeof(struct command), sizeof(struct command), (compare_func) command_compare);
 }
 
-void command_run(struct bedrock_command_source *source, const char *buf)
+void command_run(struct command_source *source, const char *buf)
 {
 	char command_buf[BEDROCK_MAX_STRING_LENGTH];
 	char *front, *end;
-	struct bedrock_command *command;
+	struct command *command;
 	int argc = 0;
 	char *argv[MAX_PARAMETERS];
 
@@ -112,7 +112,7 @@ void command_run(struct bedrock_command_source *source, const char *buf)
 	command->handler(source, argc, (const char **) argv);
 }
 
-void command_reply(struct bedrock_command_source *source, const char *fmt, ...)
+void command_reply(struct command_source *source, const char *fmt, ...)
 {
 	va_list args;
 	char message[BEDROCK_MAX_STRING_LENGTH];

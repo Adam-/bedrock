@@ -38,7 +38,7 @@ static void signal_handler(evutil_socket_t signum, short bedrock_attribute_unuse
 
 			LIST_FOREACH(&client_list, node)
 			{
-				struct bedrock_client *c = node->data;
+				struct client *c = node->data;
 
 				packet_send_disconnect(c, "Server is shutting down");
 			}

@@ -8,15 +8,15 @@
 #define BLOCK_CHUNK_SIZE 8192
 #define DATA_CHUNK_SIZE 16384
 
-struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
+struct chunk *chunk_create(struct column *column, uint8_t y)
 {
-	struct bedrock_chunk *chunk;
+	struct chunk *chunk;
 	nbt_tag *sections, *compound, *tag;
 
 	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
 
-	chunk = bedrock_malloc(sizeof(struct bedrock_chunk));
+	chunk = bedrock_malloc(sizeof(struct chunk));
 	chunk->column = column;
 	chunk->y = y;
 
@@ -45,15 +45,15 @@ struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y)
 	return chunk;
 }
 
-struct bedrock_chunk *chunk_load(struct bedrock_column *column, uint8_t y, nbt_tag *chunk_tag)
+struct chunk *chunk_load(struct column *column, uint8_t y, nbt_tag *chunk_tag)
 {
-	struct bedrock_chunk *chunk;
+	struct chunk *chunk;
 	struct nbt_tag_byte_array *byte_array;
 
 	bedrock_assert(y < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	bedrock_assert(column != NULL && column->chunks[y] == NULL, return NULL);
 
-	chunk = bedrock_malloc(sizeof(struct bedrock_chunk));
+	chunk = bedrock_malloc(sizeof(struct chunk));
 	chunk->column = column;
 	chunk->y = y;
 
@@ -78,7 +78,7 @@ struct bedrock_chunk *chunk_load(struct bedrock_column *column, uint8_t y, nbt_t
 	return chunk;
 }
 
-uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z)
+uint8_t *chunk_get_block(struct chunk *chunk, int32_t x, uint8_t y, int32_t z)
 {
 	uint16_t block_index;
 
@@ -101,7 +101,7 @@ uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int3
 	return &chunk->blocks[block_index];
 }
 
-void chunk_free(struct bedrock_chunk *chunk)
+void chunk_free(struct chunk *chunk)
 {
 	int i;
 
@@ -117,10 +117,10 @@ void chunk_free(struct bedrock_chunk *chunk)
 	bedrock_free(chunk);
 }
 
-struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int32_t x, uint8_t y, int32_t z)
+struct chunk *find_chunk_which_contains(struct world *world, int32_t x, uint8_t y, int32_t z)
 {
-	struct bedrock_region *region;
-	struct bedrock_column *column;
+	struct region *region;
+	struct column *column;
 
 	region = find_region_which_contains(world, x, z);
 	if (region == NULL)

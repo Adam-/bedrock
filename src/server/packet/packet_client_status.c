@@ -8,7 +8,7 @@ enum
 	RESPAWN
 };
 
-int packet_client_status(struct bedrock_client *client, const bedrock_packet *p)
+int packet_client_status(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t b;

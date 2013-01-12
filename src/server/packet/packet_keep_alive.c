@@ -3,7 +3,7 @@
 #include "server/packet.h"
 #include "packet/packet_disconnect.h"
 
-int packet_keep_alive(struct bedrock_client *client, const bedrock_packet *p)
+int packet_keep_alive(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint32_t id;
@@ -41,7 +41,7 @@ int packet_keep_alive(struct bedrock_client *client, const bedrock_packet *p)
 	return offset;
 }
 
-void packet_send_keep_alive(struct bedrock_client *client, uint32_t id)
+void packet_send_keep_alive(struct client *client, uint32_t id)
 {
 	bedrock_packet packet;
 

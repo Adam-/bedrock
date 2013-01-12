@@ -12,7 +12,7 @@ enum
 	METADATA_EATING = 1 << 4
 };
 
-int packet_entity_action(struct bedrock_client *client, const bedrock_packet *p)
+int packet_entity_action(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint32_t eid;

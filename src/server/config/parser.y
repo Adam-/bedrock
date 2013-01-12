@@ -8,8 +8,8 @@
 extern int yylex();
 extern void yyerror(const char *s);
 
-static struct bedrock_world *world;
-static struct bedrock_oper *oper;
+static struct world *world;
+static struct oper *oper;
 
 %}
 
@@ -61,7 +61,7 @@ conf_items: world_entry | server_entry | operator_entry;
 /* World */
 world_entry: WORLD
 {
-	world = bedrock_malloc(sizeof(struct bedrock_world));
+	world = bedrock_malloc(sizeof(struct world));
 }
 '{' world_items '}'
 {
@@ -158,7 +158,7 @@ CRIT
 /* Operator */
 operator_entry: OPER
 {
-	oper = bedrock_malloc(sizeof(struct bedrock_oper));
+	oper = bedrock_malloc(sizeof(struct oper));
 	oper->commands.free = bedrock_free;
 }
 '{' oper_items '}'

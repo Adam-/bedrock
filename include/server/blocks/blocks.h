@@ -139,18 +139,18 @@ typedef enum
 	BLOCK_ENDER_CHEST            /* 130 */
 } block_type;
 
-struct bedrock_block
+struct block
 {
 	uint8_t id;
 	const char *name;
 	double hardness;                    /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
 	double no_harvest_time;             /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
-	enum bedrock_item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
-	enum bedrock_item_flags harvest;    /* Item and type required to harvest this block. */
-	void (*on_harvest)(struct bedrock_client *, struct bedrock_chunk *, int32_t x, uint8_t y, int32_t z, struct bedrock_block *); /* Called when a block should be harvested. */
+	enum item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
+	enum item_flags harvest;    /* Item and type required to harvest this block. */
+	void (*on_harvest)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *); /* Called when a block should be harvested. */
 };
 
-extern struct bedrock_block bedrock_blocks[];
+extern struct block blocks[];
 
-extern struct bedrock_block *block_find(block_type id);
-extern struct bedrock_block *block_find_or_create(block_type id);
+extern struct block *block_find(block_type id);
+extern struct block *block_find_or_create(block_type id);

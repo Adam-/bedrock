@@ -14,7 +14,7 @@ enum
 	ANIMATION_UNCROUCH = 105
 };
 
-int packet_entity_animation(struct bedrock_client *client, const bedrock_packet *p)
+int packet_entity_animation(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint32_t id;
@@ -32,7 +32,7 @@ int packet_entity_animation(struct bedrock_client *client, const bedrock_packet 
 	if (client->column != NULL)
 		LIST_FOREACH(&client->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			if (c == client)
 				continue;
@@ -43,7 +43,7 @@ int packet_entity_animation(struct bedrock_client *client, const bedrock_packet 
 	return offset;
 }
 
-void packet_send_entity_animation(struct bedrock_client *client, struct bedrock_client *target, uint8_t anim)
+void packet_send_entity_animation(struct client *client, struct client *target, uint8_t anim)
 {
 	bedrock_packet packet;
 

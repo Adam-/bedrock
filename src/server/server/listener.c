@@ -14,7 +14,7 @@ static struct bedrock_fd fd;
 
 static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused events, void bedrock_attribute_unused *data)
 {
-	struct bedrock_client *client;
+	struct client *client;
 	int client_fd;
 	union
 	{

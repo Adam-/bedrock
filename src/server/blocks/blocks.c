@@ -2,9 +2,9 @@
 #include "blocks/blocks.h"
 #include "server/column.h"
 
-static void simple_drop(struct bedrock_client bedrock_attribute_unused *client, struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z, struct bedrock_block *block)
+static void simple_drop(struct client bedrock_attribute_unused *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block)
 {
-	struct bedrock_dropped_item *di = bedrock_malloc(sizeof(struct bedrock_dropped_item));
+	struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
 	di->item = item_find_or_create(block->id);
 	di->count = 1;
 	di->data = 0;
@@ -15,7 +15,7 @@ static void simple_drop(struct bedrock_client bedrock_attribute_unused *client, 
 	column_add_item(chunk->column, di);
 }
 
-struct bedrock_block bedrock_blocks[] = {
+struct block blocks[] = {
 	{BLOCK_AIR,                   "Air",                -1,    -1,    ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             NULL},
 	{BLOCK_STONE,                 "Stone",               2.25,  7.5,  ITEM_FLAG_PICKAXE,                          ITEM_FLAG_PICKAXE,                          simple_drop},
 	{BLOCK_GRASS,                 "Grass",               0.9,   0.9,  ITEM_FLAG_SHOVEL,                           ITEM_FLAG_NONE,                             simple_drop},
@@ -142,7 +142,7 @@ struct bedrock_block bedrock_blocks[] = {
 	{BLOCK_ENDER_CHEST,           "Ender Chest",         3.75, 3.75,  ITEM_FLAG_AXE,                              ITEM_FLAG_AXE,                              simple_drop}
 };
 
-static int block_compare(const block_type *id, const struct bedrock_block *block)
+static int block_compare(const block_type *id, const struct block *block)
 {
 	if (*id < block->id)
 		return -1;
@@ -153,15 +153,15 @@ static int block_compare(const block_type *id, const struct bedrock_block *block
 
 typedef int (*compare_func)(const void *, const void *);
 
-struct bedrock_block *block_find(block_type id)
+struct block *block_find(block_type id)
 {
-	return bsearch(&id, bedrock_blocks, sizeof(bedrock_blocks) / sizeof(struct bedrock_block), sizeof(struct bedrock_block), (compare_func) block_compare);
+	return bsearch(&id, blocks, sizeof(blocks) / sizeof(struct block), sizeof(struct block), (compare_func) block_compare);
 }
 
-struct bedrock_block *block_find_or_create(block_type id)
+struct block *block_find_or_create(block_type id)
 {
-	static struct bedrock_block b;
-	struct bedrock_block *block = block_find(id);
+	static struct block b;
+	struct block *block = block_find(id);
 
 	if (block == NULL)
 	{

@@ -2,7 +2,7 @@
 #include "server/packet.h"
 #include "nbt/nbt.h"
 
-void packet_send_spawn_point(struct bedrock_client *client)
+void packet_send_spawn_point(struct client *client)
 {
 	bedrock_packet packet;
 	int32_t *spawn_x, *spawn_y, *spawn_z;

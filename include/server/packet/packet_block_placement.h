@@ -1,2 +1,2 @@
 
-extern int packet_block_placement(struct bedrock_client *client, const bedrock_packet *p);
+extern int packet_block_placement(struct client *client, const bedrock_packet *p);

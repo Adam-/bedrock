@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-int packet_player(struct bedrock_client *client, const bedrock_packet *p)
+int packet_player(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint8_t on_ground;

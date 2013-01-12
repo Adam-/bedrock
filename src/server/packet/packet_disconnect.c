@@ -3,7 +3,7 @@
 #include "server/bedrock.h"
 #include "util/io.h"
 
-int packet_disconnect(struct bedrock_client *client, const bedrock_packet *p)
+int packet_disconnect(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char reason[BEDROCK_MAX_STRING_LENGTH];
@@ -17,7 +17,7 @@ int packet_disconnect(struct bedrock_client *client, const bedrock_packet *p)
 	return offset;
 }
 
-void packet_send_disconnect(struct bedrock_client *client, const char *reason)
+void packet_send_disconnect(struct client *client, const char *reason)
 {
 	bedrock_packet packet;
 

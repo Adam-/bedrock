@@ -5,7 +5,7 @@
 #include "packet/packet_disconnect.h"
 #include "util/crypto.h"
 
-int packet_encryption_response(struct bedrock_client *client, const bedrock_packet *p)
+int packet_encryption_response(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint16_t shared_secret_len, verify_token_len;
@@ -51,7 +51,7 @@ int packet_encryption_response(struct bedrock_client *client, const bedrock_pack
 	return offset;
 }
 
-void packet_send_encryption_response(struct bedrock_client *client)
+void packet_send_encryption_response(struct client *client)
 {
 	bedrock_packet packet;
 	uint16_t s = 0;

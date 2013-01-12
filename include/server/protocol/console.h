@@ -8,7 +8,7 @@
 
 extern bedrock_list console_list;
 
-struct bedrock_console_client
+struct console_client
 {
 	struct bedrock_fd fd;	/* Client FD */
 
@@ -21,6 +21,6 @@ struct bedrock_console_client
 extern void console_init();
 extern void console_shutdown();
 extern void console_process_exits();
-extern void console_write(struct bedrock_console_client *client, const char *string);
+extern void console_write(struct console_client *client, const char *string);
 
 #endif // BEDROCK_PROTOCOL_CONSOLE_H

@@ -2,7 +2,7 @@
 #include "server/packet.h"
 #include "server/column.h"
 
-void packet_send_destroy_entity_player(struct bedrock_client *client, struct bedrock_client *c)
+void packet_send_destroy_entity_player(struct client *client, struct client *c)
 {
 	bedrock_packet packet;
 	uint8_t count = 1;
@@ -16,7 +16,7 @@ void packet_send_destroy_entity_player(struct bedrock_client *client, struct bed
 	client_send_packet(client, &packet);
 }
 
-void packet_send_destroy_entity_dropped_item(struct bedrock_client *client, struct bedrock_dropped_item *di)
+void packet_send_destroy_entity_dropped_item(struct client *client, struct dropped_item *di)
 {
 	bedrock_packet packet;
 	uint8_t count = 1;

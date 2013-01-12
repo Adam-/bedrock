@@ -1,2 +1,2 @@
 
-extern int packet_list_ping(struct bedrock_client *client, const bedrock_packet *p);
+extern int packet_list_ping(struct client *client, const bedrock_packet *p);

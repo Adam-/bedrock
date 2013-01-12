@@ -2,10 +2,10 @@
 #include "server/packet.h"
 #include "blocks/items.h"
 
-void packet_send_set_slot(struct bedrock_client *client, uint8_t window_id, uint16_t slot, struct bedrock_item *item, uint8_t count, int16_t damage)
+void packet_send_set_slot(struct client *client, uint8_t window_id, uint16_t slot, struct item *item, uint8_t count, int16_t damage)
 {
 	bedrock_packet packet;
-	struct bedrock_item_stack slot_data;
+	struct item_stack slot_data;
 
 	slot_data.id = item != NULL ? item->id : -1;
 	slot_data.count = count;

@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-void packet_send_player_list_item(struct bedrock_client *client, struct bedrock_client *c, uint8_t online)
+void packet_send_player_list_item(struct client *client, struct client *c, uint8_t online)
 {
 	bedrock_packet packet;
 

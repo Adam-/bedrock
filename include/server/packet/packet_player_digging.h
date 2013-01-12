@@ -7,4 +7,4 @@ enum
 	SHOOT_ARROW_FNIISH_EATING = 5
 };
 
-extern int packet_player_digging(struct bedrock_client *client, const bedrock_packet *p);
+extern int packet_player_digging(struct client *client, const bedrock_packet *p);

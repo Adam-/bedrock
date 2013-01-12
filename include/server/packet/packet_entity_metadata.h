@@ -18,4 +18,4 @@ typedef enum
 	ENTITY_METADATA_INDEX_ANIMALS = 12
 } entity_metadata_index;
 
-extern void packet_send_entity_metadata(struct bedrock_client *client, entity_metadata_index index, entity_metadata_type type, const void *data, size_t size);
+extern void packet_send_entity_metadata(struct client *client, entity_metadata_index index, entity_metadata_type type, const void *data, size_t size);

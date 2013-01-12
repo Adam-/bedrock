@@ -4,7 +4,7 @@
 
 #include <errno.h>
 
-static void update_time(struct bedrock_command_source *source, struct bedrock_world *world, long time)
+static void update_time(struct command_source *source, struct world *world, long time)
 {
 	bedrock_node *node;
 
@@ -13,16 +13,16 @@ static void update_time(struct bedrock_command_source *source, struct bedrock_wo
 	
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		if (c->world == world)
 			packet_send_time(c);
 	}
 }
 
-void command_time(struct bedrock_command_source *source, int argc, const char **argv)
+void command_time(struct command_source *source, int argc, const char **argv)
 {
-	struct bedrock_world *world;
+	struct world *world;
 
 	if (source->user != NULL)
 		world = source->user->world;
@@ -76,7 +76,7 @@ void command_time(struct bedrock_command_source *source, int argc, const char **
 
 		LIST_FOREACH(&world_list, node)
 		{
-			struct bedrock_world *world = node->data;
+			struct world *world = node->data;
 			command_reply(source, "Current time in %s is %ld", world->name, world->time);
 		}
 	}

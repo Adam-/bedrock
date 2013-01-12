@@ -4,7 +4,7 @@
 #include "nbt/nbt.h"
 #include "config/config.h"
 
-void packet_send_login_response(struct bedrock_client *client)
+void packet_send_login_response(struct client *client)
 {
 	bedrock_packet packet;
 	int32_t game_type, dimension;

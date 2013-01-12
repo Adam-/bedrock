@@ -16,19 +16,19 @@ enum
 	UPDATE = 0xFF
 };
 
-int packet_block_placement(struct bedrock_client *client, const bedrock_packet *p)
+int packet_block_placement(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	int32_t x, z;
 	uint8_t y;
 	uint8_t d;
-	struct bedrock_item_stack slot_data;
+	struct item_stack slot_data;
 	uint8_t cursor_x, cursor_y, cursor_z;
 
 	nbt_tag *weilded_item;
-	struct bedrock_item *item;
+	struct item *item;
 
-	struct bedrock_chunk *target_chunk, *real_chunk;
+	struct chunk *target_chunk, *real_chunk;
 	int32_t *height;
 
 	int32_t real_x, real_z;
@@ -147,7 +147,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 	real_chunk = find_chunk_which_contains(client->world, real_x, real_y, real_z);
 	if (real_chunk == NULL)
 	{
-		struct bedrock_column *col;
+		struct column *col;
 
 		// If we can't find the new chunk it must be an up/down direction, not sideways
 		bedrock_assert(x == real_x && z == real_z, return ERROR_NOT_ALLOWED);
@@ -196,7 +196,7 @@ int packet_block_placement(struct bedrock_client *client, const bedrock_packet *
 		// Notify clients who can see this column of the change
 		LIST_FOREACH(&real_chunk->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 			packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
 		}
 	}

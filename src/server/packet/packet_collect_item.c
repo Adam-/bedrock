@@ -2,13 +2,13 @@
 #include "server/packet.h"
 #include "server/column.h"
 
-void packet_send_collect_item(struct bedrock_client *client, struct bedrock_dropped_item *di)
+void packet_send_collect_item(struct client *client, struct dropped_item *di)
 {
 	bedrock_node *node;
 
 	LIST_FOREACH(&di->column->players, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		bedrock_packet packet;
 

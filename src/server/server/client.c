@@ -40,9 +40,9 @@ int authenticated_client_count = 0;
 
 static bedrock_list exiting_client_list;
 
-struct bedrock_client *client_create()
+struct client *client_create()
 {
-	struct bedrock_client *client = bedrock_malloc(sizeof(struct bedrock_client));
+	struct client *client = bedrock_malloc(sizeof(struct client));
 	EVP_CIPHER_CTX_init(&client->in_cipher_ctx);
 	EVP_CIPHER_CTX_init(&client->out_cipher_ctx);
 	client->id = ++entity_id;
@@ -52,13 +52,13 @@ struct bedrock_client *client_create()
 	return client;
 }
 
-struct bedrock_client *client_find(const char *name)
+struct client *client_find(const char *name)
 {
 	bedrock_node *node;
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *client = node->data;
+		struct client *client = node->data;
 
 		if (!strcmp(client->name, name))
 			return client;
@@ -67,7 +67,7 @@ struct bedrock_client *client_find(const char *name)
 	return NULL;
 }
 
-bool client_load(struct bedrock_client *client)
+bool client_load(struct client *client)
 {
 	char path[PATH_MAX];
 	int fd;
@@ -159,7 +159,7 @@ static void client_save_exit(struct client_save_info *ci)
 	bedrock_free(ci);
 }
 
-void client_save(struct bedrock_client *client)
+void client_save(struct client *client)
 {
 	struct client_save_info *ci = bedrock_malloc(sizeof(struct client_save_info));
 
@@ -178,14 +178,14 @@ void client_save_all()
 
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		if ((c->authenticated & STATE_IN_GAME) && !(c->authenticated & STATE_BURSTING))
 			client_save(c);
 	}
 }
 
-static void client_free(struct bedrock_client *client)
+static void client_free(struct client *client)
 {
 	bedrock_node *node;
 
@@ -196,7 +196,7 @@ static void client_free(struct bedrock_client *client)
 
 		LIST_FOREACH(&client_list, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			if (c->authenticated & STATE_IN_GAME && c != client)
 			{
@@ -215,14 +215,14 @@ static void client_free(struct bedrock_client *client)
 	if (client->column)
 		LIST_FOREACH(&client->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			packet_send_destroy_entity_player(c, client);
 		}
 
 	LIST_FOREACH(&client->columns, node)
 	{
-		struct bedrock_column *c = node->data;
+		struct column *c = node->data;
 
 		bedrock_list_del(&c->players, client);
 
@@ -258,7 +258,7 @@ static void client_free(struct bedrock_client *client)
 	bedrock_free(client);
 }
 
-void client_exit(struct bedrock_client *client)
+void client_exit(struct client *client)
 {
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 	{
@@ -273,7 +273,7 @@ void client_process_exits()
 
 	LIST_FOREACH(&exiting_client_list, n)
 	{
-		struct bedrock_client *client = n->data;
+		struct client *client = n->data;
 
 		client_free(client);
 	}
@@ -283,7 +283,7 @@ void client_process_exits()
 
 void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
-	struct bedrock_client *client = data;
+	struct client *client = data;
 	bedrock_packet packet;
 	unsigned char buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	int i;
@@ -335,7 +335,7 @@ void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events
 
 void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
-	struct bedrock_client *client = data;
+	struct client *client = data;
 	bedrock_node *node;
 	bedrock_packet *packet;
 	int i;
@@ -384,7 +384,7 @@ void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused event
 	}
 }
 
-void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
+void client_send_packet(struct client *client, bedrock_packet *packet)
 {
 	bedrock_packet *p;
 	struct packet_info *pi;
@@ -430,7 +430,7 @@ void client_send_packet(struct bedrock_client *client, bedrock_packet *packet)
 	io_enable(&client->fd.event_write);
 }
 
-const char *client_get_ip(struct bedrock_client *client)
+const char *client_get_ip(struct client *client)
 {
 	bedrock_assert(client != NULL, return NULL);
 
@@ -468,37 +468,37 @@ bool client_valid_username(const char *name)
 	return true;
 }
 
-double *client_get_pos_x(struct bedrock_client *client)
+double *client_get_pos_x(struct client *client)
 {
 	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0);
 }
 
-double *client_get_pos_y(struct bedrock_client *client)
+double *client_get_pos_y(struct client *client)
 {
 	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1);
 }
 
-double *client_get_pos_z(struct bedrock_client *client)
+double *client_get_pos_z(struct client *client)
 {
 	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2);
 }
 
-float *client_get_yaw(struct bedrock_client *client)
+float *client_get_yaw(struct client *client)
 {
 	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 0);
 }
 
-float *client_get_pitch(struct bedrock_client *client)
+float *client_get_pitch(struct client *client)
 {
 	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 1);
 }
 
-uint8_t *client_get_on_ground(struct bedrock_client *client)
+uint8_t *client_get_on_ground(struct client *client)
 {
 	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
 }
 
-nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot)
+nbt_tag *client_get_inventory_tag(struct client *client, uint8_t slot)
 {
 	bedrock_node *node;
 
@@ -514,7 +514,7 @@ nbt_tag *client_get_inventory_tag(struct bedrock_client *client, uint8_t slot)
 	return NULL;
 }
 
-bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
+bool client_can_add_inventory_item(struct client *client, struct item *item)
 {
 	bedrock_node *node;
 	int i = -1;
@@ -537,7 +537,7 @@ bool client_can_add_inventory_item(struct bedrock_client *client, struct bedrock
 	return true;
 }
 
-void client_add_inventory_item(struct bedrock_client *client, struct bedrock_item *item)
+void client_add_inventory_item(struct client *client, struct item *item)
 {
 	nbt_tag *inven = nbt_get(client->data, TAG_LIST, 1, "Inventory");
 	struct nbt_tag_list *tag_list = &inven->payload.tag_list;
@@ -620,7 +620,7 @@ void client_add_inventory_item(struct bedrock_client *client, struct bedrock_ite
 	++tag_list->length;
 }
 
-static void client_update_column(struct bedrock_client *client, packet_column_bulk *columns, struct bedrock_column *column)
+static void client_update_column(struct client *client, packet_column_bulk *columns, struct column *column)
 {
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
@@ -630,12 +630,12 @@ static void client_update_column(struct bedrock_client *client, packet_column_bu
 	bedrock_list_add(&column->players, client);
 }
 
-void client_update_columns(struct bedrock_client *client)
+void client_update_columns(struct client *client)
 {
 	/* Update the column around the player. Used for when the player moves to a new column. */
 	int i;
-	struct bedrock_region *region;
-	struct bedrock_column *c;
+	struct region *region;
+	struct column *c;
 	bedrock_node *node, *node2;
 	/* Player coords */
 	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
@@ -756,7 +756,7 @@ void client_update_columns(struct bedrock_client *client)
 }
 
 /* Called to update a players position */
-void client_update_position(struct bedrock_client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground)
+void client_update_position(struct client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground)
 {
 	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
 	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
@@ -813,7 +813,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 	if (client->column != NULL)
 		LIST_FOREACH(&client->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			if (c == client)
 				continue;
@@ -831,7 +831,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
 		/* Check if this player should pick up any dropped items near them */
 		LIST_FOREACH_SAFE(&client->column->items, node, node2)
 		{
-			struct bedrock_dropped_item *di = node->data;
+			struct dropped_item *di = node->data;
 
 			if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
 			{
@@ -850,7 +850,7 @@ void client_update_position(struct bedrock_client *client, double x, double y, d
  * may not have the chunks available this player is in until later. client_finish_login_sequence
  * is called when the column the player is in is allocated to the client.
  */
-void client_start_login_sequence(struct bedrock_client *client)
+void client_start_login_sequence(struct client *client)
 {
 	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
 
@@ -864,10 +864,10 @@ void client_start_login_sequence(struct bedrock_client *client)
 	client_update_columns(client);
 }
 
-void client_finish_login_sequence(struct bedrock_client *client)
+void client_finish_login_sequence(struct client *client)
 {
 	bedrock_node *node;
-	struct bedrock_oper *oper;
+	struct oper *oper;
 
 	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
 
@@ -882,7 +882,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 				*damage = nbt_read(c, TAG_SHORT, 1, "Damage");
 		int8_t *count = nbt_read(c, TAG_BYTE, 1, "Count"),
 				slot;
-		struct bedrock_item *item = item_find_or_create(*id);
+		struct item *item = item_find_or_create(*id);
 
 		nbt_copy(c, TAG_BYTE, &slot, sizeof(slot), 1, "Slot");
 
@@ -895,7 +895,7 @@ void client_finish_login_sequence(struct bedrock_client *client)
 	/* Send the player lists */
 	LIST_FOREACH(&client_list, node)
 	{
-		struct bedrock_client *c = node->data;
+		struct client *c = node->data;
 
 		if (c == client || c->authenticated & STATE_IN_GAME)
 		{

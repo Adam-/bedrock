@@ -69,7 +69,7 @@ enum
 	ERROR_NOT_ALLOWED    = -4
 };
 
-struct bedrock_client;
+struct client;
 
 struct packet_info
 {
@@ -77,7 +77,7 @@ struct packet_info
 	uint8_t len;
 	uint8_t permission;
 	uint8_t flags;
-	int (*handler)(struct bedrock_client *, const bedrock_packet *);
+	int (*handler)(struct client *, const bedrock_packet *);
 };
 
 #define PACKET_HEADER_LENGTH 1
@@ -88,18 +88,18 @@ extern struct packet_info *packet_find(uint8_t id);
 extern void packet_init(bedrock_packet *packet, uint8_t id);
 extern void packet_free(bedrock_packet *packet);
 
-extern int packet_parse(struct bedrock_client *client, const bedrock_packet *packet);
+extern int packet_parse(struct client *client, const bedrock_packet *packet);
 
 extern void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size);
 extern void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size);
-extern void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct bedrock_item_stack *stack);
+extern void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct item_stack *stack);
 
 extern void packet_pack_header(bedrock_packet *packet, uint8_t header);
 extern void packet_pack(bedrock_packet *packet, const void *data, size_t size);
 extern void packet_pack_int(bedrock_packet *packet, const void *data, size_t size);
 extern void packet_pack_string(bedrock_packet *packet, const char *string);
 extern void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len);
-extern void packet_pack_slot(bedrock_packet *packet, struct bedrock_item_stack *stack);
+extern void packet_pack_slot(bedrock_packet *packet, struct item_stack *stack);
 
 #endif // BEDROCK_SERVER_PACKET_H

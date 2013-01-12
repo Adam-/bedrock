@@ -2,7 +2,7 @@
 #include "server/command.h"
 #include "server/column.h"
 
-void command_memory(struct bedrock_command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
+void command_memory(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
 	long double memory;
 

@@ -16,12 +16,12 @@ bedrock_list console_list = LIST_INIT;
 static struct bedrock_fd fd;
 static bedrock_list exiting_client_list;
 
-static void console_exit(struct bedrock_console_client *client);
-static void console_free(struct bedrock_console_client *client);
+static void console_exit(struct console_client *client);
+static void console_free(struct console_client *client);
 
-static struct bedrock_console_client *console_client_create()
+static struct console_client *console_client_create()
 {
-	struct bedrock_console_client *client = bedrock_malloc(sizeof(struct bedrock_console_client));
+	struct console_client *client = bedrock_malloc(sizeof(struct console_client));
 	client->out_buffer.free = bedrock_free;
 	bedrock_list_add(&console_list, client);
 	return client;
@@ -38,9 +38,9 @@ static int mem_find(const unsigned char *mem, size_t len, unsigned char val)
 
 static void console_client_read(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
-	struct bedrock_console_client *client = data;
+	struct console_client *client = data;
 	int i;
-	struct bedrock_command_source source;
+	struct command_source source;
 
 	if (client->in_buffer_len == sizeof(client->in_buffer))
 	{
@@ -85,7 +85,7 @@ static void console_client_read(evutil_socket_t fd, short bedrock_attribute_unus
 
 static void console_client_write(evutil_socket_t fd, short bedrock_attribute_unused events, void *data)
 {
-	struct bedrock_console_client *client = data;
+	struct console_client *client = data;
 	bedrock_node *node;
 	const char *out_str;
 	int out_str_len, i;
@@ -138,7 +138,7 @@ static void accept_client(evutil_socket_t fd, short bedrock_attribute_unused eve
 	} addr;
 	socklen_t addrlen = sizeof(addr);
 	socklen_t opt = 1;
-	struct bedrock_console_client *client;
+	struct console_client *client;
 
 	client_fd = accept(fd, &addr.addr, &addrlen);
 	if (client_fd < 0)
@@ -212,13 +212,13 @@ void console_shutdown()
 	bedrock_fd_close(&fd);
 }
 
-static void console_exit(struct bedrock_console_client *client)
+static void console_exit(struct console_client *client)
 {
 	if (bedrock_list_has_data(&exiting_client_list, client) == false)
 		bedrock_list_add(&exiting_client_list, client);
 }
 
-static void console_free(struct bedrock_console_client *client)
+static void console_free(struct console_client *client)
 {
 	bedrock_fd_close(&client->fd);
 	bedrock_list_del(&console_list, client);
@@ -235,7 +235,7 @@ void console_process_exits()
 	bedrock_list_clear(&exiting_client_list);
 }
 
-void console_write(struct bedrock_console_client *client, const char *string)
+void console_write(struct console_client *client, const char *string)
 {
 	bedrock_list_add(&client->out_buffer, bedrock_strdup(string));
 	io_enable(&client->fd.event_write);

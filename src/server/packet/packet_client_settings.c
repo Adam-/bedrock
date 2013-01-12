@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-int packet_client_settings(struct bedrock_client bedrock_attribute_unused *client, const bedrock_packet *packet)
+int packet_client_settings(struct client bedrock_attribute_unused *client, const bedrock_packet *packet)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	char locale[BEDROCK_MAX_STRING_LENGTH];

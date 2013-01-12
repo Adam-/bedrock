@@ -3,19 +3,19 @@
 
 bedrock_list oper_conf_list = LIST_INIT;
 
-void oper_free(struct bedrock_oper *oper)
+void oper_free(struct oper *oper)
 {
 	bedrock_list_clear(&oper->commands);
 	bedrock_free(oper);
 }
 
-struct bedrock_oper *oper_find(const char *name)
+struct oper *oper_find(const char *name)
 {
 	bedrock_node *node;
 
 	LIST_FOREACH(&oper_conf_list, node)
 	{
-		struct bedrock_oper *oper = node->data;
+		struct oper *oper = node->data;
 
 		if (!strcmp(name, oper->username))
 			return oper;
@@ -24,7 +24,7 @@ struct bedrock_oper *oper_find(const char *name)
 	return NULL;
 }
 
-bool oper_has_command(struct bedrock_oper *oper, const char *command)
+bool oper_has_command(struct oper *oper, const char *command)
 {
 	bedrock_node *node;
 

@@ -3,10 +3,10 @@
 #include "server/packet.h"
 #include "server/column.h"
 
-void packet_send_spawn_dropped_item(struct bedrock_client *client, struct bedrock_dropped_item *di)
+void packet_send_spawn_dropped_item(struct client *client, struct dropped_item *di)
 {
 	bedrock_packet packet;
-	struct bedrock_item_stack stack;
+	struct item_stack stack;
 	int32_t a_x, a_y, a_z;
 	uint8_t b;
 

@@ -4,10 +4,10 @@
 #include "server/bedrock.h"
 #include "util/buffer.h"
 
-struct bedrock_chunk
+struct chunk
 {
 	/* Column this chunk is in */
-	struct bedrock_column *column;
+	struct column *column;
 	/* Y coordinate */
 	uint8_t y;
 
@@ -21,10 +21,10 @@ struct bedrock_chunk
 	uint8_t *blocklight;
 };
 
-extern struct bedrock_chunk *chunk_create(struct bedrock_column *column, uint8_t y);
-extern struct bedrock_chunk *chunk_load(struct bedrock_column *column, uint8_t y, nbt_tag *tag);
-extern uint8_t *chunk_get_block(struct bedrock_chunk *chunk, int32_t x, uint8_t y, int32_t z);
-extern void chunk_free(struct bedrock_chunk *chunk);
-extern struct bedrock_chunk *find_chunk_which_contains(struct bedrock_world *world, int32_t x, uint8_t y, int32_t z);
+extern struct chunk *chunk_create(struct column *column, uint8_t y);
+extern struct chunk *chunk_load(struct column *column, uint8_t y, nbt_tag *tag);
+extern uint8_t *chunk_get_block(struct chunk *chunk, int32_t x, uint8_t y, int32_t z);
+extern void chunk_free(struct chunk *chunk);
+extern struct chunk *find_chunk_which_contains(struct world *world, int32_t x, uint8_t y, int32_t z);
 
 #endif // BEDROCK_SERVER_CHUNK_H

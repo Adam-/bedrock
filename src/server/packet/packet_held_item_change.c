@@ -5,12 +5,12 @@
 #include "nbt/nbt.h"
 #include "util/list.h"
 
-int packet_held_item_change(struct bedrock_client *client, const bedrock_packet *p)
+int packet_held_item_change(struct client *client, const bedrock_packet *p)
 {
 	size_t offset = PACKET_HEADER_LENGTH;
 	bedrock_node *node;
 	nbt_tag *tag;
-	struct bedrock_item *item;
+	struct item *item;
 	uint16_t *damage;
 
 	packet_read_int(p, &offset, &client->selected_slot, sizeof(client->selected_slot));
@@ -34,7 +34,7 @@ int packet_held_item_change(struct bedrock_client *client, const bedrock_packet 
 	if (client->column != NULL)
 		LIST_FOREACH(&client->column->players, node)
 		{
-			struct bedrock_client *c = node->data;
+			struct client *c = node->data;
 
 			if (client == c)
 				continue;
