@@ -55,7 +55,7 @@ struct item items[] = {
 	{ITEM_SHEARS,             "Shears",             ITEM_FLAG_DAMAGABLE}
 };
 
-static int item_compare(const item_type *id, const struct item *item)
+static int item_compare(const enum item_type *id, const struct item *item)
 {
 	if (*id < item->id)
 		return -1;
@@ -66,7 +66,7 @@ static int item_compare(const item_type *id, const struct item *item)
 
 typedef int (*compare_func)(const void *, const void *);
 
-struct item *item_find(item_type id)
+struct item *item_find(enum item_type id)
 {
 	static struct item i;
 	struct item *item = bsearch(&id, items, sizeof(items) / sizeof(struct item), sizeof(struct item), (compare_func) item_compare);
@@ -88,7 +88,7 @@ struct item *item_find(item_type id)
 	return item;
 }
 
-struct item *item_find_or_create(item_type id)
+struct item *item_find_or_create(enum item_type id)
 {
 	static struct item i;
 	struct item *item = item_find(id);

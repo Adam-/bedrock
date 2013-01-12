@@ -5,13 +5,14 @@
 
 #include <string.h>
 
-typedef struct
+struct bedrock_buffer
 {
 	char name[32];
 	unsigned char *data;
 	size_t length;
 	size_t capacity;
-} bedrock_buffer;
+};
+typedef struct bedrock_buffer bedrock_buffer;
 
 #define BEDROCK_BUFFER_STATIC_INIT { NULL, NULL, 0, 0 }
 #define BEDROCK_BUFFER_DEFAULT_SIZE 1024

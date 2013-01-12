@@ -22,7 +22,7 @@
 # define inline
 #endif
 
-typedef enum bool_ { false, true } bool;
+typedef enum bool { false, true } bool;
 
 #define bedrock_assert(var, what) \
 	if (!(var)) \
@@ -38,7 +38,7 @@ typedef enum bool_ { false, true } bool;
 # define bedrock_attribute_unused
 #endif
 
-typedef enum
+enum bedrock_log_level
 {
 	LEVEL_CRIT         = 1 << 1,
 	LEVEL_WARN         = 1 << 2,
@@ -50,7 +50,8 @@ typedef enum
 	LEVEL_BUFFER       = 1 << 8,
 	LEVEL_IO_DEBUG     = 1 << 9,
 	LEVEL_PACKET_DEBUG = 1 << 10
-} bedrock_log_level;
+};
+typedef enum bedrock_log_level bedrock_log_level;
 
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);
 

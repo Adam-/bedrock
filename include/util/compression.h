@@ -1,19 +1,21 @@
 #include "util/buffer.h"
 #include <zlib.h>
 
-typedef enum
+enum compression_stream_type
 {
 	ZLIB_COMPRESS,
 	ZLIB_DECOMPRESS
-} compression_stream_type;
+};
+typedef enum compression_stream_type compression_stream_type;
 
-typedef struct
+struct compression_buffer
 {
 	bedrock_buffer *buffer;
 	compression_stream_type type;
 	z_stream stream;
 	size_t buffer_size;
-} compression_buffer;
+};
+typedef struct compression_buffer compression_buffer;
 
 extern compression_buffer *compression_compress_init(size_t buffer_size);
 extern void compression_compress_end(compression_buffer *buffer);

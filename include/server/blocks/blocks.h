@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-typedef enum
+enum block_type
 {
 	BLOCK_AIR,                   /* 0 */
 	BLOCK_STONE,                 /* 1 */
@@ -137,7 +137,7 @@ typedef enum
 	BLOCK_SANDSTONE_STAIRS,      /* 128 */
 	BLOCK_EMERALD_ORE,           /* 129 */
 	BLOCK_ENDER_CHEST            /* 130 */
-} block_type;
+};
 
 struct block
 {
@@ -152,5 +152,5 @@ struct block
 
 extern struct block blocks[];
 
-extern struct block *block_find(block_type id);
-extern struct block *block_find_or_create(block_type id);
+extern struct block *block_find(enum block_type id);
+extern struct block *block_find_or_create(enum block_type id);

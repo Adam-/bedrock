@@ -3,23 +3,26 @@
 
 #include <pthread.h>
 
-typedef struct
+struct bedrock_mutex
 {
 	pthread_mutex_t mutex;
 	char desc[32];
-} bedrock_mutex;
+};
+typedef struct bedrock_mutex bedrock_mutex;
 
-typedef struct
+struct bedrock_cond
 {
 	pthread_cond_t cond;
 	char desc[32];
-} bedrock_cond;
+};
+typedef struct bedrock_cond bedrock_cond;
 
-typedef struct
+struct bedrock_spinlock
 {
 	pthread_spinlock_t spinlock;
 	char desc[32];
-} bedrock_spinlock;
+};
+typedef struct bedrock_spinlock bedrock_spinlock;
 
 #include "util/list.h"
 #include "util/pipe.h"

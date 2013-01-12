@@ -3,21 +3,23 @@
 
 #include "util.h"
 
-typedef struct _bedrock_node
+struct bedrock_node
 {
-	struct _bedrock_node *next, *prev;
+	struct bedrock_node *next, *prev;
 	void *data;
-} bedrock_node;
+};
+typedef struct bedrock_node bedrock_node;
 
 typedef void (*bedrock_free_func)(void *);
 
-typedef struct
+struct bedrock_list
 {
 	bedrock_node *head, *tail;
 	size_t count;
 	bool (*compare)(const void *data1, const void *data2);
 	bedrock_free_func free;
-} bedrock_list;
+};
+typedef struct bedrock_list bedrock_list;
 
 #define LIST_INIT { NULL, NULL, 0, NULL, NULL }
 #define LIST_FOREACH(list, var) for (var = (list)->head; var; var = var->next)

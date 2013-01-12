@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-typedef enum
+enum nbt_tag_type
 {
 	TAG_END,
 	TAG_BYTE,
@@ -20,13 +20,14 @@ typedef enum
 	TAG_LIST,
 	TAG_COMPOUND,
 	TAG_INT_ARRAY
-} nbt_tag_type;
+};
+typedef enum nbt_tag_type nbt_tag_type;
 
-typedef struct _nbt_tag
+struct nbt_tag
 {
 	uint8_t type;
 	char *name;
-	struct _nbt_tag *owner;
+	struct nbt_tag *owner;
 
 	union
 	{
@@ -62,6 +63,7 @@ typedef struct _nbt_tag
 	}
 	payload;
 
-} nbt_tag;
+};
+typedef struct nbt_tag nbt_tag;
 
 #endif // BEDROCK_NBT_TAG_H

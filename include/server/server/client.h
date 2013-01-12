@@ -17,7 +17,7 @@
 
 #include <openssl/evp.h>
 
-typedef enum
+enum client_authentication_state
 {
 	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
 	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake, including encryption request/response */
@@ -26,9 +26,9 @@ typedef enum
 	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
 	STATE_IN_GAME         = 1 << 5,     /* In the game, eg logon sequence is complete */
 	STATE_ANY             = ~0,         /* Any state */
-} client_authentication_state;
+};
 
-typedef enum
+enum client_entity_action
 {
 	ACTION_NONE,
 	ACTION_CROUCH,
@@ -36,7 +36,7 @@ typedef enum
 	ACTION_LEAVE_BED,
 	ACTION_START_SPRINTING,
 	ACTION_STOP_SPRINTING
-} client_entity_action;
+};
 
 struct client
 {
@@ -45,7 +45,7 @@ struct client
 	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
-	client_authentication_state authenticated;
+	enum client_authentication_state authenticated;
 
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
@@ -68,7 +68,7 @@ struct client
 	uint16_t ping;                        /* ping in ms */
 
 	int16_t selected_slot;                /* slot the player has selected (weilded item), 0-8 */
-	client_entity_action action;  /* action the player is doing */
+	enum client_entity_action action;  /* action the player is doing */
 
 	double stance;                         /* players's stance */
 

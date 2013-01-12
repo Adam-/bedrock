@@ -10,12 +10,13 @@
 #include <netinet/in.h>
 #endif
 
-typedef enum
+enum bedrock_fd_type
 {
 	FD_FILE,
 	FD_SOCKET,
 	FD_PIPE
-} bedrock_fd_type;
+};
+typedef enum bedrock_fd_type bedrock_fd_type;
 
 struct bedrock_fd
 {

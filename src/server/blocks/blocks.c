@@ -142,7 +142,7 @@ struct block blocks[] = {
 	{BLOCK_ENDER_CHEST,           "Ender Chest",         3.75, 3.75,  ITEM_FLAG_AXE,                              ITEM_FLAG_AXE,                              simple_drop}
 };
 
-static int block_compare(const block_type *id, const struct block *block)
+static int block_compare(const enum block_type *id, const struct block *block)
 {
 	if (*id < block->id)
 		return -1;
@@ -153,12 +153,12 @@ static int block_compare(const block_type *id, const struct block *block)
 
 typedef int (*compare_func)(const void *, const void *);
 
-struct block *block_find(block_type id)
+struct block *block_find(enum block_type id)
 {
 	return bsearch(&id, blocks, sizeof(blocks) / sizeof(struct block), sizeof(struct block), (compare_func) block_compare);
 }
 
-struct block *block_find_or_create(block_type id)
+struct block *block_find_or_create(enum block_type id)
 {
 	static struct block b;
 	struct block *block = block_find(id);

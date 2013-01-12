@@ -3,7 +3,7 @@
 #include "server/column.h"
 #include "packet/packet_entity_metadata.h"
 
-void packet_send_entity_metadata(struct client *client, entity_metadata_index index, entity_metadata_type type, const void *data, size_t size)
+void packet_send_entity_metadata(struct client *client, enum entity_metadata_index index, enum entity_metadata_type type, const void *data, size_t size)
 {
 	uint8_t header = index | type << 5, footer = 127;
 	bedrock_node *node;

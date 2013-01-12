@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef enum
+enum item_type
 {
 	ITEM_NONE,                   /* 0 */
 	ITEM_IRON_SHOVEL = 256,      /* 256 */
@@ -150,7 +150,7 @@ typedef enum
 	ITEM_STRAD_DISC,             /* 2264 */
 	ITEM_WARD_DISC,              /* 2265 */
 	ITEM_11_DISC                 /* 2266 */
-} item_type;
+};
 
 enum item_flags
 {
@@ -201,7 +201,7 @@ struct item_stack
 
 extern struct item items[];
 
-extern struct item *item_find(item_type id);
-extern struct item *item_find_or_create(item_type id);
+extern struct item *item_find(enum item_type id);
+extern struct item *item_find_or_create(enum item_type id);
 
 #endif // BEDROCK_BLOCKS_ITEMS_H
