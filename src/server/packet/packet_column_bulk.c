@@ -4,7 +4,7 @@
 #include "server/chunk.h"
 #include "packet/packet_column_bulk.h"
 #include "packet/packet_spawn_named_entity.h"
-#include "packet/packet_spawn_dropped_item.h"
+#include "packet/packet_spawn_object.h"
 #include "util/compression.h"
 
 #define COLUMN_BULK_MAX 100
@@ -41,7 +41,7 @@ static void packet_column_bulk_send_items(struct client *client, struct column *
 	LIST_FOREACH(&column->items, node)
 	{
 		struct dropped_item *item = node->data;
-		packet_send_spawn_dropped_item(client, item);
+		packet_spawn_object_item(client, item);
 	}
 }
 
@@ -62,6 +62,7 @@ void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 	int i;
 	unsigned char fake_light[BEDROCK_DATA_LENGTH]; // Temporary until lighting is sorted
 	uint32_t size;
+	uint8_t b;
 
 	memset(fake_light, 0xFF, sizeof(fake_light));
 
@@ -97,7 +98,6 @@ void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 			compression_compress_deflate(buffer, chunk->data, BEDROCK_DATA_LENGTH);
 		}
 
-
 		for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		{
 			struct chunk *chunk = column->chunks[i];
@@ -127,6 +127,9 @@ void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 
 	size = buffer->buffer->length;
 	packet_pack_int(&packet, &size, sizeof(size));
+
+	b = 1;
+	packet_pack_int(&packet, &b, sizeof(b));
 
 	packet_pack(&packet, buffer->buffer->data, buffer->buffer->length);
 

@@ -3,7 +3,7 @@
 #include "server/column.h"
 #include "nbt/nbt.h"
 #include "packet/packet_destroy_entity.h"
-#include "packet/packet_spawn_dropped_item.h"
+#include "packet/packet_spawn_object.h"
 #include "packet/packet_spawn_named_entity.h"
 #include "util/compression.h"
 
@@ -36,7 +36,7 @@ static void packet_column_remove_items(struct client *client, struct column *col
 	LIST_FOREACH(&column->items, node)
 	{
 		struct dropped_item *item = node->data;
-		packet_send_destroy_entity_dropped_item(client, item);
+		packet_spawn_object_item(client, item);
 	}
 }
 
@@ -50,7 +50,7 @@ void packet_send_column_empty(struct client *client, struct column *column)
 	packet_column_remove_players(client, column);
 	packet_column_remove_items(client, column);
 
-	packet_init(&packet, SPAWN_DROPPED_ITEM);
+	packet_init(&packet, MAP_COLUMN);
 
 	packet_pack_header(&packet, MAP_COLUMN);
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X

@@ -4,7 +4,7 @@
 #include "util/compression.h"
 #include "util/endian.h"
 #include "util/memory.h"
-#include "packet/packet_spawn_dropped_item.h"
+#include "packet/packet_spawn_object.h"
 #include "packet/packet_destroy_entity.h"
 
 #include <math.h>
@@ -285,7 +285,7 @@ void column_add_item(struct column *column, struct dropped_item *di)
 	{
 		struct client *client = node->data;
 
-		packet_send_spawn_dropped_item(client, di);
+		packet_spawn_object_item(client, di);
 	}
 }
 

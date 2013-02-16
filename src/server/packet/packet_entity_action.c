@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/column.h"
 #include "packet/packet_entity_metadata.h"
 
 enum
