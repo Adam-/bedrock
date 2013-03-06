@@ -1,0 +1,6 @@
+
+enum
+{
+	WINDOW_INVENTORY
+};
+

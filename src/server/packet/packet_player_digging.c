@@ -5,6 +5,7 @@
 #include "nbt/nbt.h"
 #include "packet/packet_block_change.h"
 #include "packet/packet_set_slot.h"
+#include "windows/window.h"
 
 enum
 {

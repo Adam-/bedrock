@@ -22,6 +22,7 @@
 #include "packet/packet_spawn_point.h"
 #include "packet/packet_set_slot.h"
 #include "packet/packet_time.h"
+#include "windows/window.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

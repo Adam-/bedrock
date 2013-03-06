@@ -2,9 +2,9 @@
 #include "server/client.h"
 #include "server/column.h"
 #include "server/packet.h"
-#include "packet/packet_set_slot.h" // XXX for WINDOW_
 #include "packet/packet_confirm_transaction.h"
 #include "nbt/nbt.h"
+#include "windows/window.h"
 
 #include <math.h>
 
