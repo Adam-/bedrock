@@ -69,17 +69,13 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				// Replacing a slot
 				else
 				{
+					bedrock_log(LEVEL_DEBUG, "click window: %s replaces slot %d with %d blocks of %s", client->name, slot, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name);
+
 					/* Swap the drag data with this slot */
-					stack->id = client->window_drag_data.id;
-					stack->count = client->window_drag_data.count;
-					stack->metadata = client->window_drag_data.metadata;
+					*stack = client->window_drag_data;
 
 					/* We are now dragging what was in this slot */
-					client->window_drag_data.id = slot_data.id;
-					client->window_drag_data.count = slot_data.count;
-					client->window_drag_data.metadata = slot_data.metadata;
-
-					bedrock_log(LEVEL_DEBUG, "click window: %s replaces slot %d with %d blocks of %s", client->name, slot, client->window_drag_data.count, item_find_or_create(client->window_drag_data.id)->name);
+					client->window_drag_data = slot_data;
 				}
 			}
 			else
