@@ -10,6 +10,7 @@
 #include "server/packet.h"
 #include "blocks/items.h"
 #include "server/oper.h"
+#include "windows/inventory.h"
 
 #ifdef WIN32
 #include "windows_time.h"
@@ -67,10 +68,12 @@ struct client
 	uint32_t ping_id;                     /* ping id sent */
 	uint16_t ping;                        /* ping in ms */
 
-	int16_t selected_slot;                /* slot the player has selected (weilded item), 0-8 */
 	enum client_entity_action action;  /* action the player is doing */
 
 	double stance;                         /* players's stance */
+
+	int16_t selected_slot;                        /* slot the player has selected (weilded item) */
+	struct item_stack inventory[INVENTORY_SIZE];  /* player's inventory, weilded items, craft box, hot bar, etc */
 
 	// Data kept while a player is dragging items on a Window
 	struct
@@ -121,7 +124,6 @@ extern float *client_get_yaw(struct client *client);
 extern float *client_get_pitch(struct client *client);
 extern uint8_t *client_get_on_ground(struct client *client);
 
-extern nbt_tag *client_get_inventory_tag(struct client *client, uint8_t slot);
 extern bool client_can_add_inventory_item(struct client *client, struct item *item);
 extern void client_add_inventory_item(struct client *client, struct item *item);
 

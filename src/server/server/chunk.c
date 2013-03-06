@@ -108,7 +108,7 @@ void chunk_free(struct chunk *chunk)
 	if (!chunk)
 		return;
 
-	bedrock_log(LEVEL_DEBUG, "chunk: Freeing chunk %d in column %d,%d", chunk->y, chunk->column->x, chunk->column->z);
+	bedrock_log(LEVEL_COLUMN, "chunk: Freeing chunk %d in column %d,%d", chunk->y, chunk->column->x, chunk->column->z);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		if (chunk->column->chunks[i] == chunk)

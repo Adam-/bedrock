@@ -69,7 +69,7 @@ void column_free(struct column *column)
 	bedrock_assert(column->players.count == 0, ;);
 	bedrock_assert((column->flags & ~COLUMN_FLAG_EMPTY) == 0, ;);
 
-	bedrock_log(LEVEL_DEBUG, "chunk: Freeing column %d,%d", column->x, column->z);
+	bedrock_log(LEVEL_COLUMN, "chunk: Freeing column %d,%d", column->x, column->z);
 
 	bedrock_list_del(&column->region->columns, column);
 

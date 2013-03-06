@@ -10,17 +10,14 @@ void packet_send_spawn_named_entity(struct client *client, struct client *c)
 	uint32_t abs_x, abs_y, abs_z;
 	float yaw, pitch;
 	int8_t y, p;
-	nbt_tag *tag;
+	struct item_stack *weilded_item;
 	struct item *item;
 	uint8_t count = 0, metadata = 0;
 	uint8_t b = 127;
 
-	tag = client_get_inventory_tag(c, c->selected_slot);
-	if (tag != NULL)
-	{
-		uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id");
-		item = item_find_or_create(*id);
-	}
+	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	if (weilded_item->count)
+		item = item_find_or_create(weilded_item->id);
 	else
 		item = item_find_or_create(ITEM_NONE);
 

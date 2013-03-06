@@ -15,14 +15,9 @@ enum
 
 static struct item *get_weilded_item(struct client *client)
 {
-	nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
-	if (tag != NULL)
-	{
-		uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id");
-		if (id != NULL)
-			return item_find_or_create(*id);
-	}
-
+	struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	if (weilded_item->count)
+		return item_find_or_create(weilded_item->id);
 	return item_find_or_create(ITEM_NONE);
 }
 
@@ -236,18 +231,15 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 	else if (status == DROP_ITEM)
 	{
 		/* Dropping currently held item */
-		nbt_tag *tag = client_get_inventory_tag(client, client->selected_slot);
-		if (tag != NULL)
+		struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+		if (weilded_item->count)
 		{
-			uint16_t *id = nbt_read(tag, TAG_SHORT, 1, "id"), *data = nbt_read(tag, TAG_SHORT, 1, "Damage");
-			uint8_t *count = nbt_read(tag, TAG_BYTE, 1, "Count");
-
 			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
 			struct column *col;
 
-			di->item = item_find_or_create(*id);
+			di->item = item_find_or_create(weilded_item->id);
 			di->count = 1;
-			di->data = *data;
+			di->data = weilded_item->metadata;
 			di->x = *client_get_pos_x(client);
 			di->y = *client_get_pos_y(client);
 			di->z = *client_get_pos_z(client);
@@ -262,18 +254,18 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 			else
 				bedrock_free(di);
 
-			bedrock_log(LEVEL_DEBUG, "player digging: %s drops a block of %s", client->name, item_find_or_create(*id)->name);
+			bedrock_log(LEVEL_DEBUG, "player digging: %s drops a block of %s", client->name, item_find_or_create(weilded_item->id)->name);
 
-			--(*count);
-			if (*count)
+			--weilded_item->count;
+
+			if (weilded_item->count)
 			{
-				packet_send_set_slot(client, WINDOW_INVENTORY, client->selected_slot + 36, item_find_or_create(*id), *count, *data);
+				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_0 + client->selected_slot, item_find_or_create(weilded_item->id), weilded_item->count, weilded_item->metadata);
 			}
 			else
 			{
 				/* Item goes away */
-				packet_send_set_slot(client, WINDOW_INVENTORY, client->selected_slot + 36, NULL, 0, 0);
-				nbt_free(tag);
+				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_0 + client->selected_slot, NULL, 0, 0);
 			}
 		}
 	}

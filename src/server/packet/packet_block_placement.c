@@ -25,7 +25,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	struct item_stack slot_data;
 	uint8_t cursor_x, cursor_y, cursor_z;
 
-	nbt_tag *weilded_item;
+	struct item_stack *weilded_item;
 	struct item *item;
 
 	struct chunk *target_chunk, *real_chunk;
@@ -88,8 +88,8 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 			return ERROR_NOT_ALLOWED;
 	}
 
-	weilded_item = client_get_inventory_tag(client, client->selected_slot);
-	if (weilded_item == NULL)
+	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	if (weilded_item->count == 0)
 	{
 		if (slot_data.id != -1)
 			return ERROR_UNEXPECTED;
@@ -98,28 +98,18 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	}
 	else
 	{
-		int16_t *weilded_id = nbt_read(weilded_item, TAG_SHORT, 1, "id");
-		uint8_t *weilded_count = nbt_read(weilded_item, TAG_BYTE, 1, "Count");
-
-
 		// At this point the client has already removed one
-		*weilded_count -= 1;
+		weilded_item->count -= 1;
 
-		item = item_find(*weilded_id);
+		item = item_find(weilded_item->id);
 		if (item == NULL || (item->flags & ITEM_FLAG_BLOCK) == 0)
 		{
-			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, *weilded_id, x, y, z, d);
-
-			if (*weilded_count == 0)
-				nbt_free(weilded_item);
+			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, weilded_item->id, x, y, z, d);
 
 			return offset;
 		}
 
 		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
-
-		if (*weilded_count == 0)
-			nbt_free(weilded_item);
 	}
 
 	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
