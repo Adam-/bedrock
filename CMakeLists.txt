@@ -49,6 +49,8 @@ else(NOT WIN32)
   add_subdirectory(win32)
 endif(NOT WIN32)
 
-add_subdirectory(src)
-
+add_subdirectory(console)
+add_subdirectory(nbt)
+add_subdirectory(server)
+add_subdirectory(util)
 

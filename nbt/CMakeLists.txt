@@ -1,5 +1,5 @@
 
-include_directories(../../include ${ZLIB_INCLUDE_DIRS})
+include_directories(../include ${ZLIB_INCLUDE_DIRS})
 add_library(nbt STATIC nbt.c)
 target_link_libraries(nbt util)
 
