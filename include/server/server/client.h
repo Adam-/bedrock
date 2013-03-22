@@ -76,7 +76,12 @@ struct client
 	struct item_stack inventory[INVENTORY_SIZE];  /* player's inventory, weilded items, craft box, hot bar, etc */
 
 	// Data kept while a player is dragging items on a Window
-	struct item_stack window_drag_data;
+	struct
+	{
+		struct item_stack stack;
+		uint8_t data;
+	}
+	drag_data;
 
 	// Data kept while a player is digging
 	struct
