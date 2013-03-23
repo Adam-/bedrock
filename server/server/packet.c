@@ -16,6 +16,7 @@
 #include "packet/packet_entity_action.h"
 #include "packet/packet_close_window.h"
 #include "packet/packet_click_window.h"
+#include "packet/packet_confirm_transaction.h"
 #include "packet/packet_client_settings.h"
 #include "packet/packet_client_status.h"
 #include "packet/packet_encryption_response.h"
@@ -52,7 +53,7 @@ struct packet_info packet_handlers[] = {
 	{CLOSE_WINDOW,             2, STATE_IN_GAME,                          NONE,                    packet_close_window},
 	{CLICK_WINDOW,             8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
 	{SET_SLOT,                 4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{CONFIRM_TRANSACTION,      5, 0,                                      SERVER_ONLY,             NULL},
+	{CONFIRM_TRANSACTION,      5, STATE_IN_GAME,                          NONE,                    packet_confirm_transaction},
 	{PLAYER_LIST,              6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CLIENT_SETTINGS,          7, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_client_settings},
 	{CLIENT_STATUS,            2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
