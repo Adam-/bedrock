@@ -318,6 +318,7 @@ static void client_free(struct client *client)
 	EVP_CIPHER_CTX_cleanup(&client->in_cipher_ctx);
 	EVP_CIPHER_CTX_cleanup(&client->out_cipher_ctx);
 
+	bedrock_list_clear(&client->drag_data.slots);
 	bedrock_list_clear(&client->out_buffer);
 	bedrock_free(client);
 }

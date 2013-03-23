@@ -79,7 +79,7 @@ struct client
 	struct
 	{
 		struct item_stack stack;
-		uint8_t data;
+		bedrock_list slots;   /* list of ints... */
 	}
 	drag_data;
 

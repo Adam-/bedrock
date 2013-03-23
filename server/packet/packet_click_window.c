@@ -10,12 +10,14 @@
 
 enum
 {
-	BUTTON_LEFT_START,
+	BUTTON_LEFT_START = 0,
 	BUTTON_LEFT = 0,
-	BUTTON_RIGHT,
-	BUTTON_LEFT_END,
-	BUTTON_MIDDLE,
-	BUTTON_RIGHT_START,
+	BUTTON_LEFT_PAINT = 1,
+	BUTTON_RIGHT = 1,
+	BUTTON_LEFT_END = 2,
+	BUTTON_MIDDLE = 3,
+	BUTTON_RIGHT_START = 4,
+	BUTTON_RIGHT_PAINT = 5,
 	BUTTON_RIGHT_END = 6
 };
 
@@ -61,7 +63,9 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		// I clicked a valid slot with items in it
 		if (stack != NULL && stack->count)
 		{
-			if (stack->id != slot_data.id || stack->count != slot_data.count) // XXX I have no metadata tracking?
+			if (slot_data.id == -1 && slot_data.count == 0)
+				/* Painting sends this in slot data */;
+			else if (stack->id != slot_data.id || stack->count != slot_data.count) // XXX I have no metadata tracking?
 				return ERROR_UNEXPECTED; // This is a lie
 
 			// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot.
@@ -70,8 +74,35 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				/* Except if the IDs match */
 				if (stack->id == client->drag_data.stack.id)
 				{
+					if (mode == OP_PAINT)
+					{
+						/* Painting on to a stack of existing matching items */
+						if (button == BUTTON_RIGHT_PAINT)
+						{
+							if (client->drag_data.stack.count && stack->count < BEDROCK_MAX_ITEMS_PER_STACK)
+							{
+								bedrock_log(LEVEL_DEBUG, "click window: %s paints 1 block of %s in to slot %d", client->name, item_find_or_create(client->drag_data.stack.id)->name, slot);
+
+								--client->drag_data.stack.count;
+								++stack->count;
+							}
+						}
+						else if (button == BUTTON_LEFT_PAINT)
+						{
+							int *i = bedrock_malloc(sizeof(int));
+							*i = slot;
+
+							bedrock_list_add(&client->drag_data.slots, i);
+							client->drag_data.slots.free = bedrock_free;
+
+							bedrock_log(LEVEL_DEBUG, "click window: %s paints across slot %d", client->name, slot);
+
+							if (client->drag_data.slots.count > BEDROCK_MAX_ITEMS_PER_STACK)
+								return ERROR_NOT_ALLOWED; /* What is a good value for too many? */
+						}
+					}
 					/* On right click take one item, else combine them as much as possible */
-					if (button == BUTTON_RIGHT)
+					else if (button == BUTTON_RIGHT)
 					{
 						if (stack->count < BEDROCK_MAX_ITEMS_PER_STACK && client->drag_data.stack.count)
 						{
@@ -120,6 +151,9 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 					}
 					/* else unknown button */
 				}
+				/* Trying to paint to an existing stack that doesn't match? */
+				else if (mode == OP_PAINT)
+					return ERROR_UNEXPECTED;
 				// Replacing a slot
 				else
 				{
@@ -186,27 +220,53 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 					if (button == BUTTON_LEFT_START || button == BUTTON_RIGHT_START)
 					{
-						/* Starting a paint while painting? */
-						if (client->drag_data.data)
-							return ERROR_NOT_ALLOWED;
-
-						client->drag_data.data = button;
-
 						bedrock_log(LEVEL_DEBUG, "click window: %s starts painting with %s using %s click", client->name, item_find_or_create(client->drag_data.stack.id)->name, button == BUTTON_LEFT_START ? "left" : "right");
 					}
 					else if (button == BUTTON_LEFT_END || button == BUTTON_RIGHT_END)
 					{
-						/* Ending a paint without starting? */
-						if (!client->drag_data.data)
-							return ERROR_NOT_ALLOWED;
-						else if (client->drag_data.data == BUTTON_LEFT_START && button != BUTTON_LEFT_END)
-							return ERROR_NOT_ALLOWED;
-						else if (client->drag_data.data == BUTTON_RIGHT_START && button != BUTTON_RIGHT_END)
-							return ERROR_NOT_ALLOWED;
+						if (button == BUTTON_LEFT_END)
+						{
+							/* Not we apply the move */
+							
+							if (client->drag_data.slots.count)
+							{
+								/* Each of the slots wants this amount */
+								int each = client->drag_data.stack.count / client->drag_data.slots.count;
+								bedrock_node *node;
+
+								LIST_FOREACH(&client->drag_data.slots, node)
+								{
+									int *i = node->data;
+									int can_hold, can_give, will_give;
+
+									bedrock_assert(*i > 0 && *i < INVENTORY_SIZE, return ERROR_UNEXPECTED);
+									stack = &client->inventory[*i];
+
+									/* Client trying to paint an item over a slot of a different type */
+									if (stack->id && stack->id != client->drag_data.stack.id)
+										return ERROR_NOT_ALLOWED;
+
+									/* Slot can hold this many more items */
+									can_hold = BEDROCK_MAX_ITEMS_PER_STACK - stack->count;
+									/* I should give at most this much from what I'm holding */
+									can_give = client->drag_data.stack.count < each ? client->drag_data.stack.count : each;
+									/* I will give this much */
+									will_give = can_hold < can_give ? can_hold : can_give;
+
+									bedrock_log(LEVEL_DEBUG, "click window: %s paints %d items to slot %d", client->name, will_give, *i);
+
+									stack->id = client->drag_data.stack.id;
+									stack->count += will_give;
+
+									client->drag_data.stack.count -= will_give;
+								}
+
+								/* Clear pending slot data */
+								bedrock_list_clear(&client->drag_data.slots);
+							}
+						}
 
 						bedrock_log(LEVEL_DEBUG, "click window: %s stops painting with %s using %s click", client->name, item_find_or_create(client->drag_data.stack.id)->name, button == BUTTON_LEFT_END ? "left" : "right");
-
-						client->drag_data.data = 0;
 
 						/* Zero drag data if we don't have any items left, otherwise keep holding the items */
 						if (!client->drag_data.stack.count)
@@ -252,16 +312,9 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			else if (client->drag_data.stack.id)
 			{
 				/* Client is painting */
-				if (mode == OP_PAINT || client->drag_data.data)
+				if (mode == OP_PAINT)
 				{
-					/* If client isn't actually painting kick them */
-					if (!client->drag_data.data)
-						return ERROR_NOT_ALLOWED;
-					/* Or if they are painting but their mode isn't set to paint */
-					else if (mode != OP_PAINT)
-						return ERROR_NOT_ALLOWED;
-
-					if (client->drag_data.data == BUTTON_RIGHT_START)
+					if (button == BUTTON_RIGHT_PAINT)
 					{
 						if (client->drag_data.stack.count)
 						{
@@ -271,6 +324,19 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 							stack->count = 1;
 							stack->id = client->drag_data.stack.id;
 						}
+					}
+					else if (button == BUTTON_LEFT_PAINT)
+					{
+						int *i = bedrock_malloc(sizeof(int));
+						*i = slot;
+
+						bedrock_list_add(&client->drag_data.slots, i);
+						client->drag_data.slots.free = bedrock_free;
+
+						bedrock_log(LEVEL_DEBUG, "click window: %s paints across empty slot %d", client->name, slot);
+
+						if (client->drag_data.slots.count > BEDROCK_MAX_ITEMS_PER_STACK)
+							return ERROR_NOT_ALLOWED; /* What is a good value for too many? */
 					}
 				}
 				else
