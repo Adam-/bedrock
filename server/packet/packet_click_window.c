@@ -324,8 +324,37 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			// Clicked an empty slot, might be placing blocks there, if we are currently dragging something
 			else if (client->drag_data.stack.id)
 			{
+				if (mode == OP_DOUBLE_CLICK)
+				{
+					/* On double click take items from inventory to fill up what I'm holding until it's full */
+					int i;
+
+					for (i = INVENTORY_SLOT_0; i < INVENTORY_SIZE; ++i)
+					{
+						stack = &client->inventory[i];
+
+						if (stack->id == client->drag_data.stack.id)
+						{
+							/* I can hold this many more items */
+							int can_hold = BEDROCK_MAX_ITEMS_PER_STACK - client->drag_data.stack.count;
+							int will_take = can_hold < stack->count ? can_hold : stack->count;
+
+							client->drag_data.stack.count += will_take;
+							stack->count -= will_take;
+
+							/* Slot might be empty now */
+							if (!stack->count)
+							{
+								stack->id = 0;
+								stack->metadata = 0;
+							}
+						}
+					}
+
+					bedrock_log(LEVEL_DEBUG, "click window: %s double clicks and now holds %d items", client->name, client->drag_data.stack.count);
+				}
 				/* Client is painting */
-				if (mode == OP_PAINT)
+				else if (mode == OP_PAINT)
 				{
 					if (button == BUTTON_RIGHT_PAINT)
 					{
