@@ -5,9 +5,11 @@ bedrock
 console
 editor
 cmake_install.cmake
-src/server/config/lexer.c
-src/server/config/parser.c
-src/server/config/parser.h
+server/config/lexer.c
+server/config/parser.c
+server/config/parser.h
+*.config
+*.log
 *.so
 *.a
 *.exe
