@@ -6,20 +6,37 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "server/config/hard.h"
 #include "util/compression.h"
 #include "util/file.h"
+#include "util/endian.h"
 #include "util/string.h"
 #include "nbt/nbt.h"
 #include "dumper.h"
 
-static bool pretend = false;
+static bool pretend, debug, column;
+static int column_x, column_z;
 static const char *file_name;
+
 static int fd;
 static int ac;
 static char **av;
 
-void bedrock_log(bedrock_log_level bedrock_attribute_unused level, const char bedrock_attribute_unused *msg, ...)
+void bedrock_log(bedrock_log_level level, const char *msg, ...)
 {
+	if (level == LEVEL_CRIT)
+		;
+	else if (level != LEVEL_NBT_DEBUG || !debug)
+		return;
+
+	va_list args;
+	char buffer[512];
+
+	va_start(args, msg);
+	vsnprintf(buffer, sizeof(buffer) - 1, msg, args);
+	va_end(args);
+
+	printf("%s\n", buffer);
 }
 
 static void pack_int(const char *src, void **ptr, size_t *sz)
@@ -55,15 +72,38 @@ static void parse_args(int argc, char **argv)
 	int c;
 
 	struct option options[] = {
+		{"column", required_argument, NULL, 'c'},
+		{"debug", no_argument, NULL, 'd'},
 		{"pretend", no_argument, NULL, 'p'},
 		{NULL, 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "p", options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "dp", options, NULL)) != -1)
 	{
 		switch (c)
 		{
+			case 'c':
+			{
+				const char *x = optarg, *z;
+				char *p = strchr(optarg, ',');
+				if (!p)
+				{
+					fprintf(stderr, "Syntax: --column x,z\n");
+					exit(-1);
+				}
+				*p++ = 0;
+				z = p;
+
+				column = true;
+				column_x = atoi(x);
+				column_z = atoi(z);
+				break;
+			}
+			case 'd':
+				debug = true;
+				break;
 			case 'p':
+				pretend = true;
 				break;
 			case '?':
 			default:
@@ -83,10 +123,57 @@ static void parse_args(int argc, char **argv)
 	av = argv + optind + 1;
 }
 
+static void offset_get(const unsigned char *contents, size_t sz, off_t *off, size_t *off_size)
+{
+	int32_t x, z;
+	off_t offset;
+	uint32_t read_offset, compressed_len;
+
+	*off = 0;
+	*off_size = sz;
+
+	if (!column)
+		return;
+
+	x = column_x % BEDROCK_COLUMNS_PER_REGION;
+	if (x < 0)
+		x = BEDROCK_COLUMNS_PER_REGION - abs(x);
+
+	z = column_z % BEDROCK_COLUMNS_PER_REGION;
+	if (z < 0)
+		z = BEDROCK_COLUMNS_PER_REGION - abs(z);
+
+	offset = x + z * BEDROCK_COLUMNS_PER_REGION;
+	offset *= sizeof(int32_t);
+
+	bedrock_assert(offset + sizeof(read_offset) <= sz, return);
+	memcpy(&read_offset, contents + offset, sizeof(read_offset));
+	convert_endianness((unsigned char *) &read_offset, sizeof(read_offset));
+
+	if (read_offset == 0)
+		return;
+	
+	/* First 3 bytes are read offset, 4th byte is the length of the chunk */
+	read_offset >>= 8;
+	read_offset *= BEDROCK_REGION_SECTOR_SIZE;
+
+	/* Get the length of the compressed data */
+	bedrock_assert(read_offset + sizeof(compressed_len) <= sz, return);
+	memcpy(&compressed_len, contents + read_offset, sizeof(compressed_len));
+	convert_endianness((unsigned char *) &compressed_len, sizeof(compressed_len));
+
+	/* The next byte is the compression type, which we assume */
+
+	*off = read_offset + sizeof(compressed_len) + 1;
+	*off_size = compressed_len;
+}
+
 static nbt_tag *get_contents_of(int f)
 {
 	unsigned char *contents;
 	size_t sz;
+	off_t offset;
+	size_t offset_size;
 	compression_buffer *buffer;
 	nbt_tag *tag;
 
@@ -96,7 +183,10 @@ static nbt_tag *get_contents_of(int f)
 		fprintf(stderr, "Unable to read contents of %s\n", file_name);
 		return NULL;
 	}
-	buffer = compression_decompress(1024, contents, sz);
+
+	offset_get(contents, sz, &offset, &offset_size);
+
+	buffer = compression_decompress(1024, contents + offset, offset_size);
 	bedrock_free(contents);
 
 	tag = nbt_parse(buffer->buffer->data, buffer->buffer->length);
@@ -266,7 +356,14 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Unable to open %s: %s\n", file_name, strerror(errno));
 		exit(-1);
 	}
+
 	tag = get_contents_of(fd);
+	if (tag == NULL)
+	{
+		fprintf(stderr, "Unable to parse %s\n", file_name);
+		close(fd);
+		exit(-1);
+	}
 
 	for (i = 0; i < ac; ++i)
 		process_arg(tag, av[i]);

@@ -36,6 +36,7 @@ enum
 	MAP_COLUMN                    = 0x33,
 	BLOCK_CHANGE                  = 0x35,
 	MAP_COLUMN_BULK               = 0x38,
+	OPEN_WINDOW                   = 0x64,
 	CLOSE_WINDOW                  = 0x65,
 	CLICK_WINDOW                  = 0x66,
 	SET_SLOT                      = 0x67,

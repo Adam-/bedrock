@@ -3,7 +3,9 @@
 #include "server/column.h"
 #include "nbt/nbt.h"
 #include "blocks/blocks.h"
+#include "windows/window.h"
 #include "packet/packet_block_change.h"
+#include "packet/packet_open_window.h"
 
 enum
 {
@@ -113,6 +115,12 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		bedrock_log(LEVEL_DEBUG, "player building: Rejecting block placement for %s because they are building on air at %d, %d, %d", client->name, real_x, real_y, real_z);
 		client_add_inventory_item(client, item);
 		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
+		return offset;
+	}
+	else if (*placed_on == BLOCK_CHEST)
+	{
+		bedrock_log(LEVEL_DEBUG, "player building: %s opens chest at %d, %d, %d", client->name, real_x, real_y, real_z);
+		packet_send_open_window(client, WINDOW_CHEST, NULL, 27);
 		return offset;
 	}
 

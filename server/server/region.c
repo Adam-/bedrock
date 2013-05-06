@@ -82,6 +82,7 @@ static void region_worker_read(struct region_operation *op)
 		return;
 	}
 
+	/* First 3 bytes are read offset, 4th byte is the length of the chunk */
 	read_offset >>= 8;
 
 	if (lseek(op->region->fd.fd, read_offset * BEDROCK_REGION_SECTOR_SIZE, SEEK_SET) == -1)

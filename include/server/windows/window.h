@@ -1,6 +1,8 @@
 
 enum
 {
-	WINDOW_INVENTORY
+	WINDOW_INVENTORY,
+
+	WINDOW_CHEST = 0
 };
 

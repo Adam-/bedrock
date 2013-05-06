@@ -50,6 +50,7 @@ struct packet_info packet_handlers[] = {
 	{MAP_COLUMN,              17, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{BLOCK_CHANGE,            13, 0,                                      SERVER_ONLY,             NULL},
 	{MAP_COLUMN_BULK,          7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{OPEN_WINDOW,              7, STATE_IN_GAME,                          SOFT_SIZE | SERVER_ONLY, NULL},
 	{CLOSE_WINDOW,             2, STATE_IN_GAME,                          NONE,                    packet_close_window},
 	{CLICK_WINDOW,             8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
 	{SET_SLOT,                 4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
