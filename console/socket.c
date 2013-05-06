@@ -18,8 +18,6 @@
 static int socket_fd;
 static int stdin_fd;
 
-#define SOCKET_NAME "./bedrock.console.socket"
-
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 static void socket_read()

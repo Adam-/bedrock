@@ -1,4 +1,5 @@
 #include "util/fd.h"
+#include "util/io.h"
 #include "util/memory.h"
 #include "util/list.h"
 
@@ -40,8 +41,13 @@ void bedrock_fd_close(struct bedrock_fd *f)
 	bedrock_list_del(&fdlist, f);
 	bedrock_mutex_unlock(&fdlist_mutex);
 
+	if (event_get_base(&f->event_read) != NULL)
+		io_disable(&f->event_read);
+	if (event_get_base(&f->event_write) != NULL)
+		io_disable(&f->event_write);
 	if (evutil_closesocket(f->fd))
 		close(f->fd);
+
 	f->open = false;
 }
 

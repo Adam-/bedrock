@@ -305,9 +305,6 @@ static void client_free(struct client *client)
 
 	bedrock_log(LEVEL_DEBUG, "client: Exiting client %s from %s", *client->name ? client->name : "(unknown)", client_get_ip(client));
 
-	io_disable(&client->fd.event_read);
-	io_disable(&client->fd.event_write);
-
 	bedrock_fd_close(&client->fd);
 
 	bedrock_list_del(&client_list, client);
