@@ -25,14 +25,17 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	struct item_stack slot_data;
 	uint8_t cursor_x, cursor_y, cursor_z;
 
+	int32_t real_x, real_z;
+	uint8_t real_y;
+
 	struct item_stack *weilded_item;
 	struct item *item;
 
 	struct chunk *target_chunk, *real_chunk;
+	uint8_t *placed_on, *being_placed;
 	int32_t *height;
 
-	int32_t real_x, real_z;
-	uint8_t real_y;
+	bedrock_node *node;
 
 	packet_read_int(p, &offset, &x, sizeof(x));
 	packet_read_int(p, &offset, &y, sizeof(y));
@@ -88,30 +91,6 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 			return ERROR_NOT_ALLOWED;
 	}
 
-	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
-	if (weilded_item->count == 0)
-	{
-		if (slot_data.id != -1)
-			return ERROR_UNEXPECTED;
-		else
-			return offset;
-	}
-	else
-	{
-		// At this point the client has already removed one
-		weilded_item->count -= 1;
-
-		item = item_find(weilded_item->id);
-		if (item == NULL || (item->flags & ITEM_FLAG_BLOCK) == 0)
-		{
-			bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, weilded_item->id, x, y, z, d);
-
-			return offset;
-		}
-
-		bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
-	}
-
 	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
 		return ERROR_NOT_ALLOWED;
 
@@ -119,20 +98,46 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	target_chunk = find_chunk_which_contains(client->world, x, y, z);
 	if (target_chunk == NULL)
 		return ERROR_UNEXPECTED;
-	else
-	{
-		uint8_t *placed_on;
 
-		placed_on = chunk_get_block(target_chunk, x, y, z);
-		if (placed_on == NULL)
-			return ERROR_NOT_ALLOWED;
-		else if (*placed_on == BLOCK_AIR)
-		{
-			client_add_inventory_item(client, item);
-			packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
-			return offset;
-		}
+	// They are building on to this block
+	placed_on = chunk_get_block(target_chunk, x, y, z);
+	if (placed_on == NULL)
+		return ERROR_NOT_ALLOWED;
+
+	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	item = item_find_or_create(weilded_item->id);
+
+	if (*placed_on == BLOCK_AIR)
+	{
+		/* Building on air, reject */
+		bedrock_log(LEVEL_DEBUG, "player building: Rejecting block placement for %s because they are building on air at %d, %d, %d", client->name, real_x, real_y, real_z);
+		client_add_inventory_item(client, item);
+		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
+		return offset;
 	}
+
+	bedrock_log(LEVEL_DEBUG, "player building: %s is building on %s with %s", client->name, item_find_or_create(*placed_on)->name, item->name);
+
+	/* Not holding an item? */
+	if (weilded_item->count == 0)
+	{
+		if (slot_data.id != -1)
+			return ERROR_UNEXPECTED;
+		else
+			return offset;
+	}
+
+	if ((item->flags & ITEM_FLAG_BLOCK) == 0)
+	{
+		bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, weilded_item->id, x, y, z, d);
+
+		client_add_inventory_item(client, item);
+		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
+
+		return offset;
+	}
+
+	bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
 
 	real_chunk = find_chunk_which_contains(client->world, real_x, real_y, real_z);
 	if (real_chunk == NULL)
@@ -150,45 +155,44 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 
 		real_chunk = chunk_create(col, real_y);
 	}
-	else
+
+	/* The new block wants to be placed here */
+	being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
+
+	if (being_placed == NULL || *being_placed != BLOCK_AIR)
 	{
-		uint8_t *being_placed;
-
-		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
-
-		if (being_placed == NULL || *being_placed != BLOCK_AIR)
-		{
-			client_add_inventory_item(client, item);
-			packet_send_block_change(client, real_x, real_y, real_z, being_placed != NULL ? *being_placed : BLOCK_AIR, 0);
-			return offset;
-		}
+		/* Being placed where something already is, reject */
+		bedrock_log(LEVEL_DEBUG, "player building: Rejecting block placement for %s because a block is already at %d, %d, %d", client->name, real_x, real_y, real_z);
+		client_add_inventory_item(client, item);
+		packet_send_block_change(client, real_x, real_y, real_z, being_placed != NULL ? *being_placed : BLOCK_AIR, 0);
+		return offset;
 	}
 
+	// This is the height right *above* the highest block
+	height = column_get_height_for(real_chunk->column, real_x, real_z);
+	if (real_y >= *height)
 	{
-		uint8_t *being_placed;
-		bedrock_node *node;
+		*height = real_y == 255 ? real_y : real_y + 1;
+		bedrock_log(LEVEL_DEBUG, "player building: Adjusting height map of %d,%d to %d", real_x, real_z, *height);
+	}
 
-		being_placed = chunk_get_block(real_chunk, real_x, real_y, real_z);
-		bedrock_assert(being_placed != NULL, return offset);
+	*being_placed = slot_data.id;
+	real_chunk->modified = true;
+	column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
 
-		// This is the height right *above* the highest block
-		height = column_get_height_for(real_chunk->column, real_x, real_z);
-		if (real_y >= *height)
-		{
-			*height = real_y == 255 ? real_y : real_y + 1;
-			bedrock_log(LEVEL_DEBUG, "player building: Adjusting height map of %d,%d to %d", real_x, real_z, *height);
-		}
+	// Notify clients who can see this column of the change
+	LIST_FOREACH(&real_chunk->column->players, node)
+	{
+		struct client *c = node->data;
+		packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
+	}
 
-		*being_placed = slot_data.id;
-		real_chunk->modified = true;
-		column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
-
-		// Notify clients who can see this column of the change
-		LIST_FOREACH(&real_chunk->column->players, node)
-		{
-			struct client *c = node->data;
-			packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
-		}
+	/* Build has now succeeded to us, remove an item from the player */
+	weilded_item->count -= 1;
+	if (!weilded_item->count)
+	{
+		weilded_item->id = 0;
+		weilded_item->metadata = 0;
 	}
 
 	return offset;
