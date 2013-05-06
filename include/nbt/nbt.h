@@ -1,4 +1,4 @@
-#include "nbt/tag.h"
+#include "tag.h"
 #include "util/buffer.h"
 
 extern nbt_tag *nbt_parse(const unsigned char *data, size_t size);

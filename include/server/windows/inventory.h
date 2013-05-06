@@ -1,3 +1,5 @@
+#ifndef BEDROCK_SERVER_WINDOWS_H
+#define BEDROCK_SERVER_WINDOWS_H
 
 enum
 {
@@ -51,3 +53,4 @@ enum
 	INVENTORY_HOTBAR_SIZE = 9
 };
 
+#endif // BEDROCK_SERVER_WINDOWS_H

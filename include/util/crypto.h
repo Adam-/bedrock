@@ -1,3 +1,4 @@
+#include <openssl/evp.h>
 
 extern void crypto_init();
 extern void crypto_shutdown();

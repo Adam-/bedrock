@@ -1,3 +1,6 @@
+#ifndef BEDROCK_SERVER_REGION_H
+#define BEDROCK_SERVER_REGION_H
+
 #include "nbt/tag.h"
 #include "util/thread.h"
 #include "util/buffer.h"
@@ -59,3 +62,5 @@ extern struct region *region_create(struct world *world, int x, int z);
 extern void region_free(struct region *region);
 /* Finds the region which contains the point x and z */
 extern struct region *find_region_which_contains(struct world *world, double x, double z);
+
+#endif // BEDROCK_SERVER_REGION_H

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 
@@ -21,8 +22,6 @@
 # define lseek _lseek
 # define inline
 #endif
-
-typedef enum bool { false, true } bool;
 
 #define bedrock_assert(var, what) \
 	if (!(var)) \

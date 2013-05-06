@@ -1,3 +1,6 @@
+#ifndef BEDROCK_SERVER_COLUMN_H
+#define BEDROCK_SERVER_COLUMN_H
+
 #include "server/region.h"
 #include "server/chunk.h"
 #include "config/hard.h"
@@ -70,3 +73,5 @@ extern void column_process_pending();
 /* Place a dropped item in the column */
 extern void column_add_item(struct column *column, struct dropped_item *di);
 extern void column_free_dropped_item(struct dropped_item *column);
+
+#endif // BEDROCK_SERVER_COLUMN_H
