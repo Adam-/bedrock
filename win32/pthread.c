@@ -47,6 +47,7 @@ int pthread_join(pthread_t thread, void **value)
 {
 	if (WaitForSingleObject(thread, INFINITE) == WAIT_FAILED)
 		return -1;
+	CloseHandle(thread);
 	return 0;
 }
 
