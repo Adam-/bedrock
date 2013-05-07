@@ -13,7 +13,7 @@ void packet_send_open_window(struct client *client, uint8_t type, const char *ti
 		use_title = 0;
 	}
 
-	++window_id;
+	while (++window_id == 0);
 	
 	packet_init(&packet, OPEN_WINDOW);
 
@@ -25,5 +25,7 @@ void packet_send_open_window(struct client *client, uint8_t type, const char *ti
 	packet_pack_int(&packet, &use_title, sizeof(use_title));
 
 	client_send_packet(client, &packet);
+
+	client->window = window_id;
 }
 

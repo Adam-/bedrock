@@ -154,3 +154,4 @@ extern struct block blocks[];
 
 extern struct block *block_find(enum block_type id);
 extern struct block *block_find_or_create(enum block_type id);
+extern struct block *block_find_by_name(const char *name);

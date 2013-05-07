@@ -106,3 +106,24 @@ struct item *item_find_or_create(enum item_type id)
 
 	return item;
 }
+
+struct item *item_find_by_name(const char *name)
+{
+	unsigned i;
+	struct block *block;
+
+	for (i = 0; i < sizeof(items) / sizeof(struct item); ++i)
+	{
+		struct item *item = &items[i];
+
+		if (!strcmp(name, item->name))
+			return item;
+	}
+
+	block = block_find_by_name(name);
+	if (block != NULL)
+		return item_find_or_create(block->id);
+
+	return NULL;
+}
+

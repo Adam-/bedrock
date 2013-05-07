@@ -75,6 +75,8 @@ struct client
 	int16_t selected_slot;                        /* slot the player has selected (weilded item) */
 	struct item_stack inventory[INVENTORY_SIZE];  /* player's inventory, weilded items, craft box, hot bar, etc */
 
+	uint8_t window;                    /* id of the window this client currently has open */
+
 	// Data kept while a player is dragging items on a Window
 	struct
 	{

@@ -1,6 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "server/column.h"
+#include "entities/entity.h"
 #include "nbt/nbt.h"
 #include "blocks/blocks.h"
 #include "windows/window.h"
@@ -38,6 +39,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	int32_t *height;
 
 	bedrock_node *node;
+	struct tile_entity *entity;
 
 	packet_read_int(p, &offset, &x, sizeof(x));
 	packet_read_int(p, &offset, &y, sizeof(y));
@@ -117,10 +119,12 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
 		return offset;
 	}
-	else if (*placed_on == BLOCK_CHEST)
+	
+	entity = column_find_tile_entity(target_chunk->column, x, y, z);
+	if (entity != NULL)
 	{
-		bedrock_log(LEVEL_DEBUG, "player building: %s opens chest at %d, %d, %d", client->name, real_x, real_y, real_z);
-		packet_send_open_window(client, WINDOW_CHEST, NULL, 27);
+		bedrock_log(LEVEL_DEBUG, "player building: %s operates entity %s at %d, %d, %d", client->name, item_find_or_create(entity->blockid)->name, real_x, real_y, real_z);
+		entity_operate(client, entity);
 		return offset;
 	}
 

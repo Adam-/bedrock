@@ -180,3 +180,19 @@ struct block *block_find_or_create(enum block_type id)
 
 	return block;
 }
+
+struct block *block_find_by_name(const char *name)
+{
+	unsigned i;
+
+	for (i = 0; i < sizeof(blocks) / sizeof(struct block); ++i)
+	{
+		struct block *block = &blocks[i];
+
+		if (!strcmp(name, block->name))
+			return block;
+	}
+
+	return NULL;
+}
+

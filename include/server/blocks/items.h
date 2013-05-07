@@ -203,5 +203,6 @@ extern struct item items[];
 
 extern struct item *item_find(enum item_type id);
 extern struct item *item_find_or_create(enum item_type id);
+extern struct item *item_find_by_name(const char *name);
 
 #endif // BEDROCK_BLOCKS_ITEMS_H

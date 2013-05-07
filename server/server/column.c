@@ -1,5 +1,6 @@
 #include "server/column.h"
 #include "server/client.h"
+#include "entities/entity.h"
 #include "nbt/nbt.h"
 #include "util/compression.h"
 #include "util/endian.h"
@@ -60,6 +61,8 @@ void column_load(struct column *column, nbt_tag *data)
 	tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 	byte_array = &tag->payload.tag_byte_array;
 	column->biomes = (uint8_t *) tag->payload.tag_byte_array.data;
+	
+	entity_load(column, data);
 }
 
 void column_free(struct column *column)
@@ -75,6 +78,9 @@ void column_free(struct column *column)
 
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);
+
+	column->tile_entities.free = (bedrock_free_func) entity_free;
+	bedrock_list_clear(&column->tile_entities);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);
@@ -306,3 +312,19 @@ void column_free_dropped_item(struct dropped_item *item)
 	bedrock_list_del(&item->column->items, item);
 	bedrock_free(item);
 }
+
+struct tile_entity *column_find_tile_entity(struct column *column, int32_t x, uint8_t y, int32_t z)
+{
+	bedrock_node *node;
+
+	LIST_FOREACH(&column->tile_entities, node)
+	{
+		struct tile_entity *entity = node->data;
+
+		if (entity->x == x && entity->y == y && entity->z == z)
+			return entity;
+	}
+
+	return NULL;
+}
+

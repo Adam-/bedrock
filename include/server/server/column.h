@@ -41,6 +41,9 @@ struct column
 
 	/* List of dropped_item structures for dropped items within the column */
 	bedrock_list items;
+
+	/* tile entities in this column */
+	bedrock_list tile_entities;
 };
 
 /* An item dropped on the map somewhere */
@@ -73,5 +76,7 @@ extern void column_process_pending();
 /* Place a dropped item in the column */
 extern void column_add_item(struct column *column, struct dropped_item *di);
 extern void column_free_dropped_item(struct dropped_item *column);
+
+extern struct tile_entity *column_find_tile_entity(struct column *column, int32_t x, uint8_t y, int32_t z);
 
 #endif // BEDROCK_SERVER_COLUMN_H
