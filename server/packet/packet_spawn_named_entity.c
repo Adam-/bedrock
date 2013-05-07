@@ -15,7 +15,7 @@ void packet_send_spawn_named_entity(struct client *client, struct client *c)
 	uint8_t count = 0, metadata = 0;
 	uint8_t b = 127;
 
-	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	weilded_item = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 	if (weilded_item->count)
 		item = item_find_or_create(weilded_item->id);
 	else

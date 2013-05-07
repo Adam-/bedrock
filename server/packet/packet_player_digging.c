@@ -16,7 +16,7 @@ enum
 
 static struct item *get_weilded_item(struct client *client)
 {
-	struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 	if (weilded_item->count)
 		return item_find_or_create(weilded_item->id);
 	return item_find_or_create(ITEM_NONE);
@@ -232,7 +232,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 	else if (status == DROP_ITEM)
 	{
 		/* Dropping currently held item */
-		struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+		struct item_stack *weilded_item = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 		if (weilded_item->count)
 		{
 			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
@@ -261,12 +261,12 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 
 			if (weilded_item->count)
 			{
-				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_0 + client->selected_slot, item_find_or_create(weilded_item->id), weilded_item->count, weilded_item->metadata);
+				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_START + client->selected_slot, item_find_or_create(weilded_item->id), weilded_item->count, weilded_item->metadata);
 			}
 			else
 			{
 				/* Item goes away */
-				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_0 + client->selected_slot, NULL, 0, 0);
+				packet_send_set_slot(client, WINDOW_INVENTORY, INVENTORY_HOTBAR_START + client->selected_slot, NULL, 0, 0);
 			}
 		}
 	}

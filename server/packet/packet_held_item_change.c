@@ -17,7 +17,7 @@ int packet_held_item_change(struct client *client, const bedrock_packet *p)
 	if (client->selected_slot < 0 || client->selected_slot >= INVENTORY_HOTBAR_SIZE)
 		return ERROR_UNEXPECTED;
 
-	stack = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	stack = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 	if (stack->count)
 		item = item_find_or_create(stack->id);
 	else

@@ -10,7 +10,7 @@
 #include "server/packet.h"
 #include "blocks/items.h"
 #include "server/oper.h"
-#include "windows/inventory.h"
+#include "windows/window.h"
 
 #ifdef WIN32
 #include "windows_time.h"
@@ -75,8 +75,6 @@ struct client
 	int16_t selected_slot;                        /* slot the player has selected (weilded item) */
 	struct item_stack inventory[INVENTORY_SIZE];  /* player's inventory, weilded items, craft box, hot bar, etc */
 
-	uint8_t window;                    /* id of the window this client currently has open */
-
 	// Data kept while a player is dragging items on a Window
 	struct
 	{
@@ -96,6 +94,19 @@ struct client
 		struct timespec end;
 	}
 	digging_data;
+
+	// Data kept while a window (tile entity) is open
+	struct
+	{
+		uint8_t id;
+		uint8_t type;
+
+		/* Coords of tile entity */
+		int32_t x;
+		uint8_t y;
+		int32_t z;
+	}
+	window_data;
 };
 
 extern bedrock_list client_list;

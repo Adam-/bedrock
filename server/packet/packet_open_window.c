@@ -26,6 +26,7 @@ void packet_send_open_window(struct client *client, uint8_t type, const char *ti
 
 	client_send_packet(client, &packet);
 
-	client->window = window_id;
+	client->window_data.id = window_id;
+	client->window_data.type = type;
 }
 

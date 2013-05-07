@@ -313,7 +313,7 @@ void column_free_dropped_item(struct dropped_item *item)
 	bedrock_free(item);
 }
 
-struct tile_entity *column_find_tile_entity(struct column *column, int32_t x, uint8_t y, int32_t z)
+struct tile_entity *column_find_tile_entity(struct column *column, int item, int32_t x, uint8_t y, int32_t z)
 {
 	bedrock_node *node;
 
@@ -322,7 +322,8 @@ struct tile_entity *column_find_tile_entity(struct column *column, int32_t x, ui
 		struct tile_entity *entity = node->data;
 
 		if (entity->x == x && entity->y == y && entity->z == z)
-			return entity;
+			if (!item || item == entity->blockid)
+				return entity;
 	}
 
 	return NULL;

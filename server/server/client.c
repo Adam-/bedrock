@@ -86,9 +86,9 @@ static void client_load_nbt(struct client *client, nbt_tag *tag)
 			uint8_t *count = nbt_read(i, TAG_BYTE, 1, "Count");
 			uint8_t *slot = nbt_read(i, TAG_BYTE, 1, "Slot");
 
-			bedrock_assert(*slot <= INVENTORY_SLOT_26, continue);
+			bedrock_assert(INVENTORY_START + *slot < INVENTORY_SIZE, continue);
 
-			stack = &client->inventory[INVENTORY_SLOT_0 + *slot];
+			stack = &client->inventory[INVENTORY_START + *slot];
 
 			stack->id = *id;
 			stack->count = *count;
@@ -202,7 +202,7 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 
 	/* Build data */
 	nbt_tag *inventory = nbt_add(client->data, TAG_LIST, "Inventory", NULL, 0);
-	for (i = INVENTORY_SLOT_0; i <= INVENTORY_HOTBAR_8; ++i)
+	for (i = INVENTORY_START; i < INVENTORY_SIZE; ++i)
 	{
 		struct item_stack *stack = &client->inventory[i];
 		uint8_t b;
@@ -211,7 +211,7 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 		nbt_add(slot, TAG_SHORT, "id", &stack->id, sizeof(stack->id));
 		nbt_add(slot, TAG_SHORT, "Damage", &stack->metadata, sizeof(stack->metadata));
 		nbt_add(slot, TAG_BYTE, "Count", &stack->count, sizeof(stack->count));
-		b = i - INVENTORY_SLOT_0;
+		b = i - INVENTORY_START;
 		nbt_add(slot, TAG_BYTE, "Slot", &b, sizeof(b));
 	}
 
@@ -564,7 +564,7 @@ bool client_can_add_inventory_item(struct client *client, struct item *item)
 {
 	int i;
 
-	for (i = INVENTORY_SLOT_0; i <= INVENTORY_HOTBAR_8; ++i)
+	for (i = INVENTORY_START; i < INVENTORY_SIZE; ++i)
 	{
 		struct item_stack *stack = &client->inventory[i];
 
@@ -586,7 +586,7 @@ void client_add_inventory_item(struct client *client, struct item *item)
 	bedrock_log(LEVEL_DEBUG, "client: Adding item %s to %s's inventory", item->name, client->name);
 
 	/* First find if we have another stack of this we can add to */
-	for (i = INVENTORY_SLOT_0; i <= INVENTORY_HOTBAR_8; ++i)
+	for (i = INVENTORY_START; i < INVENTORY_SIZE; ++i)
 	{
 		struct item_stack *stack = &client->inventory[i];
 
@@ -877,7 +877,7 @@ void client_finish_login_sequence(struct client *client)
 	packet_send_position_and_look(client);
 
 	/* Send inventory */
-	for (i = INVENTORY_SLOT_0; i <= INVENTORY_HOTBAR_8; ++i)
+	for (i = INVENTORY_START; i < INVENTORY_SIZE; ++i)
 	{
 		struct item_stack *stack = &client->inventory[i];
 

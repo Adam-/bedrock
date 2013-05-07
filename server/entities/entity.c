@@ -81,6 +81,10 @@ void entity_operate(struct client *client, struct tile_entity *entity)
 
 			packet_send_open_window(client, WINDOW_CHEST, NULL, ENTITY_CHEST_SLOTS);
 
+			client->window_data.x = entity->x;
+			client->window_data.y = entity->y;
+			client->window_data.z = entity->z;
+
 			for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
 			{
 				struct item_stack *stack = &chest->items[i];
@@ -88,7 +92,7 @@ void entity_operate(struct client *client, struct tile_entity *entity)
 				if (stack->id == 0)
 					continue;
 
-				packet_send_set_slot(client, client->window, i, item_find_or_create(stack->id), stack->count, stack->metadata);
+				packet_send_set_slot(client, client->window_data.id, i, item_find_or_create(stack->id), stack->count, stack->metadata);
 			}
 			break;
 		}

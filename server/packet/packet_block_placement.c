@@ -108,7 +108,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	if (placed_on == NULL)
 		return ERROR_NOT_ALLOWED;
 
-	weilded_item = &client->inventory[INVENTORY_HOTBAR_0 + client->selected_slot];
+	weilded_item = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 	item = item_find_or_create(weilded_item->id);
 
 	if (*placed_on == BLOCK_AIR)
@@ -120,7 +120,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		return offset;
 	}
 	
-	entity = column_find_tile_entity(target_chunk->column, x, y, z);
+	entity = column_find_tile_entity(target_chunk->column, ITEM_NONE, x, y, z);
 	if (entity != NULL)
 	{
 		bedrock_log(LEVEL_DEBUG, "player building: %s operates entity %s at %d, %d, %d", client->name, item_find_or_create(entity->blockid)->name, real_x, real_y, real_z);
