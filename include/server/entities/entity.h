@@ -11,8 +11,6 @@ struct tile_entity
 	int x;       /* Item coords */
 	int y;
 	int z;
-
-	nbt_tag *data; /* Data associated with item */
 };
 
 struct chest
@@ -24,5 +22,7 @@ struct chest
 
 
 extern void entity_load(struct column *column, nbt_tag *data);
+extern void entity_save(struct column *column);
+extern void entity_cleanup(struct column *column);
 extern void entity_free(struct tile_entity *entity);
 extern void entity_operate(struct client *client, struct tile_entity *entity);

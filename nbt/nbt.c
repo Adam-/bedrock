@@ -355,7 +355,12 @@ void nbt_free(nbt_tag *tag)
 	}
 
 	bedrock_free(tag->name);
+	nbt_clear(tag);
+	bedrock_free(tag);
+}
 
+void nbt_clear(nbt_tag *tag)
+{
 	switch (tag->type)
 	{
 		case TAG_BYTE_ARRAY:
@@ -376,10 +381,9 @@ void nbt_free(nbt_tag *tag)
 			bedrock_free(tag->payload.tag_int_array.data);
 			break;
 		default:
+			memset(&tag->payload, 0, sizeof(tag->payload));
 			break;
 	}
-
-	bedrock_free(tag);
 }
 
 static nbt_tag *nbt_get_from_valist(nbt_tag *tag, size_t size, va_list list)
@@ -478,7 +482,7 @@ void *nbt_read(nbt_tag *tag, nbt_tag_type type, size_t size, ...)
 	return &tag->payload;
 }
 
-char *nbt_read_string(nbt_tag *tag, size_t size, ...)
+const char *nbt_read_string(nbt_tag *tag, size_t size, ...)
 {
 	va_list list;
 	va_start(list, size);

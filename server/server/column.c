@@ -226,6 +226,19 @@ void column_set_pending(struct column *column, enum column_flag flag)
 	bedrock_list_add(&pending_updates, pc);
 }
 
+static bedrock_buffer *column_save_nbt(struct column *column)
+{
+	struct bedrock_buffer *buffer;
+
+	entity_save(column);
+
+	buffer = nbt_write(column->data);
+
+	entity_cleanup(column);
+
+	return buffer;
+}
+
 void column_process_pending()
 {
 	bedrock_node *node, *node2;
@@ -251,7 +264,7 @@ void column_process_pending()
 
 				bedrock_log(LEVEL_COLUMN, "column: Starting save for column %d,%d", column->x, column->z);
 
-				op->nbt_out = nbt_write(column->data);
+				op->nbt_out = column_save_nbt(column);
 
 				column->flags &= ~COLUMN_FLAG_DIRTY;
 				column->flags |= COLUMN_FLAG_WRITE;
@@ -322,7 +335,7 @@ struct tile_entity *column_find_tile_entity(struct column *column, int item, int
 		struct tile_entity *entity = node->data;
 
 		if (entity->x == x && entity->y == y && entity->z == z)
-			if (!item || item == entity->blockid)
+			if (item == ITEM_NONE || item == entity->blockid)
 				return entity;
 	}
 

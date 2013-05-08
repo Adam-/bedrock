@@ -44,6 +44,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	struct item_stack slot_data;
 	bool ok = true;
 
+	struct column *column = NULL;
 	struct item_stack *stack = NULL;
 	struct item_stack *slots[MAX_SLOTS];
 	int i;
@@ -74,7 +75,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			return ERROR_NOT_ALLOWED;
 		else if (client->window_data.type == WINDOW_CHEST)
 		{
-			struct column *column = find_column_from_world_which_contains(client->world, client->window_data.x, client->window_data.z);
+			column = find_column_from_world_which_contains(client->world, client->window_data.x, client->window_data.z);
 			struct chest *chest;
 
 			if (column == NULL)
@@ -463,6 +464,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	}
 
 	packet_send_confirm_transaction(client, window, action, ok);
+
+	/* This column is now dirty and needs to be rewritten */
+	if (ok && column)
+		column_set_pending(column, COLUMN_FLAG_DIRTY);
 
 	return offset;
 }
