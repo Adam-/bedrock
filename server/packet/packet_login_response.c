@@ -10,7 +10,7 @@ void packet_send_login_response(struct client *client)
 	int32_t game_type, dimension;
 	uint8_t b;
 
-	nbt_copy(client->world->data, TAG_INT, &game_type, sizeof(game_type), 2, "Data", "GameType");
+	nbt_copy(client->data, TAG_INT, &game_type, sizeof(game_type), 1, "playerGameType");
 	nbt_copy(client->data, TAG_INT, &dimension, sizeof(dimension), 1, "Dimension");
 
 	packet_init(&packet, LOGIN_RESPONSE);

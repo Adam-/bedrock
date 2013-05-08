@@ -2,6 +2,7 @@
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
 #include "command/command_fdlist.h"
+#include "command/command_gamemode.h"
 #include "command/command_help.h"
 #include "command/command_me.h"
 #include "command/command_memory.h"
@@ -18,6 +19,7 @@
 
 struct command commands[] = {
 	{"FDLIST",   "",                                    "shows file descriptors",                         0, 0, command_use_oper,   command_fdlist},
+	{"GAMEMODE", "<username> <mode>",                   "changes a user's gamemode",                      2, 2, command_use_oper,   command_gamemode},
 	{"HELP",     "",                                    "shows this message",                             0, 0, command_use_anyone, command_help},
 	{"ME",       "<action>",                            "performs an action",                             1, 1, command_use_anyone, command_me},
 	{"MEMORY",   "",                                    "shows memory usage",                             0, 0, command_use_oper,   command_memory},
@@ -71,7 +73,7 @@ void command_run(struct command_source *source, const char *buf)
 		*end++ = 0;
 
 	command = command_find(front);
-	if (command == NULL)
+	if (command == NULL || !command->can_use(source, command))
 		return;
 
 	if (command->max_parameters > MAX_PARAMETERS)
@@ -98,9 +100,6 @@ void command_run(struct command_source *source, const char *buf)
 		command_reply(source, "Syntax error, syntax is: %s", command->syntax);
 		return;
 	}
-
-	if (!command->can_use(source, command))
-		return;
 
 	{
 		int i;

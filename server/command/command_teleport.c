@@ -9,7 +9,7 @@ void command_teleport(struct command_source *source, int argc, const char **argv
 {
 	struct client *user_source = client_find(argv[1]);
 
-	if (source == NULL)
+	if (user_source == NULL)
 	{
 		command_reply(source, "No such user: %s", argv[1]);
 		return;
