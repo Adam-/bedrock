@@ -42,6 +42,7 @@ enum
 	CLICK_WINDOW                  = 0x66,
 	SET_SLOT                      = 0x67,
 	CONFIRM_TRANSACTION           = 0x6A,
+	CREATIVE_INVENTORY_ACTION     = 0x6B,
 	PLAYER_LIST                   = 0xC9,
 	CLIENT_SETTINGS               = 0xCC,
 	CLIENT_STATUS                 = 0xCD,

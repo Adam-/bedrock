@@ -102,9 +102,11 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 		bedrock_log(LEVEL_DEBUG, "click window: %s clicked slot %d clicked which contains %d %s", client->name, slot, stack->count, item_find_or_create(stack->id)->name);
 
+#if 0
 		for (i = 0; i < MAX_SLOTS; ++i)
 			if (slots[i] != NULL && slots[i]->id)
 				 bedrock_log(LEVEL_DEBUG, "click window: Slot %d contains %d %s", i, slots[i]->count, item_find_or_create(slots[i]->id)->name);
+#endif
 	}
 
 	// I clicked a valid slot with items in it
@@ -179,7 +181,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 						/* If we can hold more than is in this stack, take the whole stack */
 						if (can_hold >= client->drag_data.stack.count)
 						{
-							bedrock_log(LEVEL_DEBUG, "click window: %s adds %d items to slot %d", client->name, client->drag_data.stack.count, slot);
+							bedrock_log(LEVEL_DEBUG, "click window: %s adds %d items to slot %d, which now contains %d %s", client->name, client->drag_data.stack.count, slot, stack->count + client->drag_data.stack.count, item_find_or_create(stack->id)->name);
 
 							stack->count += client->drag_data.stack.count;
 
