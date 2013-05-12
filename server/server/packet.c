@@ -105,10 +105,15 @@ void packet_free(bedrock_packet *packet)
  */
 int packet_parse(struct client *client, const bedrock_packet *packet)
 {
-	uint8_t id = *packet->data;
+	uint8_t id;
 	int i;
+	struct packet_info *handler;
 
-	struct packet_info *handler = packet_find(id);
+	if (packet->length == 0)
+		return -1;
+
+	id = *packet->data;
+	handler = packet_find(id);
 	if (handler == NULL)
 	{
 		bedrock_log(LEVEL_WARN, "packet: Unrecognized packet 0x%02x from %s", id, client_get_ip(client));
