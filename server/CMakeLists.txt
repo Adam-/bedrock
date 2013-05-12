@@ -44,4 +44,7 @@ if(WIN32)
 else(WIN32)
   target_link_libraries(bedrock m rt)
 endif(WIN32)
+set_target_properties(bedrock PROPERTIES INSTALL_RPATH_USE_LINK_PATH ON BUILD_WITH_INSTALL_RPATH ON)
+
+install(TARGETS bedrock DESTINATION bin)
 

@@ -8,3 +8,5 @@ else(WIN32)
   target_link_libraries(util pthread)
 endif(WIN32)
 
+install(TARGETS util DESTINATION lib)
+
