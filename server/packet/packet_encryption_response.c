@@ -15,15 +15,17 @@ int packet_encryption_response(struct client *client, const bedrock_packet *p)
 	static const EVP_CIPHER *cipher;
 
 	packet_read_int(p, &offset, &shared_secret_len, sizeof(shared_secret_len));
-	bedrock_assert(shared_secret_len <= sizeof(shared_secret), ;);
+	if (shared_secret_len > sizeof(shared_secret))
+		return ERROR_NOT_ALLOWED;
 	packet_read(p, &offset, shared_secret, shared_secret_len);
 
 	packet_read_int(p, &offset, &verify_token_len, sizeof(verify_token_len));
-	bedrock_assert(verify_token_len <= sizeof(verify_token), ;);
+	if (verify_token_len > sizeof(verify_token))
+		return ERROR_NOT_ALLOWED;
 	packet_read(p, &offset, verify_token, verify_token_len);
 
 	crypto_rsa_decrypt(verify_token, verify_token_len, decrypted_verify_token, sizeof(decrypted_verify_token));
-	if (memcmp(decrypted_verify_token, crypto_auth_token(), BEDROCK_VERIFY_TOKEN_LEN))
+	if (offset <= ERROR_UNKNOWN || memcmp(decrypted_verify_token, crypto_auth_token(), BEDROCK_VERIFY_TOKEN_LEN))
 	{
 		packet_send_disconnect(client, "Invalid verify token");
 		return -1;
