@@ -33,6 +33,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 
 	struct item_stack *weilded_item;
 	struct item *item;
+	struct block *block;
 
 	struct chunk *target_chunk, *real_chunk;
 	uint8_t *placed_on, *being_placed;
@@ -49,6 +50,9 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	packet_read_int(p, &offset, &cursor_x, sizeof(cursor_x));
 	packet_read_int(p, &offset, &cursor_y, sizeof(cursor_y));
 	packet_read_int(p, &offset, &cursor_z, sizeof(cursor_z));
+
+	if (offset <= ERROR_UNKNOWN)
+		return offset;
 
 	real_x = x;
 	real_y = y;
@@ -192,13 +196,6 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	real_chunk->modified = true;
 	column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
 
-	// Notify clients who can see this column of the change
-	LIST_FOREACH(&real_chunk->column->players, node)
-	{
-		struct client *c = node->data;
-		packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
-	}
-
 	/* Build has now succeeded to us, remove an item from the player */
 	weilded_item->count -= 1;
 	if (!weilded_item->count)
@@ -206,6 +203,17 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		weilded_item->id = 0;
 		weilded_item->metadata = 0;
 	}
+
+	// Notify clients who can see this column of the change
+	LIST_FOREACH(&real_chunk->column->players, node)
+	{
+		struct client *c = node->data;
+		packet_send_block_change(c, real_x, real_y, real_z, slot_data.id, 0);
+	}
+
+	block = block_find(slot_data.id);
+	if (block != NULL && block->on_place != NULL)
+		block->on_place(client, target_chunk, real_x, real_y, real_z, block);
 
 	return offset;
 }

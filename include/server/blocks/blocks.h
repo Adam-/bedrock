@@ -1,3 +1,6 @@
+#ifndef BEDROCK_BLOCKS_BLOCKS_H
+#define BEDROCK_BLOCKS_BLOCKS_H
+
 #include "server/client.h"
 #include "blocks/items.h"
 #include "server/chunk.h"
@@ -148,10 +151,15 @@ struct block
 	enum item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
 	enum item_flags harvest;    /* Item and type required to harvest this block. */
 	void (*on_harvest)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *); /* Called when a block should be harvested. */
+	void (*on_place)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *block); /* Called when this block is placed */
 };
+
+extern void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block);
 
 extern struct block blocks[];
 
 extern struct block *block_find(enum block_type id);
 extern struct block *block_find_or_create(enum block_type id);
 extern struct block *block_find_by_name(const char *name);
+
+#endif
