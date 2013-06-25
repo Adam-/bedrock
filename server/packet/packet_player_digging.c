@@ -5,6 +5,7 @@
 #include "nbt/nbt.h"
 #include "packet/packet_block_change.h"
 #include "packet/packet_set_slot.h"
+#include "packet/packet_change_game_state.h"
 #include "windows/window.h"
 
 enum
@@ -105,12 +106,15 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 	uint8_t y;
 	int32_t z;
 	uint8_t face;
+	int gametype;
 
 	packet_read_int(p, &offset, &status, sizeof(status));
 	packet_read_int(p, &offset, &x, sizeof(x));
 	packet_read_int(p, &offset, &y, sizeof(y));
 	packet_read_int(p, &offset, &z, sizeof(z));
 	packet_read_int(p, &offset, &face, sizeof(face));
+
+	nbt_copy(client->data, TAG_INT, &gametype, sizeof(gametype), 1, "playerGameType");
 
 	if (status == STARTED_DIGGING)
 	{
@@ -143,20 +147,27 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		if (delay < 0)
 			return offset;
 
-		client->digging_data.x = x;
-		client->digging_data.y = y;
-		client->digging_data.z = z;
-		client->digging_data.block_id = block->id;
-		client->digging_data.item_id = item->id;
-		client->digging_data.end.tv_sec = bedrock_time.tv_sec + delay / 1;
-		client->digging_data.end.tv_nsec = bedrock_time.tv_nsec + modulus(delay, 1.0);
-		if (client->digging_data.end.tv_nsec >= 1000000000)
+		if (gametype == GAMEMODE_CREATIVE)
 		{
-			++client->digging_data.end.tv_sec;
-			client->digging_data.end.tv_nsec -= 1000000000;
+			status = FINISHED_DIGGING;
+		}
+		else
+		{
+			client->digging_data.x = x;
+			client->digging_data.y = y;
+			client->digging_data.z = z;
+			client->digging_data.block_id = block->id;
+			client->digging_data.item_id = item->id;
+			client->digging_data.end.tv_sec = bedrock_time.tv_sec + delay / 1;
+			client->digging_data.end.tv_nsec = bedrock_time.tv_nsec + modulus(delay, 1.0);
+			if (client->digging_data.end.tv_nsec >= 1000000000)
+			{
+				++client->digging_data.end.tv_sec;
+				client->digging_data.end.tv_nsec -= 1000000000;
+			}
 		}
 	}
-	else if (status == FINISHED_DIGGING)
+	if (status == FINISHED_DIGGING)
 	{
 		struct item *item = get_weilded_item(client);
 		struct chunk *chunk;
@@ -177,20 +188,27 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		if (block_id == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end.tv_sec == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
+		if (gametype == GAMEMODE_CREATIVE)
 		{
-			bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %d I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
-					client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end.tv_sec, client->digging_data.item_id, client->digging_data.block_id,
-					x, y, z, item->id, *block_id);
-
-			packet_send_block_change(client, x, y, z, *block_id, 0);
-			return offset;
+			bedrock_log(LEVEL_DEBUG, "player digging: Instant mine for %s at %d,%d,%d", client->name, x, y, z);
 		}
-
-		if (bedrock_time.tv_sec < client->digging_data.end.tv_sec || (bedrock_time.tv_sec == client->digging_data.end.tv_sec && bedrock_time.tv_nsec < client->digging_data.end.tv_nsec))
+		else
 		{
-			packet_send_block_change(client, x, y, z, *block_id, 0);
-			return offset;
+			if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end.tv_sec == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
+			{
+				bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %d I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
+						client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end.tv_sec, client->digging_data.item_id, client->digging_data.block_id,
+						x, y, z, item->id, *block_id);
+
+				packet_send_block_change(client, x, y, z, *block_id, 0);
+				return offset;
+			}
+
+			if (bedrock_time.tv_sec < client->digging_data.end.tv_sec || (bedrock_time.tv_sec == client->digging_data.end.tv_sec && bedrock_time.tv_nsec < client->digging_data.end.tv_nsec))
+			{
+				packet_send_block_change(client, x, y, z, *block_id, 0);
+				return offset;
+			}
 		}
 
 		block = block_find_or_create(*block_id);
