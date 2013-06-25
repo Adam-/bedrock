@@ -1,8 +1,4 @@
 #include "entities/entity.h"
-#include "blocks/blocks.h"
-#include "windows/window.h"
-#include "packet/packet_open_window.h"
-#include "packet/packet_set_slot.h"
 
 /* load entities from data and put them into column */
 void entity_load(struct column *column, nbt_tag *data)
