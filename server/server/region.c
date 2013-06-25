@@ -299,7 +299,7 @@ static void region_worker_write(struct region_operation *op)
 
 	// Pad the end
 	j = BEDROCK_REGION_SECTOR_SIZE - ((cb->buffer->length + 5) % BEDROCK_REGION_SECTOR_SIZE);
-	bedrock_log(LEVEL_DEBUG, "column: Finished writing compressed NBT structure, file requires an additional %d bytes of padding", j);
+	bedrock_log(LEVEL_DEBUG, "column: Finished writing compressed NBT structure, section requires an additional %d bytes of padding", j);
 	memset(padding, 0, j);
 	if (write(region->fd.fd, padding, j) != j)
 	{

@@ -150,11 +150,11 @@ struct block
 	double no_harvest_time;             /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
 	enum item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
 	enum item_flags harvest;    /* Item and type required to harvest this block. */
-	void (*on_harvest)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *); /* Called when a block should be harvested. */
+	void (*on_mine)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest); /* Called when a block is mined */
 	void (*on_place)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *block); /* Called when this block is placed */
 };
 
-extern void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block);
+extern void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest);
 
 extern struct block blocks[];
 

@@ -3,8 +3,11 @@
 #include "server/column.h"
 #include "entities/entity.h"
 
-void simple_drop(struct client bedrock_attribute_unused *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block)
+void simple_drop(struct client bedrock_attribute_unused *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest)
 {
+	if (!harvest)
+		return;
+
 	struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
 	di->item = item_find_or_create(block->id);
 	di->count = 1;
@@ -65,7 +68,7 @@ struct block blocks[] = {
 	{BLOCK_FIRE,                  "Fire",                0.05, 0.05,  ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             simple_drop, NULL},
 	{BLOCK_MONSTER_SPAWNER,       "Monster Spawner",     7.5,  25,    ITEM_FLAG_PICKAXE,                          ITEM_FLAG_NONE,                             simple_drop, NULL},
 	{BLOCK_WOODEN_STAIRS,         "Wooden Stairs",       3,    10,    ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             simple_drop, NULL},
-	{BLOCK_CHEST,                 "Chest",               3.75, 3.75,  ITEM_FLAG_AXE,                              ITEM_FLAG_AXE,                              chest_harvest, chest_place},
+	{BLOCK_CHEST,                 "Chest",               3.75, 3.75,  ITEM_FLAG_AXE,                              ITEM_FLAG_AXE,                              chest_mine, chest_place},
 	{BLOCK_REDSTONE_WIRE,         "Redstone",            0.05, 0.05,  ITEM_FLAG_NONE,                             ITEM_FLAG_NONE,                             simple_drop, NULL},
 	{BLOCK_DIAMOND_ORE,           "Diamond Ore",         7.5,  15,    ITEM_FLAG_PICKAXE | TOOL_TYPE_MASK_IRON,    ITEM_FLAG_PICKAXE | TOOL_TYPE_MASK_IRON,    simple_drop, NULL},
 	{BLOCK_DIAMOND,               "Block of Diamond",    7.5,  25,    ITEM_FLAG_PICKAXE | TOOL_TYPE_MASK_IRON,    ITEM_FLAG_PICKAXE | TOOL_TYPE_MASK_IRON,    simple_drop, NULL},
@@ -174,7 +177,8 @@ struct block *block_find_or_create(enum block_type id)
 		b.no_harvest_time = 0;
 		b.weakness = ITEM_FLAG_NONE;
 		b.harvest = ITEM_FLAG_NONE;
-		b.on_harvest = NULL;
+		b.on_mine = NULL;
+		b.on_place = NULL;
 
 		block = &b;
 	}

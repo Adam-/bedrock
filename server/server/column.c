@@ -291,7 +291,7 @@ void column_add_item(struct column *column, struct dropped_item *di)
 {
 	bedrock_node *node;
 
-	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s in at %f,%f,%f", di->item->name, di->x, di->y, di->z);
+	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s (%d) at %f,%f,%f", di->item->name, di->count, di->x, di->y, di->z);
 
 	bedrock_assert(di->eid == 0, ;);
 	di->eid = ++entity_id;

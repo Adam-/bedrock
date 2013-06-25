@@ -30,6 +30,6 @@ extern void entity_operate(struct client *client, struct tile_entity *entity);
 extern struct tile_entity *chest_load(nbt_tag *tag);
 extern void chest_save(nbt_tag *tag, struct tile_entity *entity);
 extern void chest_operate(struct client *client, struct tile_entity *entity);
-extern void chest_harvest(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *);
+extern void chest_mine(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *block, bool can_harvest);
 extern void chest_place(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block);
 

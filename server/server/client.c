@@ -561,7 +561,7 @@ bool client_can_add_inventory_item(struct client *client, struct item *item)
 	return false;
 }
 
-void client_add_inventory_item(struct client *client, struct item *item)
+bool client_add_inventory_item(struct client *client, struct item *item)
 {
 	int empty_pos = -1;
 	struct item_stack *empty = NULL;
@@ -591,18 +591,20 @@ void client_add_inventory_item(struct client *client, struct item *item)
 
 			packet_send_set_slot(client, WINDOW_INVENTORY, i, item, stack->count, stack->metadata);
 
-			return;
+			return true;
 		}
 	}
 
 	if (empty == NULL)
-		return; // No empty slots
+		return false; // No empty slots
 	
 	empty->id = item->id;
 	empty->count = 1;
 	empty->metadata = 0; // XXX?
 
 	packet_send_set_slot(client, WINDOW_INVENTORY, empty_pos, item, empty->count, empty->metadata);
+
+	return true;
 }
 
 static void client_update_column(struct client *client, packet_column_bulk *columns, struct column *column)
@@ -821,13 +823,19 @@ void client_update_position(struct client *client, double x, double y, double z,
 
 			if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
 			{
-				bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
+				while (di->count && client_add_inventory_item(client, di->item))
+					--di->count;
 
-				packet_send_collect_item(client, di);
-
-				client_add_inventory_item(client, di->item);
-
-				column_free_dropped_item(di);
+				if (!di->count)
+				{
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
+					packet_send_collect_item(client, di);
+					column_free_dropped_item(di);
+				}
+				else
+				{
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up all but %d item %s at %d,%d,%d", client->name, di->count, di->item->name, di->x, di->y, di->z);
+				}
 			}
 		}
 }

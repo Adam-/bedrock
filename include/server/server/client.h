@@ -138,7 +138,7 @@ extern const char *client_get_ip(struct client *client);
 extern bool client_valid_username(const char *name);
 
 extern bool client_can_add_inventory_item(struct client *client, struct item *item);
-extern void client_add_inventory_item(struct client *client, struct item *item);
+extern bool client_add_inventory_item(struct client *client, struct item *item);
 
 extern void client_update_columns(struct client *client);
 extern void client_update_players(struct client *client);

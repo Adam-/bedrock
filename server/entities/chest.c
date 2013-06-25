@@ -85,9 +85,36 @@ void chest_operate(struct client *client, struct tile_entity *entity)
 	}
 }
 
-void chest_harvest(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block)
+void chest_mine(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest)
 {
-	simple_drop(client, chunk, x, y, z, block);
+	struct chest *chest;
+	
+	simple_drop(client, chunk, x, y, z, block, harvest);
+
+	chest = (struct chest *) column_find_tile_entity(chunk->column, BLOCK_CHEST, x, y, z);
+	if (chest != NULL)
+	{
+		int i;
+		for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
+		{
+			struct item_stack *item = &chest->items[i];
+
+			if (!item->count)
+				continue;
+
+			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
+			di->item = item_find_or_create(item->id);
+			di->count = item->count;
+			di->data = item->metadata;
+			di->x = x;
+			di->y = y;
+			di->z = z;
+			column_add_item(chunk->column, di);
+		}
+
+		bedrock_list_del(&chunk->column->tile_entities, chest);
+		bedrock_free(chest);
+	}
 }
 
 void chest_place(struct client bedrock_attribute_unused *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block bedrock_attribute_unused *block)

@@ -237,8 +237,8 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 			packet_send_block_change(c, x, y, z, BLOCK_AIR, 0);
 		}
 
-		if (block->on_harvest != NULL && can_harvest(block, item))
-			block->on_harvest(client, chunk, x, y, z, block);
+		if (block->on_mine != NULL)
+			block->on_mine(client, chunk, x, y, z, block, can_harvest(block, item));
 
 		// If the chunk is all air delete it;
 		for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)
