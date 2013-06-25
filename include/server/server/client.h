@@ -62,7 +62,7 @@ struct client
 	double z;
 	float yaw;
 	float pitch;
-	bool on_ground;
+	uint8_t on_ground;
 
 	struct oper *oper;            /* set if this player is an operator */
 

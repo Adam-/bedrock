@@ -47,7 +47,7 @@ void packet_send_position_and_look(struct client *client)
 	packet_pack_int(&packet, &client->z, sizeof(client->z)); // Z
 	packet_pack_int(&packet, &client->yaw, sizeof(client->yaw)); // Yaw
 	packet_pack_int(&packet, &client->pitch, sizeof(client->pitch)); // Pitch
-	packet_pack_int(&packet, &client->on_ground, sizeof(uint8_t)); // On ground
+	packet_pack_int(&packet, &client->on_ground, sizeof(client->on_ground)); // On ground
 
 	client_send_packet(client, &packet);
 }

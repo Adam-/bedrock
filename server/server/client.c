@@ -103,6 +103,7 @@ static void client_load_nbt(struct client *client, nbt_tag *tag)
 	nbt_copy(tag, TAG_DOUBLE, &client->z, sizeof(client->z), 2, "Pos", 2);
 	nbt_copy(tag, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
 	nbt_copy(tag, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
+	nbt_copy(tag, TAG_BYTE, &client->on_ground, sizeof(client->on_ground), 1, "OnGround");
 
 	client->data = tag;
 }
@@ -226,6 +227,7 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 	nbt_set(client->data, TAG_DOUBLE, &client->z, sizeof(client->z), 2, "Pos", 2);
 	nbt_set(client->data, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
 	nbt_set(client->data, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
+	nbt_set(client->data, TAG_BYTE, &client->on_ground, sizeof(client->on_ground), 1, "OnGround");
 
 	buffer = nbt_write(client->data);
 
@@ -777,6 +779,8 @@ void client_update_position(struct client *client, double x, double y, double z,
 		client->pitch = pitch;
 	if (client->stance != stance)
 		client->stance = stance;
+	if (client->on_ground != on_ground)
+		client->on_ground = on_ground;
 
 	c_x = (x - old_x) * 32;
 	c_y = (y - old_y) * 32;
