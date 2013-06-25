@@ -45,16 +45,24 @@ struct client
 
 	EVP_CIPHER_CTX in_cipher_ctx, out_cipher_ctx; /* Crypto contexts for in and out data */
 
-	uint32_t id;                         /* unique entity id, shared across players and NPCs */
-	enum client_authentication_state authenticated;
-
 	unsigned char in_buffer[BEDROCK_CLIENT_RECVQ_LENGTH];
 	size_t in_buffer_len;
 
 	bedrock_list out_buffer;              /* list of packets to send, these are already encrypted! */
 
+	uint32_t id;                         /* unique entity id, shared across players and NPCs */
+	enum client_authentication_state authenticated;
+
+
 	char name[BEDROCK_USERNAME_MAX];
 	char ip[INET6_ADDRSTRLEN];
+
+	double x;
+	double y;
+	double z;
+	float yaw;
+	float pitch;
+	bool on_ground;
 
 	struct oper *oper;            /* set if this player is an operator */
 
@@ -128,13 +136,6 @@ extern void client_send_packet(struct client *client, bedrock_packet *packet);
 extern const char *client_get_ip(struct client *client);
 
 extern bool client_valid_username(const char *name);
-
-extern double *client_get_pos_x(struct client *client);
-extern double *client_get_pos_y(struct client *client);
-extern double *client_get_pos_z(struct client *client);
-extern float *client_get_yaw(struct client *client);
-extern float *client_get_pitch(struct client *client);
-extern uint8_t *client_get_on_ground(struct client *client);
 
 extern bool client_can_add_inventory_item(struct client *client, struct item *item);
 extern void client_add_inventory_item(struct client *client, struct item *item);

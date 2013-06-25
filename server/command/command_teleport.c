@@ -37,7 +37,7 @@ void command_teleport(struct command_source *source, int argc, const char **argv
 
 		command_reply(source, "Teleporting %s to %s", user_source->name, target->name);
 
-		client_update_position(user_source, *client_get_pos_x(target), *client_get_pos_y(target), *client_get_pos_z(target), *client_get_yaw(user_source), *client_get_pitch(user_source), target->stance, *client_get_on_ground(target));
+		client_update_position(user_source, target->x, target->y, target->z, user_source->yaw, user_source->pitch, target->stance, target->on_ground);
 		packet_send_entity_teleport(user_source, user_source);
 	}
 	else if (argc == 5)
@@ -74,7 +74,7 @@ void command_teleport(struct command_source *source, int argc, const char **argv
 
 		command_reply(source, "Teleporting %s to %d, %d, %d", user_source->name, long_x, long_y, long_z);
 
-		client_update_position(user_source, long_x, long_y, long_z, *client_get_yaw(user_source), *client_get_pitch(user_source), user_source->stance, *client_get_on_ground(user_source));
+		client_update_position(user_source, long_x, long_y, long_z, user_source->yaw, user_source->pitch, user_source->stance, user_source->on_ground);
 		packet_send_entity_teleport(user_source, user_source);
 	}
 	else

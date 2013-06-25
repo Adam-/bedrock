@@ -99,7 +99,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 			return ERROR_NOT_ALLOWED;
 	}
 
-	if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
+	if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
 		return ERROR_NOT_ALLOWED;
 
 	// They are building onto a block in this chunk

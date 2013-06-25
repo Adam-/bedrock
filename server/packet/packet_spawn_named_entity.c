@@ -8,7 +8,6 @@ void packet_send_spawn_named_entity(struct client *client, struct client *c)
 {
 	bedrock_packet packet;
 	uint32_t abs_x, abs_y, abs_z;
-	float yaw, pitch;
 	int8_t y, p;
 	struct item_stack *weilded_item;
 	struct item *item;
@@ -21,15 +20,12 @@ void packet_send_spawn_named_entity(struct client *client, struct client *c)
 	else
 		item = item_find_or_create(ITEM_NONE);
 
-	abs_x = *client_get_pos_x(c) * 32;
-	abs_y = *client_get_pos_y(c) * 32;
-	abs_z = *client_get_pos_z(c) * 32;
+	abs_x = c->x * 32;
+	abs_y = c->y * 32;
+	abs_z = c->z * 32;
 
-	yaw = *client_get_yaw(c);
-	pitch = *client_get_pitch(c);
-
-	y = (yaw / 360.0) * 256;
-	p = (pitch / 360.0) * 256;
+	y = (c->yaw / 360.0) * 256;
+	p = (c->pitch / 360.0) * 256;
 
 	packet_init(&packet, SPAWN_NAMED_ENTITY);
 

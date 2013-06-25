@@ -343,9 +343,9 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				di->item = item_find_or_create(client->drag_data.stack.id);
 				di->count = client->drag_data.stack.count;
 				di->data = client->drag_data.stack.metadata;
-				di->x = *client_get_pos_x(client);
-				di->y = *client_get_pos_y(client);
-				di->z = *client_get_pos_z(client);
+				di->x = client->x;
+				di->y = client->y;
+				di->z = client->z;
 
 				// XXX put in the direction the user is facing
 				di->x += rand() % 4;

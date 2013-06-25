@@ -4,7 +4,7 @@
 void packet_send_entity_head_look(struct client *client, struct client *target)
 {
 	bedrock_packet packet;
-	int8_t new_y = (*client_get_yaw(target) / 360.0) * 256;
+	int8_t new_y = (target->yaw / 360.0) * 256;
 
 	packet_init(&packet, ENTITY_HEAD_LOOK);
 

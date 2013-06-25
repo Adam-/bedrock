@@ -8,7 +8,7 @@ int packet_player(struct client *client, const bedrock_packet *p)
 
 	packet_read_int(p, &offset, &on_ground, sizeof(on_ground));
 
-	client_update_position(client, *client_get_pos_x(client), *client_get_pos_y(client), *client_get_pos_z(client), *client_get_yaw(client), *client_get_pitch(client), client->stance, on_ground);
+	client_update_position(client, client->x, client->y, client->z, client->yaw, client->pitch, client->stance, on_ground);
 
 	return offset;
 }

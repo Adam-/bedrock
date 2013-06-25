@@ -124,7 +124,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		double delay;
 		struct item *item = get_weilded_item(client);
 
-		if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
+		if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
 			return ERROR_NOT_ALLOWED;
 
 		// Reset dig state
@@ -177,7 +177,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		bedrock_node *node;
 		int i;
 
-		if (abs(*client_get_pos_x(client) - x) > 6 || abs(*client_get_pos_y(client) - y) > 6 || abs(*client_get_pos_z(client) - z) > 6)
+		if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
 			return ERROR_NOT_ALLOWED;
 
 		chunk = find_chunk_which_contains(client->world, x, y, z);
@@ -259,9 +259,9 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 			di->item = item_find_or_create(weilded_item->id);
 			di->count = 1;
 			di->data = weilded_item->metadata;
-			di->x = *client_get_pos_x(client);
-			di->y = *client_get_pos_y(client);
-			di->z = *client_get_pos_z(client);
+			di->x = client->x;
+			di->y = client->y;
+			di->z = client->z;
 
 			// XXX put in the direction the user is facing
 			di->x += rand() % 4;

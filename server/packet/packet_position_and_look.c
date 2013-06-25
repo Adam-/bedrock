@@ -17,7 +17,7 @@ int packet_position_and_look(struct client *client, const bedrock_packet *p)
 	packet_read_int(p, &offset, &pitch, sizeof(pitch));
 	packet_read_int(p, &offset, &on_ground, sizeof(on_ground));
 
-	if (!(client->authenticated & STATE_BURSTING) && (abs(x - *client_get_pos_x(client)) > 100 || abs(z - *client_get_pos_z(client)) > 100))
+	if (!(client->authenticated & STATE_BURSTING) && (abs(x - client->x) > 100 || abs(z - client->z) > 100))
 	{
 		packet_send_disconnect(client, "Moving too fast");
 		return offset;
@@ -35,19 +35,19 @@ void packet_send_position_and_look(struct client *client)
 	packet_init(&packet, PLAYER_POS_LOOK);
 
 	packet_pack_header(&packet, PLAYER_POS_LOOK);
-	packet_pack_int(&packet, client_get_pos_x(client), sizeof(double)); // X
+	packet_pack_int(&packet, &client->x, sizeof(client->x)); // X
 	if (client->stance)
 		packet_pack_int(&packet, &client->stance, sizeof(client->stance)); // Stance
 	else
 	{
-		double d = *client_get_pos_y(client) + 2;
+		double d = client->y + 2;
 		packet_pack_int(&packet, &d, sizeof(d)); // Stance
 	}
-	packet_pack_int(&packet, client_get_pos_y(client), sizeof(double)); // Y
-	packet_pack_int(&packet, client_get_pos_z(client), sizeof(double)); // Z
-	packet_pack_int(&packet, client_get_yaw(client), sizeof(float)); // Yaw
-	packet_pack_int(&packet, client_get_pitch(client), sizeof(float)); // Pitch
-	packet_pack_int(&packet, client_get_on_ground(client), sizeof(uint8_t)); // On ground
+	packet_pack_int(&packet, &client->y, sizeof(client->y)); // Y
+	packet_pack_int(&packet, &client->z, sizeof(client->z)); // Z
+	packet_pack_int(&packet, &client->yaw, sizeof(client->yaw)); // Yaw
+	packet_pack_int(&packet, &client->pitch, sizeof(client->pitch)); // Pitch
+	packet_pack_int(&packet, &client->on_ground, sizeof(uint8_t)); // On ground
 
 	client_send_packet(client, &packet);
 }

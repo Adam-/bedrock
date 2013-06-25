@@ -98,6 +98,12 @@ static void client_load_nbt(struct client *client, nbt_tag *tag)
 		nbt_free(inventory);
 	}
 
+	nbt_copy(tag, TAG_DOUBLE, &client->x, sizeof(client->x), 2, "Pos", 0);
+	nbt_copy(tag, TAG_DOUBLE, &client->y, sizeof(client->y), 2, "Pos", 1);
+	nbt_copy(tag, TAG_DOUBLE, &client->z, sizeof(client->z), 2, "Pos", 2);
+	nbt_copy(tag, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
+	nbt_copy(tag, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
+
 	client->data = tag;
 }
 
@@ -214,6 +220,12 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 		b = i - INVENTORY_START;
 		nbt_add(slot, TAG_BYTE, "Slot", &b, sizeof(b));
 	}
+
+	nbt_set(client->data, TAG_DOUBLE, &client->x, sizeof(client->x), 2, "Pos", 0);
+	nbt_set(client->data, TAG_DOUBLE, &client->y, sizeof(client->y), 2, "Pos", 1);
+	nbt_set(client->data, TAG_DOUBLE, &client->z, sizeof(client->z), 2, "Pos", 2);
+	nbt_set(client->data, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
+	nbt_set(client->data, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
 
 	buffer = nbt_write(client->data);
 
@@ -530,36 +542,6 @@ bool client_valid_username(const char *name)
 	return true;
 }
 
-double *client_get_pos_x(struct client *client)
-{
-	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 0);
-}
-
-double *client_get_pos_y(struct client *client)
-{
-	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 1);
-}
-
-double *client_get_pos_z(struct client *client)
-{
-	return nbt_read(client->data, TAG_DOUBLE, 2, "Pos", 2);
-}
-
-float *client_get_yaw(struct client *client)
-{
-	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 0);
-}
-
-float *client_get_pitch(struct client *client)
-{
-	return nbt_read(client->data, TAG_FLOAT, 2, "Rotation", 1);
-}
-
-uint8_t *client_get_on_ground(struct client *client)
-{
-	return nbt_read(client->data, TAG_BYTE, 1, "OnGround");
-}
-
 bool client_can_add_inventory_item(struct client *client, struct item *item)
 {
 	int i;
@@ -639,8 +621,7 @@ void client_update_columns(struct client *client)
 	struct column *c;
 	bedrock_node *node, *node2;
 	/* Player coords */
-	double x = *client_get_pos_x(client), z = *client_get_pos_z(client);
-	double player_x = x / BEDROCK_BLOCKS_PER_CHUNK, player_z = z / BEDROCK_BLOCKS_PER_CHUNK;
+	double player_x = client->x / BEDROCK_BLOCKS_PER_CHUNK, player_z = client->z / BEDROCK_BLOCKS_PER_CHUNK;
 	packet_column_bulk columns = PACKET_COLUMN_BULK_INIT;
 	bool finish = false;
 
@@ -677,10 +658,10 @@ void client_update_columns(struct client *client)
 	}
 
 	/* Region the player is in */
-	region = find_region_which_contains(client->world, x, z);
+	region = find_region_which_contains(client->world, client->x, client->z);
 	bedrock_assert(region != NULL, return);
 
-	client->column = c = find_column_which_contains(region, x, z);
+	client->column = c = find_column_which_contains(region, client->x, client->z);
 
 	if (c != NULL)
 		if (bedrock_list_has_data(&client->columns, c) == false)
@@ -699,9 +680,9 @@ void client_update_columns(struct client *client)
 		/* First, go from -i,i to i,i (exclusive) */
 		for (j = -i; j < i; ++j)
 		{
-			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
+			region = find_region_which_contains(client->world, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z + (i * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
-			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z + (i * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z + (i * BEDROCK_BLOCKS_PER_CHUNK));
 
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -712,9 +693,9 @@ void client_update_columns(struct client *client)
 		/* Next, go from i,i to i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
-			region = find_region_which_contains(client->world, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			region = find_region_which_contains(client->world, client->x + (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
-			c = find_column_which_contains(region, x + (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, client->x + (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -725,9 +706,9 @@ void client_update_columns(struct client *client)
 		/* Next, go from i,-i to -i,-i (exclusive) */
 		for (j = i; j > -i; --j)
 		{
-			region = find_region_which_contains(client->world, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+			region = find_region_which_contains(client->world, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
-			c = find_column_which_contains(region, x + (j * BEDROCK_BLOCKS_PER_CHUNK), z - (i * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -738,9 +719,9 @@ void client_update_columns(struct client *client)
 		/* Next, go from -i,-i to -i,i (exclusive) */
 		for (j = -i; j < i; ++j)
 		{
-			region = find_region_which_contains(client->world, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			region = find_region_which_contains(client->world, client->x - (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
-			c = find_column_which_contains(region, x - (i * BEDROCK_BLOCKS_PER_CHUNK), z + (j * BEDROCK_BLOCKS_PER_CHUNK));
+			c = find_column_which_contains(region, client->x - (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 
 			if (c == NULL || bedrock_list_has_data(&client->columns, c))
 				continue;
@@ -759,10 +740,10 @@ void client_update_columns(struct client *client)
 /* Called to update a players position */
 void client_update_position(struct client *client, double x, double y, double z, float yaw, float pitch, double stance, uint8_t on_ground)
 {
-	double old_x = *client_get_pos_x(client), old_y = *client_get_pos_y(client), old_z = *client_get_pos_z(client);
-	float old_yaw = *client_get_yaw(client), old_pitch = *client_get_pitch(client);
+	double old_x = client->x, old_y = client->y, old_z = client->z;
+	float old_yaw = client->yaw, old_pitch = client->pitch;
 	double old_stance = client->stance;
-	uint8_t old_on_ground = *client_get_on_ground(client);
+	uint8_t old_on_ground = client->on_ground;
 
 	double old_column_x = old_x / BEDROCK_BLOCKS_PER_CHUNK, old_column_z = old_z / BEDROCK_BLOCKS_PER_CHUNK,
 			new_column_x = x / BEDROCK_BLOCKS_PER_CHUNK, new_column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
@@ -785,15 +766,15 @@ void client_update_position(struct client *client, double x, double y, double z,
 		return;
 
 	if (old_x != x)
-		nbt_set(client->data, TAG_DOUBLE, &x, sizeof(x), 2, "Pos", 0);
+		client->x = x;
 	if (old_y != y)
-		nbt_set(client->data, TAG_DOUBLE, &y, sizeof(y), 2, "Pos", 1);
+		client->y = y;
 	if (old_z != z)
-		nbt_set(client->data, TAG_DOUBLE, &z, sizeof(z), 2, "Pos", 2);
+		client->z = z;
 	if (old_yaw != yaw)
-		nbt_set(client->data, TAG_FLOAT, &yaw, sizeof(yaw), 2, "Rotation", 0);
+		client->yaw = yaw;
 	if (old_pitch != pitch)
-		nbt_set(client->data, TAG_FLOAT, &pitch, sizeof(pitch), 2, "Rotation", 1);
+		client->pitch = pitch;
 	if (client->stance != stance)
 		client->stance = stance;
 
