@@ -17,6 +17,7 @@
 #include <fcntl.h>
 
 static bool foreground = false;
+static char config_path[PATH_MAX] = "server.config";
 bool bedrock_running = true;
 time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
@@ -142,15 +143,17 @@ static void save(evutil_socket_t bedrock_attribute_unused fd, short bedrock_attr
 static void parse_cli_args(int argc, char **argv)
 {
 	int c;
+	int len = 0;
 
 	struct option options[] = {
 		{"help", no_argument, NULL, 'h'},
 		{"foreground", no_argument, NULL, 'f'},
 		{"version", no_argument, NULL, 'v'},
+		{"config", required_argument, NULL, 'c'},
 		{NULL, 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "hfv", options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "hfvc", options, NULL)) != -1)
 	{
 		switch (c)
 		{
@@ -162,6 +165,7 @@ static void parse_cli_args(int argc, char **argv)
 				fprintf(stdout, " -f         run in foreground\n");
 #endif
 				fprintf(stdout, " -v         shows version\n");
+				fprintf(stdout, " -c         set path to config file\n");
 				fprintf(stdout, "\n");
 				exit(0);
 				break;
@@ -171,6 +175,21 @@ static void parse_cli_args(int argc, char **argv)
 			case 'v':
 				fprintf(stdout, "Bedrock %d.%d%s, built on %s at %s\n", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA, __DATE__, __TIME__);
 				exit(0);
+				break;
+			case 'c':
+				if(!optarg)
+				{
+					fprintf(stderr, "you must specify an argument.\n");
+					fprintf(stderr, "Usage:\n");
+					fprintf(stderr, " --config=path        set the config file\n");
+					exit(1);
+				}
+
+				len = strlen(optarg);
+				strncpy(config_path, optarg, PATH_MAX);
+				if(optarg[len - 1] == '/' || optarg[len - 1] == '\\')
+					strncat(config_path, "server.config", PATH_MAX);
+
 				break;
 			case '?':
 				exit(1);
@@ -213,8 +232,11 @@ int main(int argc, char **argv)
 
 	parse_cli_args(argc, argv);
 
-	if (config_parse("server.config"))
+	if (config_parse(config_path))
+	{
+		fprintf(stderr, "ERROR: Cannot find server.config: %s\n", config_path);
 		exit(1);
+	}
 
 	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 	bedrock_log(LEVEL_INFO, "Listening on %s:%d with %d max players - %s", server_ip, server_port, server_maxusers, server_desc);
