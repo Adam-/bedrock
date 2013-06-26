@@ -54,6 +54,8 @@ struct region
 
 	/* Columns in this region */
 	bedrock_list columns;
+	/* Nonexistant columns in this region. Eg, columns with no ->data */
+	int empty_columns;
 };
 
 extern void region_operation_free(struct region_operation *op);

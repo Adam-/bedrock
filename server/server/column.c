@@ -70,9 +70,9 @@ void column_free(struct column *column)
 	int i;
 
 	bedrock_assert(column->players.count == 0, ;);
-	bedrock_assert((column->flags & ~COLUMN_FLAG_EMPTY) == 0, ;);
+	bedrock_assert(!column->flags, ;);
 
-	bedrock_log(LEVEL_COLUMN, "chunk: Freeing column %d,%d", column->x, column->z);
+	bedrock_log(LEVEL_COLUMN, "column: Freeing column %d,%d", column->x, column->z);
 
 	bedrock_list_del(&column->region->columns, column);
 
@@ -94,7 +94,7 @@ void column_free(struct column *column)
 	 * Also be sure the region worker still exists. If it doesn't then the region
 	 * is being free'd right now and this column is being free'd as a result of it.
 	 */
-	if (column->region->columns.count == 0 && column->region->worker != NULL)
+	if (column->region->columns.count - column->region->empty_columns == 0 && column->region->worker != NULL)
 	{
 		/* Be sure this won't block */
 		bedrock_mutex_lock(&column->region->operations_mutex);
@@ -217,13 +217,16 @@ void column_set_pending(struct column *column, enum column_flag flag)
 {
 	struct pending_column_update *pc;
 
-	if (column == NULL || column->flags & flag)
+	if (column->flags)
+	{
+		column->flags |= flag;
 		return;
+	}
 
 	pc = bedrock_malloc(sizeof(struct pending_column_update));
 
 	pc->column = column;
-	column->flags |= flag;
+	column->flags = flag;
 
 	bedrock_list_add(&pending_updates, pc);
 }
@@ -277,15 +280,21 @@ void column_process_pending()
 		/* Column must be *only* empty */
 		else if (column->flags == COLUMN_FLAG_EMPTY)
 		{
+			column->flags = 0;
 			if (column->players.count == 0)
+			{
 				column_free(column);
-			else
-				column->flags &= ~COLUMN_FLAG_EMPTY;
+				goto remove;
+			}
 		}
 
-		bedrock_list_del_node(&pending_updates, node);
-		bedrock_free(dc);
-		bedrock_free(node);
+		if (!column->flags)
+		{
+		 remove:
+			bedrock_list_del_node(&pending_updates, node);
+			bedrock_free(dc);
+			bedrock_free(node);
+		}
 	}
 }
 

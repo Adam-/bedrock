@@ -25,6 +25,9 @@ void command_stats(struct command_source *source, int bedrock_attribute_unused a
 			{
 				struct column *column = node3->data;
 
+				if (column->data == NULL)
+					continue;
+
 				++columns;
 
 				for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)

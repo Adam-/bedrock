@@ -390,17 +390,14 @@ static void region_operations_notify(struct region *region)
 						}
 					}
 				}
+				else
+					region->empty_columns++;
+
 				break;
 			case REGION_OP_WRITE:
 				op->column->flags &= ~COLUMN_FLAG_WRITE;
 
 				bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d to %s", op->column->x, op->column->z, op->column->region->path);
-
-				/* Now that the write is finished, check if we want this column to be free'd */
-				if (op->column->players.count == 0)
-					column_set_pending(op->column, COLUMN_FLAG_EMPTY);
-				else
-					op->column->flags &= ~COLUMN_FLAG_EMPTY;
 				break;
 		}
 
@@ -475,7 +472,7 @@ void region_free(struct region *region)
 
 	bedrock_pipe_close(&region->finished_operations_pipe);
 
-	bedrock_assert(!bedrock_running || region->columns.count == 0, ;);
+	bedrock_assert(!bedrock_running || region->columns.count - region->empty_columns == 0, ;);
 
 	region->columns.free = (bedrock_free_func) column_free;
 	bedrock_list_clear(&region->columns);
