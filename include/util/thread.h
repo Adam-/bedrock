@@ -3,6 +3,10 @@
 
 #include <pthread.h>
 
+#ifdef __APPLE__
+# include "osx_compat.h"
+#endif
+
 struct bedrock_mutex
 {
 	pthread_mutex_t mutex;
