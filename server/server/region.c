@@ -363,7 +363,6 @@ static void region_worker(struct bedrock_thread *thread, struct region *region)
 static void region_operations_notify(struct region *region)
 {
 	bedrock_node *node, *node2;
-
 	bedrock_mutex_lock(&region->finished_operations_mutex);
 
 	LIST_FOREACH_SAFE(&region->finished_operations, node, node2)
@@ -373,23 +372,17 @@ static void region_operations_notify(struct region *region)
 		switch (op->operation)
 		{
 			case REGION_OP_READ:
-			{
 				op->column->flags &= ~COLUMN_FLAG_READ;
 
-				if (op->column->data == NULL)
+				if (op->column->data != NULL)
 				{
-					// Column doesn't exist on disk
-					column_free(op->column);
-				}
-				else
-				{
-					bedrock_node *node;
+					bedrock_node *node3;
 
 					bedrock_log(LEVEL_COLUMN, "region: Successfully loaded column at %d, %d from %s", op->column->x, op->column->z, op->region->path);
 
-					LIST_FOREACH(&client_list, node)
+					LIST_FOREACH(&client_list, node3)
 					{
-						struct client *client = node->data;
+						struct client *client = node3->data;
 
 						if (client->authenticated >= STATE_BURSTING)
 						{
@@ -398,20 +391,16 @@ static void region_operations_notify(struct region *region)
 					}
 				}
 				break;
-			}
 			case REGION_OP_WRITE:
 				op->column->flags &= ~COLUMN_FLAG_WRITE;
 
 				bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d to %s", op->column->x, op->column->z, op->column->region->path);
 
 				/* Now that the write is finished, check if we want this column to be free'd */
-				if (op->column->flags & COLUMN_FLAG_EMPTY)
-				{
-					if (op->column->players.count == 0)
-						column_free(op->column);
-					else
-						op->column->flags &= ~COLUMN_FLAG_EMPTY;
-				}
+				if (op->column->players.count == 0)
+					column_set_pending(op->column, COLUMN_FLAG_EMPTY);
+				else
+					op->column->flags &= ~COLUMN_FLAG_EMPTY;
 				break;
 		}
 
@@ -467,7 +456,8 @@ void region_free(struct region *region)
 	bedrock_list_del(&region->world->regions, region);
 
 	bedrock_mutex_lock(&region->fd_mutex);
-	bedrock_fd_close(&region->fd);
+	if (region->fd.open)
+		bedrock_fd_close(&region->fd);
 	bedrock_mutex_unlock(&region->fd_mutex);
 	bedrock_mutex_destroy(&region->fd_mutex);
 

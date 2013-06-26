@@ -60,7 +60,7 @@ void column_load(struct column *column, nbt_tag *data)
 
 	tag = nbt_get(data, TAG_BYTE_ARRAY, 2, "Level", "Biomes");
 	byte_array = &tag->payload.tag_byte_array;
-	column->biomes = (uint8_t *) tag->payload.tag_byte_array.data;
+	column->biomes = (uint8_t *) byte_array->data;
 	
 	entity_load(column, data);
 }
@@ -201,6 +201,8 @@ struct column *find_column_which_contains(struct region *region, double x, doubl
 		column = NULL;
 	}
 	else if (column->flags & COLUMN_FLAG_READ)
+		column = NULL;
+	else if (column->data == NULL)
 		column = NULL;
 
 	return column;
