@@ -71,6 +71,7 @@ struct client *client_find(const char *name)
 /* Load data from tag into the given client */
 static void client_load_nbt(struct client *client, nbt_tag *tag)
 {
+	int32_t gamemode;
 	nbt_tag *inventory = nbt_get(tag, TAG_LIST, 1, "Inventory");
 	if (inventory != NULL)
 	{
@@ -104,6 +105,8 @@ static void client_load_nbt(struct client *client, nbt_tag *tag)
 	nbt_copy(tag, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
 	nbt_copy(tag, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
 	nbt_copy(tag, TAG_BYTE, &client->on_ground, sizeof(client->on_ground), 1, "OnGround");
+	nbt_copy(tag, TAG_INT, &gamemode, sizeof(gamemode), 1, "playerGameType");
+	client->gamemode = gamemode;
 
 	client->data = tag;
 }
@@ -206,6 +209,7 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 {
 	bedrock_buffer *buffer;
 	int i;
+	int32_t gamemode = client->gamemode;
 
 	/* Build data */
 	nbt_tag *inventory = nbt_add(client->data, TAG_LIST, "Inventory", NULL, 0);
@@ -228,6 +232,7 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 	nbt_set(client->data, TAG_FLOAT, &client->yaw, sizeof(client->yaw), 2, "Rotation", 0);
 	nbt_set(client->data, TAG_FLOAT, &client->pitch, sizeof(client->pitch), 2, "Rotation", 1);
 	nbt_set(client->data, TAG_BYTE, &client->on_ground, sizeof(client->on_ground), 1, "OnGround");
+	nbt_set(client->data, TAG_INT, &gamemode, sizeof(gamemode), 1, "playerGameType");
 
 	buffer = nbt_write(client->data);
 

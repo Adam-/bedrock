@@ -106,15 +106,12 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 	uint8_t y;
 	int32_t z;
 	uint8_t face;
-	int gametype;
 
 	packet_read_int(p, &offset, &status, sizeof(status));
 	packet_read_int(p, &offset, &x, sizeof(x));
 	packet_read_int(p, &offset, &y, sizeof(y));
 	packet_read_int(p, &offset, &z, sizeof(z));
 	packet_read_int(p, &offset, &face, sizeof(face));
-
-	nbt_copy(client->data, TAG_INT, &gametype, sizeof(gametype), 1, "playerGameType");
 
 	if (status == STARTED_DIGGING)
 	{
@@ -147,7 +144,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		if (delay < 0)
 			return offset;
 
-		if (gametype == GAMEMODE_CREATIVE)
+		if (client->gamemode == GAMEMODE_CREATIVE)
 		{
 			status = FINISHED_DIGGING;
 		}
@@ -188,7 +185,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		if (block_id == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		if (gametype == GAMEMODE_CREATIVE)
+		if (client->gamemode == GAMEMODE_CREATIVE)
 		{
 			bedrock_log(LEVEL_DEBUG, "player digging: Instant mine for %s at %d,%d,%d", client->name, x, y, z);
 		}

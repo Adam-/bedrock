@@ -39,6 +39,12 @@ enum client_entity_action
 	ACTION_STOP_SPRINTING
 };
 
+enum client_gamemode
+{
+	GAMEMODE_SURVIVAL,
+	GAMEMODE_CREATIVE
+};
+
 struct client
 {
 	struct bedrock_fd fd;                /* fd for this client */
@@ -65,6 +71,8 @@ struct client
 	uint8_t on_ground;
 
 	struct oper *oper;            /* set if this player is an operator */
+
+	enum client_gamemode gamemode;        /* player's gamemode */
 
 	nbt_tag *data;                        /* player's .dat file */
 	struct world *world;          /* world this player is in */

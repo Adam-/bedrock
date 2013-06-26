@@ -7,7 +7,6 @@ int packet_creative_inventory_action(struct client *client, const bedrock_packet
 	size_t offset = PACKET_HEADER_LENGTH;
 	uint16_t id;
 	struct item_stack slot, *stack;
-	int opt;
 
 	packet_read_int(packet, &offset, &id, sizeof(id));
 	packet_read_slot(packet, &offset, &slot);
@@ -15,8 +14,7 @@ int packet_creative_inventory_action(struct client *client, const bedrock_packet
 	if (offset <= ERROR_UNKNOWN)
 		return offset;
 
-	nbt_copy(client->data, TAG_INT, &opt, sizeof(opt), 1, "playerGameType");
-	if (opt != GAMEMODE_CREATIVE)
+	if (client->gamemode != GAMEMODE_CREATIVE)
 		return ERROR_UNEXPECTED;
 
 	if (id >= INVENTORY_SIZE)

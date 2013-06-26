@@ -34,7 +34,7 @@ void command_gamemode(struct command_source *source, int bedrock_attribute_unuse
 		return;
 	}
 
-	nbt_set(targ->data, TAG_INT, &opt, sizeof(opt), 1, "playerGameType");
+	targ->gamemode = opt;
 	packet_send_change_game_state(targ, CHANGE_GAME_MODE, opt);
 
 	LIST_FOREACH(&client_list, node)
