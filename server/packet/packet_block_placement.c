@@ -196,12 +196,17 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	real_chunk->modified = true;
 	column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
 
-	/* Build has now succeeded to us, remove an item from the player */
-	weilded_item->count -= 1;
-	if (!weilded_item->count)
+	/* Build has now succeeded to us, remove an item from the player
+	 * if not in creative mode
+	 */
+	if (client->gamemode != GAMEMODE_CREATIVE)
 	{
-		weilded_item->id = 0;
-		weilded_item->metadata = 0;
+		weilded_item->count -= 1;
+		if (!weilded_item->count)
+		{
+			weilded_item->id = 0;
+			weilded_item->metadata = 0;
+		}
 	}
 
 	// Notify clients who can see this column of the change
