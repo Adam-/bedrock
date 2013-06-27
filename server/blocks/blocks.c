@@ -3,9 +3,9 @@
 #include "server/column.h"
 #include "entities/entity.h"
 
-void simple_drop(struct client bedrock_attribute_unused *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest)
+void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest)
 {
-	if (!harvest)
+	if (!harvest || client->gamemode == GAMEMODE_CREATIVE)
 		return;
 
 	struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
