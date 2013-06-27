@@ -18,6 +18,7 @@
 #include "packet/packet_click_window.h"
 #include "packet/packet_confirm_transaction.h"
 #include "packet/packet_creative_inventory_action.h"
+#include "packet/packet_player_abilities.h"
 #include "packet/packet_client_settings.h"
 #include "packet/packet_client_status.h"
 #include "packet/packet_encryption_response.h"
@@ -59,6 +60,7 @@ struct packet_info packet_handlers[] = {
 	{CONFIRM_TRANSACTION,       5, STATE_IN_GAME,                          NONE,                    packet_confirm_transaction},
 	{CREATIVE_INVENTORY_ACTION, 3, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_creative_inventory_action},
 	{PLAYER_LIST,               6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{PLAYER_ABILITIES,          4, STATE_IN_GAME,                          NONE,                    packet_player_abilities},
 	{CLIENT_SETTINGS,           7, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_client_settings},
 	{CLIENT_STATUS,             2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
 	{ENCRYPTION_RESPONSE,       5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},

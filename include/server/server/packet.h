@@ -44,6 +44,7 @@ enum
 	CONFIRM_TRANSACTION           = 0x6A,
 	CREATIVE_INVENTORY_ACTION     = 0x6B,
 	PLAYER_LIST                   = 0xC9,
+	PLAYER_ABILITIES              = 0xCA,
 	CLIENT_SETTINGS               = 0xCC,
 	CLIENT_STATUS                 = 0xCD,
 	ENCRYPTION_RESPONSE           = 0xFC,
