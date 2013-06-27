@@ -65,7 +65,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	{
 		if (window == WINDOW_INVENTORY)
 		{
-			if (slot < INVENTORY_CRAFT_OUTPUT || slot > INVENTORY_SIZE)
+			if (slot < INVENTORY_CRAFT_OUTPUT || slot >= INVENTORY_SIZE)
 				return ERROR_NOT_ALLOWED;
 	
 			for (i = INVENTORY_CRAFT_OUTPUT; i < INVENTORY_SIZE; ++i)
