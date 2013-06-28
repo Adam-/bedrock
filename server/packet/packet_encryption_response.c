@@ -7,7 +7,7 @@
 
 int packet_encryption_response(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint16_t shared_secret_len, verify_token_len;
 	unsigned char shared_secret[512], verify_token[512];
 	unsigned char decrypted_shared_secret[512], decrypted_verify_token[512];

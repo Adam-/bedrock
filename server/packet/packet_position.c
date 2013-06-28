@@ -4,7 +4,7 @@
 
 int packet_position(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	double x, y, stance, z;
 	uint8_t on_ground;
 

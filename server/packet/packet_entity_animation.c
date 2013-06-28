@@ -16,7 +16,7 @@ enum
 
 int packet_entity_animation(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint32_t id;
 	uint8_t anim;
 	bedrock_node *node;

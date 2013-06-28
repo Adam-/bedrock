@@ -38,7 +38,7 @@ struct packet_info packet_handlers[] = {
 	{PLAYER_LOOK,              10, STATE_IN_GAME,                          CLIENT_ONLY,             packet_player_look},
 	{PLAYER_POS_LOOK,          42, STATE_BURSTING | STATE_IN_GAME,         NONE,                    packet_position_and_look},
 	{PLAYER_DIGGING,           12, STATE_IN_GAME,                          CLIENT_ONLY,             packet_player_digging},
-	{PLAYER_BLOCK_PLACEMENT,   13, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_block_placement},
+	{PLAYER_BLOCK_PLACEMENT,   16, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_block_placement},
 	{HELD_ITEM_CHANGE,          3, STATE_IN_GAME,                          NONE,                    packet_held_item_change},
 	{ENTITY_ANIMATION,          6, STATE_IN_GAME,                          NONE,                    packet_entity_animation},
 	{ENTITY_ACTION,             6, STATE_IN_GAME,                          CLIENT_ONLY,             packet_entity_action},
@@ -55,10 +55,10 @@ struct packet_info packet_handlers[] = {
 	{CHANGE_GAME_STATE,         3, 0,                                      SERVER_ONLY,             NULL},
 	{OPEN_WINDOW,               7, STATE_IN_GAME,                          SOFT_SIZE | SERVER_ONLY, NULL},
 	{CLOSE_WINDOW,              2, STATE_IN_GAME,                          NONE,                    packet_close_window},
-	{CLICK_WINDOW,              8, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
+	{CLICK_WINDOW,             10, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
 	{SET_SLOT,                  4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{CONFIRM_TRANSACTION,       5, STATE_IN_GAME,                          NONE,                    packet_confirm_transaction},
-	{CREATIVE_INVENTORY_ACTION, 3, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_creative_inventory_action},
+	{CREATIVE_INVENTORY_ACTION, 5, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_creative_inventory_action},
 	{PLAYER_LIST,               6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
 	{PLAYER_ABILITIES,          4, STATE_IN_GAME,                          NONE,                    packet_player_abilities},
 	{CLIENT_SETTINGS,           7, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_client_settings},
@@ -183,7 +183,7 @@ int packet_parse(struct client *client, const bedrock_packet *packet)
 	return i;
 }
 
-void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)
+void packet_read(const bedrock_packet *packet, int *offset, void *dest, size_t dest_size)
 {
 	if (*offset <= ERROR_UNKNOWN)
 		return;
@@ -197,7 +197,7 @@ void packet_read(const bedrock_packet *packet, size_t *offset, void *dest, size_
 	*offset += dest_size;
 }
 
-void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, size_t dest_size)
+void packet_read_int(const bedrock_packet *packet, int *offset, void *dest, size_t dest_size)
 {
 	if (*offset <= ERROR_UNKNOWN)
 		return;
@@ -212,7 +212,7 @@ void packet_read_int(const bedrock_packet *packet, size_t *offset, void *dest, s
 	*offset += dest_size;
 }
 
-void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest, size_t dest_size)
+void packet_read_string(const bedrock_packet *packet, int *offset, char *dest, size_t dest_size)
 {
 	uint16_t length, i, j;
 
@@ -225,7 +225,7 @@ void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest
 	if (*offset <= ERROR_UNKNOWN)
 		return;
 	/* Remember, this length is length in CHARACTERS */
-	else if (*offset + (length * 2) > packet->length)
+	else if (((unsigned int) *offset) + (length * 2) > packet->length)
 	{
 		*offset = ERROR_EAGAIN;
 		return;
@@ -255,15 +255,19 @@ void packet_read_string(const bedrock_packet *packet, size_t *offset, char *dest
 	*offset = ERROR_UNKNOWN;
 }
 
-void packet_read_slot(const bedrock_packet *packet, size_t *offset, struct item_stack *stack)
+void packet_read_slot(const bedrock_packet *packet, int *offset, struct item_stack *stack)
 {
 	packet_read_int(packet, offset, &stack->id, sizeof(stack->id));
+	if (*offset <= ERROR_UNKNOWN)
+		return;
 	if (stack->id != -1)
 	{
 		int16_t s;
 		packet_read_int(packet, offset, &stack->count, sizeof(stack->count));
 		packet_read_int(packet, offset, &stack->metadata, sizeof(stack->metadata));
 		packet_read_int(packet, offset, &s, sizeof(s));
+		if (*offset <= ERROR_UNKNOWN)
+			return;
 		if (s != -1)
 			*offset += s;
 	}

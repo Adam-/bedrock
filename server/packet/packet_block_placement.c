@@ -21,7 +21,7 @@ enum
 
 int packet_block_placement(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	int32_t x, z;
 	uint8_t y;
 	uint8_t d;

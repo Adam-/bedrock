@@ -15,7 +15,7 @@ enum
 
 int packet_entity_action(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint32_t eid;
 	uint8_t aid;
 

@@ -3,7 +3,7 @@
 
 int packet_confirm_transaction(struct client bedrock_attribute_unused *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t b;
 	uint16_t s;
 

@@ -3,7 +3,7 @@
 
 int packet_close_window(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t window;
 
 	packet_read_int(p, &offset, &window, sizeof(window));

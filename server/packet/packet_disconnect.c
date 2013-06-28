@@ -5,7 +5,7 @@
 
 int packet_disconnect(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	char reason[BEDROCK_MAX_STRING_LENGTH];
 
 	packet_read_string(p, &offset, reason, sizeof(reason));

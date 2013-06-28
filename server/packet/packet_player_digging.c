@@ -100,7 +100,7 @@ static double calculate_block_time(struct client bedrock_attribute_unused *clien
 
 int packet_player_digging(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t status;
 	int32_t x;
 	uint8_t y;

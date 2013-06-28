@@ -10,7 +10,7 @@ enum
 
 int packet_client_status(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t b;
 
 	packet_read_int(p, &offset, &b, sizeof(b));

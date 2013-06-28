@@ -35,7 +35,7 @@ enum
 
 int packet_click_window(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t window;
 	int16_t slot;
 	uint8_t button;
@@ -55,6 +55,9 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	packet_read_int(p, &offset, &action, sizeof(action));
 	packet_read_int(p, &offset, &mode, sizeof(mode));
 	packet_read_slot(p, &offset, &slot_data);
+
+	if (offset <= ERROR_UNKNOWN)
+		return offset;
 
 	for (i = 0; i < MAX_SLOTS; ++i)
 		slots[i] = NULL;

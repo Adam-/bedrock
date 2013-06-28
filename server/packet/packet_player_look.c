@@ -3,7 +3,7 @@
 
 int packet_player_look(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	float yaw, pitch;
 	uint8_t on_ground;
 

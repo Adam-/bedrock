@@ -5,7 +5,7 @@
 
 int packet_keep_alive(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint32_t id;
 
 	packet_read_int(p, &offset, &id, sizeof(id));

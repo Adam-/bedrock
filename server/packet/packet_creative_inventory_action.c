@@ -4,7 +4,7 @@
 
 int packet_creative_inventory_action(struct client *client, const bedrock_packet *packet)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint16_t id;
 	struct item_stack slot, *stack;
 

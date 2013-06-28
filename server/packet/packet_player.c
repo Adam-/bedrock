@@ -3,7 +3,7 @@
 
 int packet_player(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	uint8_t on_ground;
 
 	packet_read_int(p, &offset, &on_ground, sizeof(on_ground));

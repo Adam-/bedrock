@@ -7,7 +7,7 @@
 
 int packet_held_item_change(struct client *client, const bedrock_packet *p)
 {
-	size_t offset = PACKET_HEADER_LENGTH;
+	int offset = PACKET_HEADER_LENGTH;
 	bedrock_node *node;
 	struct item_stack *stack;
 	struct item *item;
