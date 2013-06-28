@@ -1,0 +1,5 @@
+id: 35
+name: Wool
+hardness: 1.200000
+no-harvest-time: 1.200000
+on_mine: simple_drop

@@ -1,0 +1,7 @@
+id: 21
+name: Lapis Lazuli Ore
+hardness: 4.500000
+no-harvest-time: 15.000000
+weakness: pickaxe
+weakness-metal: stone
+on_mine: simple_drop

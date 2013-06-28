@@ -1,0 +1,6 @@
+id: 117
+name: Brewing Stand
+hardness: 0.750000
+no-harvest-time: 0.750000
+weakness: axe
+on_mine: simple_drop

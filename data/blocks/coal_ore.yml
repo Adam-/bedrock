@@ -1,0 +1,6 @@
+id: 16
+name: Coal Ore
+hardness: 4.500000
+no-harvest-time: 15.000000
+weakness: pickaxe
+on_mine: simple_drop

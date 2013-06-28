@@ -1,0 +1,6 @@
+id: 269
+name: Wooden shovel
+damageable: true
+enchantable: true
+tool: shovel
+tool-metal: wood

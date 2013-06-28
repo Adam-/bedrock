@@ -1,0 +1,5 @@
+id: 53
+name: Wooden Stairs
+hardness: 3.000000
+no-harvest-time: 10.000000
+on_mine: simple_drop

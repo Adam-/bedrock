@@ -1,0 +1,5 @@
+id: 60
+name: Farmland
+hardness: 0.900000
+no-harvest-time: 0.900000
+on_mine: simple_drop

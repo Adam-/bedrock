@@ -1,0 +1,6 @@
+id: 285
+name: Gold pickaxe
+damageable: true
+enchantable: true
+tool: pickaxe
+tool-metal: gold

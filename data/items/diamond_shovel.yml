@@ -1,0 +1,6 @@
+id: 277
+name: Diamond shovel
+damageable: true
+enchantable: true
+tool: shovel
+tool-metal: diamond

@@ -1,0 +1,5 @@
+id: 89
+name: Glowstone
+hardness: 0.450000
+no-harvest-time: 0.450000
+on_mine: simple_drop

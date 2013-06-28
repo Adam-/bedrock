@@ -145,7 +145,7 @@ enum block_type
 struct block
 {
 	uint8_t id;
-	const char *name;
+	char *name;
 	double hardness;                    /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
 	double no_harvest_time;             /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
 	enum item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */
@@ -154,12 +154,14 @@ struct block
 	void (*on_place)(struct client *, struct chunk *, int32_t x, uint8_t y, int32_t z, struct block *block); /* Called when this block is placed */
 };
 
+extern bedrock_list blocks;
+
 extern void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest);
 
-extern struct block blocks[];
-
+extern int block_init();
+extern void block_shutdown();
 extern struct block *block_find(enum block_type id);
-extern struct block *block_find_or_create(enum block_type id);
 extern struct block *block_find_by_name(const char *name);
+extern struct block *block_find_or_create(enum block_type id);
 
 #endif

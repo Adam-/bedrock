@@ -1,0 +1,5 @@
+id: 290
+name: Wooden hoe
+damageable: true
+tool: hoe
+tool-metal: wood

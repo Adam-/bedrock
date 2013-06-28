@@ -1,0 +1,5 @@
+id: 18
+name: Leaves
+hardness: 0.300000
+no-harvest-time: 0.300000
+on_mine: simple_drop

@@ -1,0 +1,5 @@
+id: 96
+name: Trapdoor
+hardness: 4.500000
+no-harvest-time: 4.500000
+on_mine: simple_drop

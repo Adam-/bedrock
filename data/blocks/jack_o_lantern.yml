@@ -1,0 +1,5 @@
+id: 91
+name: Jack O Lantern
+hardness: 1.500000
+no-harvest-time: 1.500000
+on_mine: simple_drop

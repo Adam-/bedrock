@@ -1,0 +1,5 @@
+id: 294
+name: Gold hoe
+damageable: true
+tool: hoe
+tool-metal: gold

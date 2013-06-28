@@ -1,0 +1,6 @@
+id: 2
+name: Grass
+hardness: 0.900000
+no-harvest-time: 0.900000
+weakness: shovel
+on_mine: simple_drop

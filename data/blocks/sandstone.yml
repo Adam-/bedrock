@@ -1,0 +1,6 @@
+id: 24
+name: Sandstone
+hardness: 1.200000
+no-harvest-time: 4.000000
+weakness: pickaxe
+on_mine: simple_drop

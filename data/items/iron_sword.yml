@@ -1,0 +1,6 @@
+id: 267
+name: Iron sword
+damageable: true
+enchantable: true
+tool: sword
+tool-metal: iron

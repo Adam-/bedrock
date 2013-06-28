@@ -1,0 +1,5 @@
+id: 99
+name: Huge Brown Mushroom
+hardness: 0.300000
+no-harvest-time: 0.300000
+on_mine: simple_drop

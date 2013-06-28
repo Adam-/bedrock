@@ -1,0 +1,6 @@
+id: 283
+name: Gold sword
+damageable: true
+enchantable: true
+tool: sword
+tool-metal: gold

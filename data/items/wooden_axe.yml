@@ -1,0 +1,6 @@
+id: 271
+name: Wooden axe
+damageable: true
+enchantable: true
+tool: axe
+tool-metal: wood

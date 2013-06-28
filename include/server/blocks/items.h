@@ -1,6 +1,8 @@
 #ifndef BEDROCK_BLOCKS_ITEMS_H
 #define BEDROCK_BLOCKS_ITEMS_H
 
+#include "util/list.h"
+
 #include <stdint.h>
 
 enum item_type
@@ -186,7 +188,7 @@ enum item_flags
 struct item
 {
 	uint16_t id;
-	const char *name;
+	char *name;
 	enum item_flags flags;
 };
 
@@ -199,10 +201,12 @@ struct item_stack
 	int16_t metadata;
 };
 
-extern struct item items[];
+extern bedrock_list items;
 
+extern int item_init();
+extern void item_shutdown();
 extern struct item *item_find(enum item_type id);
-extern struct item *item_find_or_create(enum item_type id);
 extern struct item *item_find_by_name(const char *name);
+extern struct item *item_find_or_create(enum item_type id);
 
 #endif // BEDROCK_BLOCKS_ITEMS_H

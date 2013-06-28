@@ -1,0 +1,6 @@
+id: 78
+name: Snow
+hardness: 0.150000
+no-harvest-time: 0.500000
+weakness: shovel
+on_mine: simple_drop

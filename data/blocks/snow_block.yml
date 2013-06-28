@@ -1,0 +1,6 @@
+id: 80
+name: Snow Block
+hardness: 0.300000
+no-harvest-time: 1.000000
+weakness: shovel
+on_mine: simple_drop

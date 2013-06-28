@@ -1,0 +1,6 @@
+id: 1
+name: Stone
+hardness: 2.250000
+no-harvest-time: 7.500000
+weakness: pickaxe
+on_mine: simple_drop

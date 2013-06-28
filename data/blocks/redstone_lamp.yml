@@ -1,0 +1,5 @@
+id: 124
+name: Redstone Lamp
+hardness: 3.750000
+no-harvest-time: 3.750000
+on_mine: simple_drop

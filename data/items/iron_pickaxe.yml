@@ -1,0 +1,6 @@
+id: 257
+name: Iron pickaxe
+damageable: true
+enchantable: true
+tool: pickaxe
+tool-metal: iron

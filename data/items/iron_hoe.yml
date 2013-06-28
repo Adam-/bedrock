@@ -1,0 +1,5 @@
+id: 292
+name: Iron hoe
+damageable: true
+tool: hoe
+tool-metal: iron

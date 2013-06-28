@@ -1,0 +1,6 @@
+id: 268
+name: Wooden sword
+damageable: true
+enchantable: true
+tool: sword
+tool-metal: wood

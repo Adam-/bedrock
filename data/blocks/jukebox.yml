@@ -1,0 +1,5 @@
+id: 84
+name: Jukebox
+hardness: 3.000000
+no-harvest-time: 3.000000
+on_mine: simple_drop

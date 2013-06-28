@@ -1,0 +1,6 @@
+id: 278
+name: Diamond pickaxe
+damageable: true
+enchantable: true
+tool: pickaxe
+tool-metal: diamond

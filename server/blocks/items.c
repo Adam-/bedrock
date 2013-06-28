@@ -1,91 +1,182 @@
 #include "server/bedrock.h"
 #include "blocks/items.h"
 #include "blocks/blocks.h"
+#include "util/string.h"
 
-struct item items[] = {
-	{ITEM_NONE,               "",                   ITEM_FLAG_NONE},
-	{ITEM_IRON_SHOVEL,        "Iron shovel",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_IRON_PICKAXE,       "Iron pickaxe",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_IRON_AXE,           "Iron axe",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_FLINT_AND_STEEL,    "Flint and steel",    ITEM_FLAG_DAMAGABLE},
-	{ITEM_BOW,                "Bow",                ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_IRON_SWORD,         "Iron sword",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SWORD   | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_WOODEN_SWORD,       "Wooden sword",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SWORD   | ITEM_FLAG_WOOD},
-	{ITEM_WOODEN_SHOVEL,      "Wooden shovel",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_WOOD},
-	{ITEM_WOODEN_PICKAXE,     "Wooden pickaxe",     ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_WOOD},
-	{ITEM_WOODEN_AXE,         "Wooden axe",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_WOOD},
-	{ITEM_STONE_SWORD,        "Stone sword",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SWORD   | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_STONE_SHOVEL,       "Stone shovel",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_STONE_PICKAXE,      "Stone pickaxe",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_STONE_AXE,          "Stone axe",          ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_DIAMOND_SWORD,      "Diamond sword",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SWORD   | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_DIAMOND_SHOVEL,     "Diamond shovel",     ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_DIAMOND_PICKAXE,    "Diamond pickaxe",    ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_DIAMOND_AXE,        "Diamond axe",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_GOLD_SWORD,         "Gold sword",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SWORD   | ITEM_FLAG_GOLD    | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON  | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_GOLD_SHOVEL,        "Gold shovel",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_SHOVEL  | ITEM_FLAG_GOLD    | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON  | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_GOLD_PICKAXE,       "Gold pickaxe",       ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_PICKAXE | ITEM_FLAG_GOLD    | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON  | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_GOLD_AXE,           "Gold axe",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE | ITEM_FLAG_AXE     | ITEM_FLAG_GOLD    | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON  | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_WOODEN_HOE,         "Wooden hoe",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_HOE         | ITEM_FLAG_WOOD},
-	{ITEM_STONE_HOE,          "Stone hoe",          ITEM_FLAG_DAMAGABLE | ITEM_FLAG_HOE         | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_IRON_HOE,           "Iron hoe",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_HOE         | ITEM_FLAG_IRON    | ITEM_FLAG_STONE   | ITEM_FLAG_WOOD},
-	{ITEM_DIAMOND_HOE,        "Diamond hoe",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_HOE         | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON    | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_GOLD_HOE,           "Gold hoe",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_HOE         | ITEM_FLAG_GOLD    | ITEM_FLAG_DIAMOND | ITEM_FLAG_IRON  | ITEM_FLAG_STONE | ITEM_FLAG_WOOD},
-	{ITEM_LEATHER_CAP,        "Leather cap",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_LEATHER_TUNIC,      "Leather tunic",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_LEATHER_PANTS,      "Leather pants",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_LEATHER_BOOTS,      "Leather boots",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_CHAIN_HELMET,       "Chain cap",          ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_CHAIN_CHESTPLATE,   "Chain chestplate",   ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_CHAIN_LEGGINGS,     "Chain leggings",     ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_CHAIN_BOOTS,        "Chain boots",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_IRON_HELMET,        "Iron cap",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_IRON_CHESTPLATE,    "Iron chestplate",    ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_IRON_LEGGINGS,      "Iron leggings",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_IRON_BOOTS,         "Iron boots",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_DIAMOND_HELMET,     "Diamond cap",        ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_DIAMOND_CHESTPLATE, "Diamond chestplate", ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_DIAMOND_LEGGINGS,   "Diamond leggings",   ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_DIAMOND_BOOTS,      "Diamond boots",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_GOLDEN_HELMET,      "Gold cap",           ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_GOLDEN_CHESTPLATE,  "Gold chestplate",    ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_GOLDEN_LEGGINGS,    "Gold leggings",      ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_GOLDEN_BOOTS,       "Gold boots",         ITEM_FLAG_DAMAGABLE | ITEM_FLAG_ENCHANTABLE},
-	{ITEM_FISHING_ROD,        "Fishing rod",        ITEM_FLAG_DAMAGABLE},
-	{ITEM_SHEARS,             "Shears",             ITEM_FLAG_DAMAGABLE}
-};
+#include <yaml.h>
 
-static int item_compare(const enum item_type *id, const struct item *item)
+#include <sys/types.h>
+#include <dirent.h>
+
+bedrock_list items = LIST_INIT;
+
+static void item_free(struct item *i)
 {
-	if (*id < item->id)
+	bedrock_free(i->name);
+	bedrock_free(i);
+}
+
+int item_init()
+{
+	DIR *dir = opendir("data/items");
+	struct dirent *ent;
+
+	items.free = (bedrock_free_func) item_free;
+
+	if (!dir)
 		return -1;
-	else if (*id > item->id)
-		return 1;
+	
+	while ((ent = readdir(dir)))
+	{
+		char filename[PATH_MAX];
+		FILE *f;
+		struct item *i;
+
+		yaml_parser_t parser;
+		yaml_token_t token;
+		yaml_token_type_t type = YAML_NO_TOKEN;
+		char *key = NULL;
+		int done;
+
+		if (!strstr(ent->d_name, ".yml"))
+			continue;
+
+		snprintf(filename, sizeof(filename), "data/items/%s", ent->d_name);
+		f = fopen(filename, "rb");
+		if (!f)
+			continue;
+
+		if (!yaml_parser_initialize(&parser))
+			continue;
+
+		i = bedrock_malloc(sizeof(struct item));
+
+		yaml_parser_set_input_file(&parser, f);
+		do
+		{
+			if (!yaml_parser_scan(&parser, &token))
+				break;
+
+			if (token.type == YAML_SCALAR_TOKEN)
+			{
+				if (type == YAML_KEY_TOKEN)
+				{
+					bedrock_free(key);
+					key = bedrock_malloc(token.data.scalar.length);
+					memcpy(key, token.data.scalar.value, token.data.scalar.length);
+				}
+				else if (type == YAML_VALUE_TOKEN)
+				{
+					const char *value = (const char *) token.data.scalar.value;
+
+					if (!strcmp(key, "id"))
+						i->id = atoi(value);
+					else if (!strcmp(key, "name"))
+						i->name = bedrock_strdup(value);
+					else if (!strcmp(key, "damageable"))
+						i->flags |= ITEM_FLAG_DAMAGABLE;
+					else if (!strcmp(key, "enchantable"))
+						i->flags |= ITEM_FLAG_ENCHANTABLE;
+					else if (!strcmp(key, "tool"))
+					{
+						if (!strcmp(value, "shovel"))
+							i->flags |= ITEM_FLAG_SHOVEL;
+						else if (!strcmp(value, "pickaxe"))
+							i->flags |= ITEM_FLAG_PICKAXE;
+						else if (!strcmp(value, "axe"))
+							i->flags |= ITEM_FLAG_AXE;
+						else if (!strcmp(value, "sword"))
+							i->flags |= ITEM_FLAG_SWORD;
+						else if (!strcmp(value, "hoe"))
+							i->flags |= ITEM_FLAG_HOE;
+						else if (!strcmp(value, "shears"))
+							i->flags |= ITEM_FLAG_SHEARS;
+					}
+					else if (!strcmp(key, "tool-metal"))
+					{
+						if (!strcmp(value, "gold"))
+							i->flags |= ITEM_FLAG_GOLD;
+						else if (!strcmp(value, "diamond"))
+							i->flags |= ITEM_FLAG_DIAMOND;
+						else if (!strcmp(value, "iron"))
+							i->flags |= ITEM_FLAG_IRON;
+						else if (!strcmp(value, "stone"))
+							i->flags |= ITEM_FLAG_STONE;
+						else if (!strcmp(value, "wood"))
+							i->flags |= ITEM_FLAG_WOOD;
+					}
+				}
+			}
+
+			done = token.type == YAML_STREAM_END_TOKEN;
+			type = token.type;
+
+			yaml_token_delete(&token);
+		}
+		while (!done);
+		bedrock_free(key);
+		yaml_parser_delete(&parser);
+
+		fclose(f);
+
+		bedrock_list_add(&items, i);
+	}
+	
+	closedir(dir);
+
 	return 0;
 }
 
-typedef int (*compare_func)(const void *, const void *);
+void item_shutdown()
+{
+	bedrock_list_clear(&items);
+}
 
 struct item *item_find(enum item_type id)
 {
 	static struct item i;
-	struct item *item = bsearch(&id, items, sizeof(items) / sizeof(struct item), sizeof(struct item), (compare_func) item_compare);
+	struct block *block;
+	bedrock_node *node;
 
-	if (item == NULL)
+	LIST_FOREACH(&items, node)
 	{
-		struct block *block = block_find(id);
+		struct item *item = node->data;
 
-		if (block != NULL)
-		{
-			i.id = id;
-			i.name = block->name;
-			i.flags = ITEM_FLAG_BLOCK;
-
-			item = &i;
-		}
+		if (item->id == id)
+			return item;
 	}
 
-	return item;
+	block = block_find(id);
+
+	if (block != NULL)
+	{
+		i.id = id;
+		i.name = block->name;
+		i.flags = ITEM_FLAG_BLOCK;
+		return &i;
+	}
+
+	return NULL;
+}
+
+struct item *item_find_by_name(const char *name)
+{
+	struct block *block;
+	bedrock_node *node;
+
+	LIST_FOREACH(&items, node)
+	{
+		struct item *item = node->data;
+
+		if (!strcmp(name, item->name))
+			return item;
+	}
+
+	block = block_find_by_name(name);
+	if (block != NULL)
+		return item_find_or_create(block->id);
+
+	return NULL;
 }
 
 struct item *item_find_or_create(enum item_type id)
@@ -105,25 +196,5 @@ struct item *item_find_or_create(enum item_type id)
 	}
 
 	return item;
-}
-
-struct item *item_find_by_name(const char *name)
-{
-	unsigned i;
-	struct block *block;
-
-	for (i = 0; i < sizeof(items) / sizeof(struct item); ++i)
-	{
-		struct item *item = &items[i];
-
-		if (!strcmp(name, item->name))
-			return item;
-	}
-
-	block = block_find_by_name(name);
-	if (block != NULL)
-		return item_find_or_create(block->id);
-
-	return NULL;
 }
 

@@ -1,0 +1,6 @@
+id: 276
+name: Diamond sword
+damageable: true
+enchantable: true
+tool: sword
+tool-metal: diamond

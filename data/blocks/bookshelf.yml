@@ -1,0 +1,6 @@
+id: 47
+name: Bookshelf
+hardness: 2.250000
+no-harvest-time: 2.250000
+weakness: axe
+on_mine: simple_drop

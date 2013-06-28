@@ -1,0 +1,7 @@
+id: 49
+name: Obsidian
+hardness: 10.000000
+no-harvest-time: 250.000000
+weakness: pickaxe
+weakness-metal: diamond
+on_mine: simple_drop

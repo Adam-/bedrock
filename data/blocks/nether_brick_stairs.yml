@@ -1,0 +1,6 @@
+id: 114
+name: Nether Brick Stairs
+hardness: 3.000000
+no-harvest-time: 10.000000
+weakness: pickaxe
+on_mine: simple_drop

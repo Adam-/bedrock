@@ -1,0 +1,5 @@
+id: 291
+name: Stone hoe
+damageable: true
+tool: hoe
+tool-metal: stone

@@ -38,7 +38,7 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock nbt util)
+target_link_libraries(bedrock nbt util ${YAML_LIBRARY})
 if(WIN32)
   target_link_libraries(bedrock ws2_32)
 else(WIN32)

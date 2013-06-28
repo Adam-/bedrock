@@ -1,0 +1,5 @@
+id: 65
+name: Ladder
+hardness: 0.600000
+no-harvest-time: 0.600000
+on_mine: simple_drop

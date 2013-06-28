@@ -1,0 +1,6 @@
+id: 3
+name: Dirt
+hardness: 0.750000
+no-harvest-time: 0.750000
+weakness: shovel
+on_mine: simple_drop

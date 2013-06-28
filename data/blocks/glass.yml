@@ -1,0 +1,5 @@
+id: 20
+name: Glass
+hardness: 0.500000
+no-harvest-time: 0.500000
+on_mine: simple_drop

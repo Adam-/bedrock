@@ -3,6 +3,8 @@
 #include "server/client.h"
 #include "server/column.h"
 #include "server/signal.h"
+#include "blocks/blocks.h"
+#include "blocks/items.h"
 #include "packet/packet_keep_alive.h"
 #include "config/config.h"
 #include "util/crypto.h"
@@ -242,6 +244,9 @@ int main(int argc, char **argv)
 	console_init();
 	bedrock_threadengine_start();
 
+	if (block_init() || item_init())
+		exit(1);
+
 	io_timer_schedule(&send_keepalive_timer, 400, EV_PERSIST, send_keepalive, NULL);
 	io_timer_schedule(&save_timer, 6000, EV_PERSIST, save, NULL);
 
@@ -259,6 +264,9 @@ int main(int argc, char **argv)
 	save(-1, 0, NULL);
 
 	world_free(world);
+
+	item_shutdown();
+	block_shutdown();
 
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();

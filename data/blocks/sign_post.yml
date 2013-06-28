@@ -1,0 +1,5 @@
+id: 63
+name: Sign Post
+hardness: 1.500000
+no-harvest-time: 1.500000
+on_mine: simple_drop

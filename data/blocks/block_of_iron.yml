@@ -1,0 +1,7 @@
+id: 42
+name: Block of Iron
+hardness: 7.500000
+no-harvest-time: 25.000000
+weakness: pickaxe
+weakness-metal: iron
+on_mine: simple_drop

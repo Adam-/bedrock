@@ -1,0 +1,7 @@
+id: 74
+name: Redstone Ore
+hardness: 4.500000
+no-harvest-time: 15.000000
+weakness: pickaxe
+weakness-metal: iron
+on_mine: simple_drop

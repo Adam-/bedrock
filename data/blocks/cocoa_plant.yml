@@ -1,0 +1,5 @@
+id: 127
+name: Cocoa Plant
+hardness: 0.050000
+no-harvest-time: 0.050000
+on_mine: simple_drop

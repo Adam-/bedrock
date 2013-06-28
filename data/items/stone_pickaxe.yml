@@ -1,0 +1,6 @@
+id: 274
+name: Stone pickaxe
+damageable: true
+enchantable: true
+tool: pickaxe
+tool-metal: stone

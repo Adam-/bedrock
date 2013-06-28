@@ -1,0 +1,6 @@
+id: 286
+name: Gold axe
+damageable: true
+enchantable: true
+tool: axe
+tool-metal: gold

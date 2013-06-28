@@ -1,0 +1,6 @@
+id: 273
+name: Stone shovel
+damageable: true
+enchantable: true
+tool: shovel
+tool-metal: stone

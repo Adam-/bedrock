@@ -1,0 +1,5 @@
+id: 28
+name: Detector Rail
+hardness: 1.050000
+no-harvest-time: 1.050000
+on_mine: simple_drop

@@ -1,0 +1,6 @@
+id: 272
+name: Stone sword
+damageable: true
+enchantable: true
+tool: sword
+tool-metal: stone

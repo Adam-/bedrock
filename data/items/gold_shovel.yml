@@ -1,0 +1,6 @@
+id: 284
+name: Gold shovel
+damageable: true
+enchantable: true
+tool: shovel
+tool-metal: gold

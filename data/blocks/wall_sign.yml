@@ -1,0 +1,5 @@
+id: 68
+name: Wall Sign
+hardness: 1.500000
+no-harvest-time: 1.500000
+on_mine: simple_drop

@@ -1,0 +1,5 @@
+id: 293
+name: Diamond hoe
+damageable: true
+tool: hoe
+tool-metal: diamond

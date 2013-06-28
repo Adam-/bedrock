@@ -1,0 +1,6 @@
+id: 256
+name: Iron shovel
+damageable: true
+enchantable: true
+tool: shovel
+tool-metal: iron

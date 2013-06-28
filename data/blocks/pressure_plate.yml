@@ -1,0 +1,6 @@
+id: 72
+name: Pressure Plate
+hardness: 0.750000
+no-harvest-time: 0.750000
+weakness: pickaxe
+on_mine: simple_drop

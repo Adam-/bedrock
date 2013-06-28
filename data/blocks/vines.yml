@@ -1,0 +1,5 @@
+id: 106
+name: Vines
+hardness: 0.300000
+no-harvest-time: 0.300000
+on_mine: simple_drop
