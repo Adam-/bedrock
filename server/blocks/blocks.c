@@ -3,8 +3,7 @@
 #include "server/column.h"
 #include "entities/entity.h"
 #include "util/string.h"
-
-#include <yaml.h>
+#include "util/yml.h"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -46,91 +45,59 @@ int block_init()
 	while ((ent = readdir(dir)))
 	{
 		char filename[PATH_MAX];
-		FILE *f;
+		struct yaml_object *yaml;
 		struct block *b;
-
-		yaml_parser_t parser;
-		yaml_token_t token;
-		yaml_token_type_t type = YAML_NO_TOKEN;
-		char *key = NULL;
-		int done;
+		bedrock_node *node;
 
 		if (!strstr(ent->d_name, ".yml"))
 			continue;
 
 		snprintf(filename, sizeof(filename), "data/blocks/%s", ent->d_name);
-		f = fopen(filename, "rb");
-		if (!f)
-			continue;
-
-		if (!yaml_parser_initialize(&parser))
+		yaml = yaml_parse(filename);
+		if (yaml == NULL)
 			continue;
 
 		b = bedrock_malloc(sizeof(struct block));
 
-		yaml_parser_set_input_file(&parser, f);
-		do
+		LIST_FOREACH(&yaml->objects, node)
 		{
-			if (!yaml_parser_scan(&parser, &token))
-				break;
+			struct yaml_object *attr = node->data;
 
-			if (token.type == YAML_SCALAR_TOKEN)
+			if (!strcmp(attr->name, "id"))
+				b->id = atoi(attr->value);
+			else if (!strcmp(attr->name, "name"))
+				b->name = bedrock_strdup(attr->value);
+			else if (!strcmp(attr->name, "hardness"))
+				b->hardness = atof(attr->value);
+			else if (!strcmp(attr->name, "no-harvest-time"))
+				b->no_harvest_time = atof(attr->value);
+			else if (!strcmp(attr->name, "weakness"))
 			{
-				if (type == YAML_KEY_TOKEN)
-				{
-					bedrock_free(key);
-					key = bedrock_malloc(token.data.scalar.length);
-					memcpy(key, token.data.scalar.value, token.data.scalar.length);
-				}
-				else if (type == YAML_VALUE_TOKEN)
-				{
-					const char *value = (const char *) token.data.scalar.value;
-
-					if (!strcmp(key, "id"))
-						b->id = atoi(value);
-					else if (!strcmp(key, "name"))
-						b->name = bedrock_strdup(value);
-					else if (!strcmp(key, "hardness"))
-						b->hardness = atof(value);
-					else if (!strcmp(key, "no-harvest-time"))
-						b->no_harvest_time = atof(value);
-					else if (!strcmp(key, "weakness"))
-					{
-						if (!strcmp(value, "pickaxe"))
-							b->weakness |= ITEM_FLAG_PICKAXE;
-						else if (!strcmp(value, "shovel"))
-							b->weakness |= ITEM_FLAG_SHOVEL;
-						else if (!strcmp(value, "axe"))
-							b->weakness |= ITEM_FLAG_AXE;
-					}
-					else if (!strcmp(key, "weakness-metal"))
-					{
-						if (!strcmp(value, "gold"))
-							b->weakness |= TOOL_TYPE_MASK_GOLD;
-						else if (!strcmp(value, "diamond"))
-							b->weakness |= TOOL_TYPE_MASK_DIAMOND;
-						else if (!strcmp(value, "iron"))
-							b->weakness |= TOOL_TYPE_MASK_IRON;
-						else if (!strcmp(value, "stone"))
-							b->weakness |= TOOL_TYPE_MASK_STONE;
-						else if (!strcmp(value, "wood"))
-							b->weakness |= TOOL_TYPE_MASK_WOOD;
-					}
-					else if (!strcmp(key, "on_mine"))
-						;
-				}
+				if (!strcmp(attr->value, "pickaxe"))
+					b->weakness |= ITEM_FLAG_PICKAXE;
+				else if (!strcmp(attr->value, "shovel"))
+					b->weakness |= ITEM_FLAG_SHOVEL;
+				else if (!strcmp(attr->value, "axe"))
+					b->weakness |= ITEM_FLAG_AXE;
 			}
-
-			done = token.type == YAML_STREAM_END_TOKEN;
-			type = token.type;
-
-			yaml_token_delete(&token);
+			else if (!strcmp(attr->name, "weakness-metal"))
+			{
+				if (!strcmp(attr->value, "gold"))
+					b->weakness |= TOOL_TYPE_MASK_GOLD;
+				else if (!strcmp(attr->value, "diamond"))
+					b->weakness |= TOOL_TYPE_MASK_DIAMOND;
+				else if (!strcmp(attr->value, "iron"))
+					b->weakness |= TOOL_TYPE_MASK_IRON;
+				else if (!strcmp(attr->value, "stone"))
+					b->weakness |= TOOL_TYPE_MASK_STONE;
+				else if (!strcmp(attr->value, "wood"))
+					b->weakness |= TOOL_TYPE_MASK_WOOD;
+			}
+			else if (!strcmp(attr->name, "on_mine"))
+				;
 		}
-		while (!done);
-		bedrock_free(key);
-		yaml_parser_delete(&parser);
 
-		fclose(f);
+		yaml_object_free(yaml);
 
 		bedrock_list_add(&blocks, b);
 	}

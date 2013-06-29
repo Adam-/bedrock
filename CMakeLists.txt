@@ -34,8 +34,6 @@ set(CMAKE_MODULE_PATH cmake)
 
 # required packages for compile
 find_package(ZLIB REQUIRED)
-find_package(FLEX REQUIRED)
-find_package(BISON REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(libevent REQUIRED)
 find_package(libyaml REQUIRED)

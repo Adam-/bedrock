@@ -24,8 +24,6 @@ time_t bedrock_start;
 struct timespec bedrock_time = { 0, 0 };
 uint32_t entity_id = 0;
 
-uint16_t bedrock_conf_log_level = 0;
-
 static struct timespec last_tick;
 
 static void update_time()
@@ -215,7 +213,7 @@ int main(int argc, char **argv)
 
 	parse_cli_args(argc, argv);
 
-	if (config_parse("server.config"))
+	if (config_parse("config.yml"))
 		exit(1);
 
 	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);

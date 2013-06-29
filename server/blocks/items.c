@@ -2,8 +2,7 @@
 #include "blocks/items.h"
 #include "blocks/blocks.h"
 #include "util/string.h"
-
-#include <yaml.h>
+#include "util/yml.h"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -29,95 +28,63 @@ int item_init()
 	while ((ent = readdir(dir)))
 	{
 		char filename[PATH_MAX];
-		FILE *f;
 		struct item *i;
-
-		yaml_parser_t parser;
-		yaml_token_t token;
-		yaml_token_type_t type = YAML_NO_TOKEN;
-		char *key = NULL;
-		int done;
+		struct yaml_object *yaml;
+		bedrock_node *node;
 
 		if (!strstr(ent->d_name, ".yml"))
 			continue;
 
 		snprintf(filename, sizeof(filename), "data/items/%s", ent->d_name);
-		f = fopen(filename, "rb");
-		if (!f)
-			continue;
-
-		if (!yaml_parser_initialize(&parser))
+		yaml = yaml_parse(filename);
+		if (yaml == NULL)
 			continue;
 
 		i = bedrock_malloc(sizeof(struct item));
 
-		yaml_parser_set_input_file(&parser, f);
-		do
+		LIST_FOREACH(&yaml->objects, node)
 		{
-			if (!yaml_parser_scan(&parser, &token))
-				break;
+			struct yaml_object *attr = node->data;
 
-			if (token.type == YAML_SCALAR_TOKEN)
+			if (!strcmp(attr->name, "id"))
+				i->id = atoi(attr->value);
+			else if (!strcmp(attr->name, "name"))
+				i->name = bedrock_strdup(attr->value);
+			else if (!strcmp(attr->name, "damageable"))
+				i->flags |= ITEM_FLAG_DAMAGABLE;
+			else if (!strcmp(attr->name, "enchantable"))
+				i->flags |= ITEM_FLAG_ENCHANTABLE;
+			else if (!strcmp(attr->name, "tool"))
 			{
-				if (type == YAML_KEY_TOKEN)
-				{
-					bedrock_free(key);
-					key = bedrock_malloc(token.data.scalar.length);
-					memcpy(key, token.data.scalar.value, token.data.scalar.length);
-				}
-				else if (type == YAML_VALUE_TOKEN)
-				{
-					const char *value = (const char *) token.data.scalar.value;
-
-					if (!strcmp(key, "id"))
-						i->id = atoi(value);
-					else if (!strcmp(key, "name"))
-						i->name = bedrock_strdup(value);
-					else if (!strcmp(key, "damageable"))
-						i->flags |= ITEM_FLAG_DAMAGABLE;
-					else if (!strcmp(key, "enchantable"))
-						i->flags |= ITEM_FLAG_ENCHANTABLE;
-					else if (!strcmp(key, "tool"))
-					{
-						if (!strcmp(value, "shovel"))
-							i->flags |= ITEM_FLAG_SHOVEL;
-						else if (!strcmp(value, "pickaxe"))
-							i->flags |= ITEM_FLAG_PICKAXE;
-						else if (!strcmp(value, "axe"))
-							i->flags |= ITEM_FLAG_AXE;
-						else if (!strcmp(value, "sword"))
-							i->flags |= ITEM_FLAG_SWORD;
-						else if (!strcmp(value, "hoe"))
-							i->flags |= ITEM_FLAG_HOE;
-						else if (!strcmp(value, "shears"))
-							i->flags |= ITEM_FLAG_SHEARS;
-					}
-					else if (!strcmp(key, "tool-metal"))
-					{
-						if (!strcmp(value, "gold"))
-							i->flags |= ITEM_FLAG_GOLD;
-						else if (!strcmp(value, "diamond"))
-							i->flags |= ITEM_FLAG_DIAMOND;
-						else if (!strcmp(value, "iron"))
-							i->flags |= ITEM_FLAG_IRON;
-						else if (!strcmp(value, "stone"))
-							i->flags |= ITEM_FLAG_STONE;
-						else if (!strcmp(value, "wood"))
-							i->flags |= ITEM_FLAG_WOOD;
-					}
-				}
+				if (!strcmp(attr->value, "shovel"))
+					i->flags |= ITEM_FLAG_SHOVEL;
+				else if (!strcmp(attr->value, "pickaxe"))
+					i->flags |= ITEM_FLAG_PICKAXE;
+				else if (!strcmp(attr->value, "axe"))
+					i->flags |= ITEM_FLAG_AXE;
+				else if (!strcmp(attr->value, "sword"))
+					i->flags |= ITEM_FLAG_SWORD;
+				else if (!strcmp(attr->value, "hoe"))
+					i->flags |= ITEM_FLAG_HOE;
+				else if (!strcmp(attr->value, "shears"))
+					i->flags |= ITEM_FLAG_SHEARS;
 			}
-
-			done = token.type == YAML_STREAM_END_TOKEN;
-			type = token.type;
-
-			yaml_token_delete(&token);
+			else if (!strcmp(attr->name, "tool-metal"))
+			{
+				if (!strcmp(attr->value, "gold"))
+					i->flags |= ITEM_FLAG_GOLD;
+				else if (!strcmp(attr->value, "diamond"))
+					i->flags |= ITEM_FLAG_DIAMOND;
+				else if (!strcmp(attr->value, "iron"))
+					i->flags |= ITEM_FLAG_IRON;
+				else if (!strcmp(attr->value, "stone"))
+					i->flags |= ITEM_FLAG_STONE;
+				else if (!strcmp(attr->value, "wood"))
+					i->flags |= ITEM_FLAG_WOOD;
+			}
 		}
-		while (!done);
-		bedrock_free(key);
-		yaml_parser_delete(&parser);
 
-		fclose(f);
+		yaml_object_free(yaml);
 
 		bedrock_list_add(&items, i);
 	}

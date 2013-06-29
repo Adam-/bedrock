@@ -2,11 +2,6 @@
 # Include library header files
 include_directories(../include ../include/server ${OPENSSL_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
 
-# Generate the files for compile
-FLEX_TARGET(LEXER ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.l ${CMAKE_CURRENT_SOURCE_DIR}/config/lexer.c)
-BISON_TARGET(PARSER ${CMAKE_CURRENT_SOURCE_DIR}/config/parser.y ${CMAKE_CURRENT_SOURCE_DIR}/config/parser.c)
-ADD_FLEX_BISON_DEPENDENCY(LEXER PARSER)
-
 # Set an empty list for later
 set(BEDROCK_SOURCES)
 
@@ -37,8 +32,8 @@ if(WIN32)
   endforeach(SOURCE_FOLDER ${SOURCE_FOLDERS})
 endif(WIN32)
 
-add_executable(bedrock ${BEDROCK_SOURCES} ${FLEX_LEXER_OUTPUTS} ${BISON_PARSER_OUTPUTS})
-target_link_libraries(bedrock nbt util ${YAML_LIBRARY})
+add_executable(bedrock ${BEDROCK_SOURCES})
+target_link_libraries(bedrock nbt util)
 if(WIN32)
   target_link_libraries(bedrock ws2_32)
 else(WIN32)
