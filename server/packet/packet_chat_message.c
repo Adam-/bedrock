@@ -19,6 +19,10 @@ int packet_chat_message(struct client *client, const bedrock_packet *p)
 		char *p = strrchr(message, SPECIAL_CHAR);
 		if (p != NULL && (size_t) (p - message) == strlen(message) - 1)
 			return ERROR_INVALID_FORMAT;
+
+		p = strchr(message, '"'); // XXX
+		if (p != NULL)
+			return offset;
 	}
 
 	if (*message == '/')
@@ -54,16 +58,18 @@ void packet_send_chat_message(struct client *client, const char *buf, ...)
 {
 	bedrock_packet packet;
 	va_list args;
-	char message[BEDROCK_MAX_STRING_LENGTH];
+	char message[BEDROCK_MAX_STRING_LENGTH], json_message[BEDROCK_MAX_STRING_LENGTH];
 
 	va_start(args, buf);
 	vsnprintf(message, sizeof(message), buf, args);
 	va_end(args);
 
+	snprintf(json_message, sizeof(json_message), "{\"text\":\"%s\"}", message);
+
 	packet_init(&packet, CHAT_MESSAGE);
 
 	packet_pack_header(&packet, CHAT_MESSAGE);
-	packet_pack_string(&packet, message);
+	packet_pack_string(&packet, json_message);
 
 	client_send_packet(client, &packet);
 }

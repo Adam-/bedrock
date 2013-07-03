@@ -15,6 +15,7 @@
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_entity_head_look.h"
 #include "packet/packet_entity_teleport.h"
+#include "packet/packet_entity_properties.h"
 #include "packet/packet_keep_alive.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
@@ -895,6 +896,8 @@ void client_finish_login_sequence(struct client *client)
 			packet_send_chat_message(c, "%s joined the game", client->name);
 		}
 	}
+
+	packet_send_entity_properties(client, "generic.movementSpeed", BEDROCK_DEFAUT_PLAYER_WALK_SPEED);
 
 	/* Once this comes back we know the client is synced */
 	packet_send_keep_alive(client, ~0);

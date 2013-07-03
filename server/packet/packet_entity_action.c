@@ -18,9 +18,11 @@ int packet_entity_action(struct client *client, const bedrock_packet *p)
 	int offset = PACKET_HEADER_LENGTH;
 	uint32_t eid;
 	uint8_t aid;
+	int32_t unknown;
 
 	packet_read_int(p, &offset, &eid, sizeof(eid));
 	packet_read_int(p, &offset, &aid, sizeof(aid));
+	packet_read_int(p, &offset, &unknown, sizeof(unknown));
 
 	if (eid != client->id)
 		return ERROR_UNEXPECTED;

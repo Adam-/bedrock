@@ -33,6 +33,7 @@ enum
 	ENTITY_TELEPORT               = 0x22,
 	ENTITY_HEAD_LOOK              = 0x23,
 	ENTITY_METADATA               = 0x28,
+	ENTITY_PROPERTIES             = 0x2C,
 	MAP_COLUMN                    = 0x33,
 	BLOCK_CHANGE                  = 0x35,
 	MAP_COLUMN_BULK               = 0x38,
