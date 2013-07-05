@@ -110,6 +110,17 @@ struct yaml_object *yaml_parse(const char *file)
 			}
 			case YAML_FLOW_SEQUENCE_END_TOKEN:
 				object = object->parent;
+				if (scalar != NULL)
+				{
+					object->objects.free = (bedrock_free_func) yaml_object_free;
+					bedrock_list_clear(&object->objects);
+
+					object = object->parent;
+					scalar = NULL;
+				}
+				break;
+			case YAML_TAG_TOKEN:
+				strncpy(object->type, (char *) token.data.tag.suffix, sizeof(object->type));
 				break;
 			case YAML_BLOCK_SEQUENCE_START_TOKEN:
 				break;
@@ -151,12 +162,12 @@ static void recursive_yaml_dump(FILE *out, struct yaml_object *obj, int level)
 	fprintf(out, " -> ");
 
 	if (*obj->value)
-		fprintf(out, "%s (scalar)\n", obj->value);
+		fprintf(out, "%s (%s)\n", obj->value, obj->type);
 	else
 	{
 		bedrock_node *node;
 
-		fprintf(out, "(list)\n");
+		fprintf(out, "(%s)\n", obj->type);
 
 		LIST_FOREACH(&obj->objects, node)
 		{

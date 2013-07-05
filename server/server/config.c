@@ -11,6 +11,7 @@ int server_maxusers;
 char server_ip[64];
 int server_port;
 uint16_t bedrock_conf_log_level = 0;
+bool allow_new_users = false;
 
 int config_parse(const char *config)
 {
@@ -94,6 +95,8 @@ int config_parse(const char *config)
 							bedrock_conf_log_level |= LEVEL_PACKET_DEBUG;
 					}
 				}
+				else if (!strcmp(attr->name, "allow_new_users"))
+					allow_new_users = !strcmp(attr->value, "true");
 			}
 		}
 		else if (!strcmp(o->name, "oper"))

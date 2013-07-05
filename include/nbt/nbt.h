@@ -1,7 +1,9 @@
 #include "tag.h"
 #include "util/buffer.h"
+#include "util/yml.h"
 
 extern nbt_tag *nbt_parse(const unsigned char *data, size_t size);
+extern nbt_tag *nbt_parse_yml(struct yaml_object *obj);
 extern bedrock_buffer *nbt_write(nbt_tag *tag);
 extern void nbt_free(nbt_tag *tag);
 extern void nbt_clear(nbt_tag *tag);

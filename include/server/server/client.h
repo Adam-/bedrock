@@ -131,6 +131,7 @@ extern int authenticated_client_count;
 extern struct client *client_create();
 extern struct client *client_find(const char *name);
 extern bool client_load(struct client *client);
+extern void client_new(struct client *client);
 extern void client_save(struct client *client);
 extern void client_save_all();
 extern void client_exit(struct client *client);

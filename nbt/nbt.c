@@ -514,7 +514,7 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 {
 	nbt_tag *c;
 
-	bedrock_assert(tag != NULL && (tag->type == TAG_LIST || tag->type == TAG_COMPOUND), return NULL);
+	bedrock_assert(tag == NULL || (tag->type == TAG_LIST || tag->type == TAG_COMPOUND), return NULL);
 
 	c = bedrock_malloc(sizeof(nbt_tag));
 	if (name != NULL)
@@ -567,7 +567,9 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 			break;
 	}
 
-	if (tag->type == TAG_LIST)
+	if (tag == NULL)
+		;
+	else if (tag->type == TAG_LIST)
 	{
 		struct nbt_tag_list *tl = &tag->payload.tag_list;
 
@@ -579,7 +581,7 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 
 		bedrock_assert((size_t) tl->length == tl->list.count, ;);
 	}
-	else
+	else //if (tag->type == TAG_COMPOUND)
 		bedrock_list_add(&tag->payload.tag_compound, c);
 
 	return c;

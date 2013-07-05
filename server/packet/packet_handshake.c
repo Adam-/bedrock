@@ -54,8 +54,19 @@ int packet_handshake(struct client *client, const bedrock_packet *p)
 	client_load(client);
 	if (client->data == NULL)
 	{
-		packet_send_disconnect(client, "Unknown user");
-		return offset;
+		if (allow_new_users == false)
+		{
+			packet_send_disconnect(client, "Unknown user");
+			return offset;
+		}
+
+		client_new(client);
+
+		if (client->data == NULL)
+		{
+			packet_send_disconnect(client, "Error creating user");
+			return offset;
+		}
 	}
 
 	packet_send_encryption_request(client);

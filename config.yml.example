@@ -25,6 +25,9 @@ server:
   # The log levels to use,
   log_level: [CRIT, WARN, INFO]
 
+  # If disabled, unknown users will not be able to log in.
+  allow_new_users: true
+
 # Configures a server operator (admin).
 oper:
   -

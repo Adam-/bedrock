@@ -1,0 +1,29 @@
+Motion: !!list [!!float 0.0, !!float 0.0, !!float 0.0]
+foodExhaustionLevel: !!float 0.0
+Health: !!short 20
+OnGround: !!byte 0
+HurtTime: !!short 0
+foodExhaustionLevel: !!short 2.288459
+foodTickTimer: !!int 0
+XpLevel: !!int 0
+Health: !!short 20
+Dimension: !!int 0
+Air: !!short 300
+Inventory: !!list []
+Pos: !!list [!!double 0, !!double 0, !!double 0]
+foodSaturationLevel: !!float 0
+AttackTime: !!short 0
+abilities: !!compound
+  flying: !!byte 0
+  instabuild: !!byte 0
+  mayfly: !!byte 0
+  invulnerable: !!byte 0
+Sleeping: !!byte 0
+Fire: !!short -20
+playerGameType: !!int 0
+foodLevel: !!int 20
+FallDistance: !!float 0
+XpTotal: !!int 0
+Rotation: !!list [ !!float -84.300095, !!float -21.899990 ]
+DeathTime: !!short 0
+XpP: !!float 0.0

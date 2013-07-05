@@ -128,7 +128,7 @@ bool client_load(struct client *client)
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
 	{
-		bedrock_log(LEVEL_CRIT, "client: Unable to load player information for %s from %s - %s", client->name, path, strerror(errno));
+		bedrock_log(LEVEL_DEBUG, "client: Unable to load player information for %s from %s - %s", client->name, path, strerror(errno));
 		return false;
 	}
 
@@ -166,6 +166,47 @@ bool client_load(struct client *client)
 	return true;
 }
 
+void client_new(struct client *client)
+{
+	struct yaml_object *yml;
+	nbt_tag *nbt;
+
+	bedrock_assert(client->data == NULL, return);
+	bedrock_assert(client->world != NULL, return);
+
+	yml = yaml_parse("data/player.yml");
+	if (yml == NULL)
+	{
+		bedrock_log(LEVEL_WARN, "client: Unable to load player.yml");
+		return;
+	}
+
+	nbt = nbt_parse_yml(yml);
+	bedrock_assert(nbt != NULL, goto error);
+
+	{
+		/* Set position from world spawn point */
+		int32_t *i_spawn_x = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnX"),
+			*i_spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY"),
+			*i_spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
+
+		double d_spawn_x = *i_spawn_x,
+			d_spawn_y = *i_spawn_y,
+			d_spawn_z = *i_spawn_z;
+
+		nbt_set(nbt, TAG_DOUBLE, &d_spawn_x, sizeof(d_spawn_x), 2, "Pos", 0);
+		nbt_set(nbt, TAG_DOUBLE, &d_spawn_y, sizeof(d_spawn_y), 2, "Pos", 1);
+		nbt_set(nbt, TAG_DOUBLE, &d_spawn_z, sizeof(d_spawn_z), 2, "Pos", 2);
+	}
+
+	client_load_nbt(client, nbt);
+
+	bedrock_log(LEVEL_DEBUG, "client: Successfully created new player: %s", client->name);
+
+ error:
+	yaml_object_free(yml);
+}
+
 struct client_save_info
 {
 	char name[BEDROCK_USERNAME_MAX];
@@ -178,10 +219,10 @@ static void client_save_entry(struct bedrock_thread bedrock_attribute_unused *th
 	int fd;
 	compression_buffer *buffer;
 	
-	fd = open(ci->path, O_WRONLY | O_TRUNC | _O_BINARY);
+	fd = open(ci->path, O_CREAT | O_WRONLY | O_TRUNC | _O_BINARY, S_IRUSR | S_IWUSR);
 	if (fd == -1)
 	{
-		bedrock_log(LEVEL_WARN, "client: Unable to open client file for %s - %s", ci->name, strerror(errno));
+		bedrock_log(LEVEL_WARN, "client: Unable to open player file for %s - %s", ci->name, strerror(errno));
 		return;
 	}
 
@@ -218,6 +259,9 @@ static bedrock_buffer *client_save_nbt(struct client *client)
 	{
 		struct item_stack *stack = &client->inventory[i];
 		uint8_t b;
+
+		if (!stack->id || !stack->count)
+			continue;
 
 		nbt_tag *slot = nbt_add(inventory, TAG_COMPOUND, NULL, NULL, 0);
 		nbt_add(slot, TAG_SHORT, "id", &stack->id, sizeof(stack->id));
