@@ -94,7 +94,8 @@ int block_init()
 					b->weakness |= TOOL_TYPE_MASK_WOOD;
 			}
 			else if (!strcmp(attr->name, "on_mine"))
-				;
+				if (!strcmp(attr->value, "simple_drop"))
+					b->on_mine = simple_drop;
 		}
 
 		yaml_object_free(yaml);
