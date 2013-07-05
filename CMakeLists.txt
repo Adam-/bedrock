@@ -53,5 +53,6 @@ add_subdirectory(nbt)
 add_subdirectory(server)
 add_subdirectory(util)
 
-install(FILES server.config.example DESTINATION bin)
-#install(DIRECTORY include DESTINATION .)
+install(FILES config.yml.example DESTINATION .)
+install(DIRECTORY include DESTINATION .)
+install(DIRECTORY data DESTINATION .)
