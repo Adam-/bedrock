@@ -10,10 +10,18 @@ int packet_list_ping(struct client *client, const bedrock_packet *p)
 	int offset = PACKET_HEADER_LENGTH;
 	uint8_t b;
 	char string[BEDROCK_MAX_STRING_LENGTH];
+	int16_t s;
+	int32_t i;
 	int len = 0;
 	bedrock_packet packet;
 
 	packet_read_int(p, &offset, &b, sizeof(b));
+	packet_read_int(p, &offset, &b, sizeof(b));
+	packet_read_string(p, &offset, string, sizeof(string));
+	packet_read_int(p, &offset, &s, sizeof(s));
+	packet_read_int(p, &offset, &b, sizeof(b));
+	packet_read_string(p, &offset, string, sizeof(string));
+	packet_read_int(p, &offset, &i, sizeof(i));
 
 	string[len++] = (char) SPECIAL_CHAR;
 	string[len++] = '1';
@@ -34,8 +42,6 @@ int packet_list_ping(struct client *client, const bedrock_packet *p)
 	packet_pack_string_len(&packet, string, len);
 
 	client_send_packet(client, &packet);
-
-	io_disable(&client->fd.event_read);
 
 	return offset;
 }

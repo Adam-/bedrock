@@ -48,6 +48,7 @@ enum
 	PLAYER_ABILITIES              = 0xCA,
 	CLIENT_SETTINGS               = 0xCC,
 	CLIENT_STATUS                 = 0xCD,
+	PLUGIN_MESSAGE                = 0xFA,
 	ENCRYPTION_RESPONSE           = 0xFC,
 	ENCRYPTION_REQUEST            = 0xFD,
 	LIST_PING                     = 0xFE,

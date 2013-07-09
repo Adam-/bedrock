@@ -21,6 +21,7 @@
 #include "packet/packet_player_abilities.h"
 #include "packet/packet_client_settings.h"
 #include "packet/packet_client_status.h"
+#include "packet/packet_plugin_message.h"
 #include "packet/packet_encryption_response.h"
 #include "packet/packet_list_ping.h"
 #include "packet/packet_disconnect.h"
@@ -64,9 +65,10 @@ struct packet_info packet_handlers[] = {
 	{PLAYER_ABILITIES,         10, STATE_IN_GAME,                          NONE,                    packet_player_abilities},
 	{CLIENT_SETTINGS,           7, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_client_settings},
 	{CLIENT_STATUS,             2, STATE_LOGGED_IN | STATE_IN_GAME,        CLIENT_ONLY,             packet_client_status},
+	{PLUGIN_MESSAGE,            5, STATE_ANY,                              SOFT_SIZE,               packet_plugin_message},
 	{ENCRYPTION_RESPONSE,       5, STATE_HANDSHAKING,                      SOFT_SIZE,               packet_encryption_response},
 	{ENCRYPTION_REQUEST,        7, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
-	{LIST_PING,                 2, STATE_UNAUTHENTICATED,                  CLIENT_ONLY,             packet_list_ping},
+	{LIST_PING,                 7, STATE_UNAUTHENTICATED,                  SOFT_SIZE | CLIENT_ONLY, packet_list_ping},
 	{DISCONNECT,                3, STATE_ANY,                              SOFT_SIZE,               packet_disconnect}
 };
 
