@@ -26,7 +26,6 @@ enum
 enum
 {
 	OP_REGULAR,
-	OP_SHIFT,
 	OP_PAINT = 5,
 	OP_DOUBLE_CLICK
 };
@@ -57,6 +56,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	packet_read_slot(p, &offset, &slot_data);
 
 	if (offset <= ERROR_UNKNOWN)
+		return offset;
+
+	/* Clicking on something other than a slot, but still inside of the window */
+	if (slot == -1)
 		return offset;
 
 	for (i = 0; i < MAX_SLOTS; ++i)
@@ -97,7 +100,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				slots[i + CHEST_INVENTORY_START] = &client->inventory[INVENTORY_START + i];
 		}
 		else
+		{
+			bedrock_log(LEVEL_DEBUG, "click window: unknown window ID for %s", client->name);
 			return ERROR_UNEXPECTED;
+		}
 
 		bedrock_assert(slot >= 0 && slot < MAX_SLOTS, return ERROR_NOT_ALLOWED);
 		stack = slots[slot];
@@ -118,7 +124,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		if (slot_data.id == -1 && slot_data.count == 0)
 			/* Painting sends this in slot data */;
 		else if (stack->id != slot_data.id || stack->count != slot_data.count) // XXX I have no metadata tracking?
+		{
+			bedrock_log(LEVEL_DEBUG, "click window: mismatch in stack data for %s", client->name);
 			return ERROR_UNEXPECTED; // This is a client/server desync
+		}
 
 		// If I am already dragging an item replace it with this slot completely, even if I right clicked this slot.
 		if (client->drag_data.stack.id)
@@ -209,7 +218,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			}
 			/* Trying to paint to an existing stack that doesn't match? */
 			else if (mode == OP_PAINT)
+			{
+				bedrock_log(LEVEL_DEBUG, "click window: paint: painting to a slot which mismatching item ids for %s", client->name);
 				return ERROR_UNEXPECTED;
+			}
 			// Replacing a slot
 			else
 			{
@@ -273,7 +285,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			{
 				/* Trying to (stop) paint with nothing held? */
 				if (!client->drag_data.stack.id)
+				{
+					bedrock_log(LEVEL_DEBUG, "click window: trying to stop paint with nothing held for %s", client->name);
 					return ERROR_UNEXPECTED;
+				}
 
 				if (button == BUTTON_LEFT_START || button == BUTTON_RIGHT_START)
 				{
@@ -301,7 +316,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 								/* Client trying to paint an item over a slot of a different type */
 								if (stack == NULL || (stack->id && stack->id != client->drag_data.stack.id))
+								{
+									bedrock_log(LEVEL_DEBUG, "click window: paint: finish paint over slot of different type for %s", client->name);
 									return ERROR_NOT_ALLOWED;
+								}
 
 								/* Slot can hold this many more items */
 								can_hold = BEDROCK_MAX_ITEMS_PER_STACK - stack->count;
