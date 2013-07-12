@@ -64,6 +64,31 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 	for (i = 0; i < MAX_SLOTS; ++i)
 		slots[i] = NULL;
+	
+	if (window == WINDOW_INVENTORY)
+	{
+		for (i = INVENTORY_CRAFT_OUTPUT; i < INVENTORY_SIZE; ++i)
+			slots[i] = &client->inventory[i];
+	}
+	else if (window != client->window_data.id)
+		return ERROR_NOT_ALLOWED;
+	else if (client->window_data.type == WINDOW_CHEST)
+	{
+		column = find_column_from_world_which_contains(client->world, client->window_data.x, client->window_data.z);
+		struct chest *chest;
+
+		if (column == NULL)
+			return ERROR_UNEXPECTED;
+
+		chest = (struct chest *) column_find_tile_entity(column, BLOCK_CHEST, client->window_data.x, client->window_data.y, client->window_data.z);
+		if (chest == NULL)
+			return ERROR_UNEXPECTED;
+
+		for (i = 0; i < CHEST_INVENTORY_START; ++i)
+			slots[i] = &chest->items[i];
+		for (i = 0; i < INVENTORY_SIZE - INVENTORY_START; ++i)
+			slots[i + CHEST_INVENTORY_START] = &client->inventory[INVENTORY_START + i];
+	}
 
 	if (slot == -999)
 		; // Outside of the window
@@ -73,31 +98,11 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		{
 			if (slot < INVENTORY_CRAFT_OUTPUT || slot >= INVENTORY_SIZE)
 				return ERROR_NOT_ALLOWED;
-	
-			for (i = INVENTORY_CRAFT_OUTPUT; i < INVENTORY_SIZE; ++i)
-				slots[i] = &client->inventory[i];
 		}
-		else if (window != client->window_data.id)
-			return ERROR_NOT_ALLOWED;
 		else if (client->window_data.type == WINDOW_CHEST)
 		{
-			column = find_column_from_world_which_contains(client->world, client->window_data.x, client->window_data.z);
-			struct chest *chest;
-
-			if (column == NULL)
-				return ERROR_UNEXPECTED;
-
-			chest = (struct chest *) column_find_tile_entity(column, BLOCK_CHEST, client->window_data.x, client->window_data.y, client->window_data.z);
-			if (chest == NULL)
-				return ERROR_UNEXPECTED;
-
 			if (slot < 0 || slot >= CHEST_SIZE)
 				return ERROR_NOT_ALLOWED;
-
-			for (i = 0; i < CHEST_INVENTORY_START; ++i)
-				slots[i] = &chest->items[i];
-			for (i = 0; i < INVENTORY_SIZE - INVENTORY_START; ++i)
-				slots[i + CHEST_INVENTORY_START] = &client->inventory[INVENTORY_START + i];
 		}
 		else
 		{
@@ -109,7 +114,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		stack = slots[slot];
 		bedrock_assert(stack != NULL, return ERROR_NOT_ALLOWED);
 
-		bedrock_log(LEVEL_DEBUG, "click window: %s clicked slot %d clicked which contains %d %s", client->name, slot, stack->count, item_find_or_create(stack->id)->name);
+		bedrock_log(LEVEL_DEBUG, "click window: %s clicked slot %d which contains %d %s", client->name, slot, stack->count, item_find_or_create(stack->id)->name);
 
 #if 0
 		for (i = 0; i < MAX_SLOTS; ++i)
