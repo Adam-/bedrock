@@ -7,6 +7,7 @@
 #include "nbt/nbt.h"
 #include "windows/window.h"
 #include "packet/packet_confirm_transaction.h"
+#include "server/crafting/crafting.h"
 
 #include <math.h>
 
@@ -48,6 +49,8 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	struct item_stack *slots[MAX_SLOTS];
 	int i;
 
+	bool crafting_output = false;
+
 	packet_read_int(p, &offset, &window, sizeof(window));
 	packet_read_int(p, &offset, &slot, sizeof(slot));
 	packet_read_int(p, &offset, &button, sizeof(button));
@@ -69,6 +72,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	{
 		for (i = INVENTORY_CRAFT_OUTPUT; i < INVENTORY_SIZE; ++i)
 			slots[i] = &client->inventory[i];
+		crafting_output = slot == INVENTORY_CRAFT_OUTPUT;
 	}
 	else if (window != client->window_data.id)
 		return ERROR_NOT_ALLOWED;
@@ -89,6 +93,16 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		for (i = 0; i < INVENTORY_SIZE - INVENTORY_START; ++i)
 			slots[i + CHEST_INVENTORY_START] = &client->inventory[INVENTORY_START + i];
 	}
+	else if (client->window_data.type == WINDOW_WORKBENCH)
+	{
+		for (i = WORKBENCH_OUTPUT; i < WORKBENCH_INVENTORY_START; ++i)
+			slots[i] = &client->window_data.crafting[i];
+		for (i = WORKBENCH_INVENTORY_START; i < WORKBENCH_HELDITEMS_START; ++i)
+			slots[i] = &client->inventory[INVENTORY_START + (i - WORKBENCH_INVENTORY_START)];
+		for (i = WORKBENCH_HELDITEMS_START; i < WORKBENCH_SIZE; ++i)
+			slots[i] = &client->inventory[INVENTORY_HOTBAR_START + (i - WORKBENCH_HELDITEMS_START)];
+		crafting_output = slot == WORKBENCH_OUTPUT;
+	}
 
 	if (slot == -999)
 		; // Outside of the window
@@ -101,7 +115,12 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		}
 		else if (client->window_data.type == WINDOW_CHEST)
 		{
-			if (slot < 0 || slot >= CHEST_SIZE)
+			if (slot < CHEST_CHEST_START || slot >= CHEST_SIZE)
+				return ERROR_NOT_ALLOWED;
+		}
+		else if (client->window_data.type == WINDOW_WORKBENCH)
+		{
+			if (slot < WORKBENCH_OUTPUT || slot >= WORKBENCH_SIZE)
 				return ERROR_NOT_ALLOWED;
 		}
 		else
@@ -142,6 +161,8 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 			{
 				if (mode == OP_PAINT)
 				{
+					if (crafting_output)
+						return ERROR_UNEXPECTED;
 					/* Painting on to a stack of existing matching items */
 					if (button == BUTTON_RIGHT_PAINT)
 					{
@@ -167,6 +188,21 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 						else
 							/* Painting to too many slots */
 							ok = false;
+					}
+				}
+				else if (crafting_output)
+				{
+					/* Add to currently held items if I can hold everything in this slot */
+
+					if (client->drag_data.stack.count + stack->count < BEDROCK_MAX_ITEMS_PER_STACK)
+					{
+						client->drag_data.stack.count += stack->count;
+						bedrock_log(LEVEL_DEBUG, "click window: crafting: %s picks up an additional %d %s", client->name, stack->count, item_find_or_create(stack->id)->name);
+
+						if (window == WINDOW_INVENTORY)
+							crafting_remove_one(&client->inventory[INVENTOTY_CRAFT_START], INVENTORY_CRAFT_END - INVENTOTY_CRAFT_START + 1);
+						else if (client->window_data.type == WINDOW_WORKBENCH)
+							crafting_remove_one(&client->window_data.crafting[WORKBENCH_CRAFT_START], WORKBENCH_INVENTORY_START - WORKBENCH_CRAFT_START);
 					}
 				}
 				/* On right click take one item, else combine them as much as possible */
@@ -227,6 +263,11 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				bedrock_log(LEVEL_DEBUG, "click window: paint: painting to a slot which mismatching item ids for %s", client->name);
 				return ERROR_UNEXPECTED;
 			}
+			/* I clicked a valid slot and I'm dragging something and the itemss don't match.
+			 * Trying to replace something with craft outbox box, which you can't do
+			 */
+			else if (crafting_output)
+				return ERROR_UNEXPECTED;
 			// Replacing a slot
 			else
 			{
@@ -239,12 +280,32 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 				client->drag_data.stack = slot_data;
 			}
 		}
+		// I am not dragging an item
 		else
 		{
 			/* This item is now being dragged and is no longer in its slot */
 			client->drag_data.stack.id = stack->id;
 			client->drag_data.stack.metadata = stack->metadata;
 
+			if (crafting_output || button == BUTTON_LEFT)
+			{
+				client->drag_data.stack.count = stack->count;
+				bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s and takes all %d blocks", client->name, slot, item_find_or_create(stack->id)->name, stack->count);
+
+				if (crafting_output)
+				{
+					bedrock_log(LEVEL_DEBUG, "click window: crafting: %s finishes crafting %d %s", client->name, stack->count, item_find_or_create(stack->id)->name);
+					if (window == WINDOW_INVENTORY)
+						crafting_remove_one(&client->inventory[INVENTOTY_CRAFT_START], INVENTORY_CRAFT_END - INVENTOTY_CRAFT_START + 1);
+					else if (client->window_data.type == WINDOW_WORKBENCH)
+						crafting_remove_one(&client->window_data.crafting[WORKBENCH_CRAFT_START], WORKBENCH_INVENTORY_START - WORKBENCH_CRAFT_START);
+				}
+
+				/* Slot is now empty */
+				stack->id = 0;
+				stack->count = 0;
+				stack->metadata = 0;
+			}
 			if (button == BUTTON_RIGHT)
 			{
 				/* We only want half of the blocks here. If there is an odd count then they are holding the larger. */
@@ -266,16 +327,6 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 					stack->id = 0;
 					stack->metadata = 0;
 				}
-			}
-			else if (button == BUTTON_LEFT)
-			{
-				client->drag_data.stack.count = stack->count;
-				bedrock_log(LEVEL_DEBUG, "click window: %s clicks on slot %d which contains %s and takes all %d blocks", client->name, slot, item_find_or_create(stack->id)->name, stack->count);
-
-				/* Slot is now empty */
-				stack->id = 0;
-				stack->count = 0;
-				stack->metadata = 0;
 			}
 			/* unknown button? */
 			else
@@ -493,9 +544,26 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 	packet_send_confirm_transaction(client, window, action, ok);
 
-	/* This column is now dirty and needs to be rewritten */
-	if (ok && column)
-		column_set_pending(column, COLUMN_FLAG_DIRTY);
+	if (ok)
+	{
+		/* This column is now dirty and needs to be rewritten */
+		if (column)
+			column_set_pending(column, COLUMN_FLAG_DIRTY);
+
+		if (window == WINDOW_INVENTORY)
+		{
+			crafting_process(&client->inventory[INVENTOTY_CRAFT_START], INVENTORY_CRAFT_END - INVENTOTY_CRAFT_START + 1, &client->inventory[INVENTORY_CRAFT_OUTPUT]);
+			if (client->inventory[INVENTORY_CRAFT_OUTPUT].id)
+				/* the client automatically sets this slot to the proper item */
+				bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s", client->name, client->inventory[INVENTORY_CRAFT_OUTPUT].count, item_find_or_create(client->inventory[INVENTORY_CRAFT_OUTPUT].id)->name);
+		}
+		else if (client->window_data.type == WINDOW_WORKBENCH)
+		{
+			crafting_process(&client->window_data.crafting[WORKBENCH_CRAFT_START], WORKBENCH_INVENTORY_START - WORKBENCH_CRAFT_START, &client->window_data.crafting[WORKBENCH_OUTPUT]);
+			if (client->window_data.crafting[WORKBENCH_OUTPUT].id)
+				bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s at a workbench", client->name, client->window_data.crafting[WORKBENCH_OUTPUT].count, item_find_or_create(client->window_data.crafting[WORKBENCH_OUTPUT].id)->name);
+		}
+	}
 
 	return offset;
 }

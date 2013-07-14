@@ -132,6 +132,13 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		return offset;
 	}
 
+	if (*placed_on == BLOCK_CRAFTING_TABLE)
+	{
+		packet_send_open_window(client, WINDOW_WORKBENCH, NULL, WORKBENCH_SIZE);
+		bedrock_log(LEVEL_DEBUG, "player building: %s operates crafting bench", client->name);
+		return offset;
+	}
+
 	bedrock_log(LEVEL_DEBUG, "player building: %s is building on %s with %s", client->name, item_find_or_create(*placed_on)->name, item->name);
 
 	/* Not holding an item? */

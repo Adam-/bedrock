@@ -111,16 +111,19 @@ struct client
 	}
 	digging_data;
 
-	// Data kept while a window (tile entity) is open
+	// Data kept while a window is open
 	struct
 	{
 		uint8_t id;
 		uint8_t type;
 
-		/* Coords of tile entity */
+		/* Coords of tile entity, if this window is a tile entity */
 		int32_t x;
 		uint8_t y;
 		int32_t z;
+
+		/* for crafting benches, output slot + input slots */
+		struct item_stack crafting[WORKBENCH_INVENTORY_START];
 	}
 	window_data;
 };

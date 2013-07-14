@@ -78,7 +78,7 @@ static void parse_args(int argc, char **argv)
 		{NULL, 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "dp", options, NULL)) != -1)
+	while ((c = getopt_long(argc, argv, "c:dp", options, NULL)) != -1)
 	{
 		switch (c)
 		{

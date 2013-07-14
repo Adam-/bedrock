@@ -10,6 +10,7 @@
 #include "util/crypto.h"
 #include "util/io.h"
 #include "protocol/console.h"
+#include "crafting/recipe.h"
 
 #include <time.h>
 #include <errno.h>
@@ -244,6 +245,7 @@ int main(int argc, char **argv)
 
 	if (block_init() || item_init())
 		exit(1);
+	recipe_init();
 
 	io_timer_schedule(&send_keepalive_timer, 400, EV_PERSIST, send_keepalive, NULL);
 	io_timer_schedule(&save_timer, 6000, EV_PERSIST, save, NULL);
@@ -263,8 +265,9 @@ int main(int argc, char **argv)
 
 	world_free(world);
 
-	item_shutdown();
+	recipe_shutdown();
 	block_shutdown();
+	item_shutdown();
 
 	bedrock_thread_exit_all();
 	bedrock_threadengine_stop();

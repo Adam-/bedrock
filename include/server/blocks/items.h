@@ -192,8 +192,6 @@ struct item
 	enum item_flags flags;
 };
 
-#define BEDROCK_ITEM_STACK_EMPTY { -1, 0, 0 }
-
 struct item_stack
 {
 	int16_t id;
