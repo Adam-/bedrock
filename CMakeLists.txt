@@ -30,7 +30,7 @@ check_type_size(uint32_t UINT32_T)
 check_type_size(int64_t INT64_T)
 check_type_size(uint64_t UINT64_T)
 
-set(CMAKE_MODULE_PATH cmake)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # required packages for compile
 find_package(ZLIB REQUIRED)
