@@ -88,19 +88,18 @@ void column_free(struct column *column)
 	if (column->data != NULL)
 		nbt_free(column->data);
 
-	/* If this is the last column in a region, free the region.
-	 * Because this column is being free'd it guarentees there are no pending
-	 * operations on this region, so region_free will not block.
+	/* If this is the last column in a region, mark the region as want free.
+	 * Because this is the last column it guarentees there are no pending
+	 * operations on this region. However the region worker thread may be what
+	 * is erasing this column (which can be for a number of reasons), so it isn't
+	 * safe to attempt to delete the region here.
+	 *
 	 * Also be sure the region worker still exists. If it doesn't then the region
 	 * is being free'd right now and this column is being free'd as a result of it.
 	 */
 	if (column->region->columns.count - column->region->empty_columns == 0 && column->region->worker != NULL)
 	{
-		/* Be sure this won't block */
-		bedrock_mutex_lock(&column->region->operations_mutex);
-		bedrock_assert(column->region->operations.count == 0, ;);
-		bedrock_mutex_unlock(&column->region->operations_mutex);
-		region_free(column->region);
+		region_set_pending(column->region, REGION_FLAG_EMPTY);
 	}
 
 	bedrock_free(column);

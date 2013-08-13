@@ -13,6 +13,11 @@ enum region_op
 	REGION_OP_WRITE = 1 << 1
 };
 
+enum region_flag
+{
+	REGION_FLAG_EMPTY = 1 << 0
+};
+
 /* A pending operation on a region */
 struct region_operation
 {
@@ -30,6 +35,8 @@ struct region
 	int x;
 	int z;
 	char path[PATH_MAX];
+
+	unsigned int flags:1;
 
 	/* Must be held for this fd */
 	bedrock_mutex fd_mutex;
@@ -64,5 +71,7 @@ extern struct region *region_create(struct world *world, int x, int z);
 extern void region_free(struct region *region);
 /* Finds the region which contains the point x and z */
 extern struct region *find_region_which_contains(struct world *world, double x, double z);
+extern void region_set_pending(struct region *region, enum region_flag flag);
+extern void region_process_pending();
 
 #endif // BEDROCK_SERVER_REGION_H

@@ -133,6 +133,9 @@ static void save(evutil_socket_t bedrock_attribute_unused fd, short bedrock_attr
 	/* Save pending columns */
 	column_process_pending();
 
+	/* Remove empty regions */
+	region_process_pending();
+
 	/* Save clients */
 	client_save_all();
 

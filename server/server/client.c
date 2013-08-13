@@ -700,7 +700,12 @@ void client_update_columns(struct client *client)
 
 			/* Column is no longer in render distance of anything */
 			if (c->players.count == 0)
-				column_set_pending(c, COLUMN_FLAG_EMPTY);
+			{
+				if (c->flags == 0)
+					column_free(c);
+				else
+					column_set_pending(c, COLUMN_FLAG_EMPTY);
+			}
 		}
 	}
 

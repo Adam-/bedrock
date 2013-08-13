@@ -17,6 +17,9 @@
 #define REGION_BUFFER_SIZE 65536
 #define DATA_CHUNK_SIZE 2048
 
+/* A list of regions with pending operations */
+static bedrock_list pending_updates = LIST_INIT;
+
 void region_operation_free(struct region_operation *op)
 {
 	bedrock_buffer_free(op->nbt_out);
@@ -397,6 +400,15 @@ static void region_operations_notify(struct region *region)
 			case REGION_OP_WRITE:
 				op->column->flags &= ~COLUMN_FLAG_WRITE;
 
+				/* Now that the write is finished, check if we want this column to be free'd */
+				if (op->column->flags & COLUMN_FLAG_EMPTY)
+				{
+					if (op->column->players.count == 0)
+						column_free(op->column);
+					else
+						op->column->flags &= ~COLUMN_FLAG_EMPTY;
+				}
+
 				bedrock_log(LEVEL_COLUMN, "region: Finished save for column %d,%d to %s", op->column->x, op->column->z, op->column->region->path);
 				break;
 		}
@@ -506,4 +518,36 @@ struct region *find_region_which_contains(struct world *world, double x, double 
 	region = region_create(world, region_x, region_z);
 
 	return region;
+}
+
+void region_set_pending(struct region *region, enum region_flag flag)
+{
+	if (region->flags)
+	{
+		region->flags |= flag;
+		return;
+	}
+
+	bedrock_list_add(&pending_updates, region);
+}
+
+void region_process_pending()
+{
+	bedrock_node *node, *node2;
+
+	LIST_FOREACH_SAFE(&pending_updates, node, node2)
+	{
+		struct region *region = node->data;
+
+		if (region->flags & REGION_FLAG_EMPTY)
+		{
+			if (region->columns.count - region->empty_columns == 0)
+				region_free(region);
+			else
+				region->flags &= ~REGION_FLAG_EMPTY;
+		}
+
+		bedrock_list_del_node(&pending_updates, node);
+		bedrock_free(node);
+	}
 }
