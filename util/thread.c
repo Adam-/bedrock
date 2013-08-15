@@ -7,28 +7,34 @@ bedrock_list thread_list = LIST_INIT;
 bedrock_pipe thread_notify_pipe;
 
 static bedrock_list thread_exited_list = LIST_INIT;
+static bedrock_mutex thread_mutex;
 
 static void do_exit_threads(void bedrock_attribute_unused *unused)
 {
-	bedrock_node *node, *node2;
+	bedrock_mutex_lock(&thread_mutex);
 
-	LIST_FOREACH_SAFE(&thread_exited_list, node, node2)
+	while (thread_exited_list.count)
 	{
-		struct bedrock_thread *thread = node->data;
+		struct bedrock_thread *thread = thread_exited_list.head->data;
+
+		bedrock_mutex_unlock(&thread_mutex);
 		bedrock_thread_join(thread);
+		bedrock_mutex_lock(&thread_mutex);
 	}
 
-	bedrock_assert(thread_exited_list.count == 0, ;);
+	bedrock_mutex_unlock(&thread_mutex);
 }
 
 void bedrock_threadengine_start()
 {
 	bedrock_pipe_open(&thread_notify_pipe, "thread exit pipe", do_exit_threads, NULL);
+	bedrock_mutex_init(&thread_mutex, "thread mutex");
 }
 
 void bedrock_threadengine_stop()
 {
 	bedrock_pipe_close(&thread_notify_pipe);
+	bedrock_mutex_destroy(&thread_mutex);
 }
 
 static void *thread_entry(void *data)
@@ -67,16 +73,22 @@ struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_
 
 bool bedrock_thread_want_exit(struct bedrock_thread *thread)
 {
-	return bedrock_list_has_data(&thread_exited_list, thread);
+	bool b;
+	bedrock_mutex_lock(&thread_mutex);
+	b = bedrock_list_has_data(&thread_exited_list, thread);
+	bedrock_mutex_unlock(&thread_mutex);
+	return b;
 }
 
 void bedrock_thread_set_exit(struct bedrock_thread *thread)
 {
-	if (bedrock_thread_want_exit(thread) == false)
+	bedrock_mutex_lock(&thread_mutex);
+	if (bedrock_list_has_data(&thread_exited_list, thread) == false)
 	{
 		bedrock_list_add(&thread_exited_list, thread);
 		bedrock_pipe_notify(&thread_notify_pipe);
 	}
+	bedrock_mutex_unlock(&thread_mutex);
 }
 
 void bedrock_thread_join(struct bedrock_thread *thread)
@@ -92,7 +104,9 @@ void bedrock_thread_join(struct bedrock_thread *thread)
 		thread->at_exit(thread->data);
 
 	bedrock_list_del(&thread_list, thread);
+	bedrock_mutex_lock(&thread_mutex);
 	bedrock_list_del(&thread_exited_list, thread);
+	bedrock_mutex_unlock(&thread_mutex);
 
 	bedrock_free(thread);
 }
