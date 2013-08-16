@@ -16,7 +16,7 @@ void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t 
 		return;
 
 	struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
-	di->item = item_find_or_create(block->id);
+	di->item = item_find_or_create(block->item.id);
 	di->count = 1;
 	di->data = 0;
 	di->x = x;
@@ -28,7 +28,7 @@ void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t 
 
 static void block_free(struct block *b)
 {
-	bedrock_free(b->name);
+	bedrock_free(b->item.name);
 	bedrock_free(b);
 }
 
@@ -58,15 +58,16 @@ int block_init()
 			continue;
 
 		b = bedrock_malloc(sizeof(struct block));
+		b->item.flags = ITEM_FLAG_BLOCK;
 
 		LIST_FOREACH(&yaml->objects, node)
 		{
 			struct yaml_object *attr = node->data;
 
 			if (!strcmp(attr->name, "id"))
-				b->id = atoi(attr->value);
+				b->item.id = atoi(attr->value);
 			else if (!strcmp(attr->name, "name"))
-				b->name = bedrock_strdup(attr->value);
+				b->item.name = bedrock_strdup(attr->value);
 			else if (!strcmp(attr->name, "hardness"))
 				b->hardness = atof(attr->value);
 			else if (!strcmp(attr->name, "no-harvest-time"))
@@ -121,7 +122,7 @@ struct block *block_find(enum block_type id)
 	{
 		struct block *b = node->data;
 
-		if (b->id == id)
+		if (b->item.id == id)
 			return b;
 	}
 
@@ -136,7 +137,7 @@ struct block *block_find_by_name(const char *name)
 	{
 		struct block *b = node->data;
 
-		if (!strcmp(name, b->name))
+		if (!strcmp(name, b->item.name))
 			return b;
 	}
 
@@ -145,23 +146,26 @@ struct block *block_find_by_name(const char *name)
 
 struct block *block_find_or_create(enum block_type id)
 {
-	static struct block b;
 	struct block *block = block_find(id);
+
+	bedrock_assert(id <= INT16_MAX, return NULL);
 
 	if (block == NULL)
 	{
 		bedrock_log(LEVEL_DEBUG, "block: Unrecognized block %d", id);
 
-		b.id = id;
-		b.name = "Unknown";
-		b.hardness = 0;
-		b.no_harvest_time = 0;
-		b.weakness = ITEM_FLAG_NONE;
-		b.harvest = ITEM_FLAG_NONE;
-		b.on_mine = NULL;
-		b.on_place = NULL;
+		block = bedrock_malloc(sizeof(struct block));
+		block->item.id = id;
+		block->item.name = bedrock_strdup("Unknown");
+		block->item.flags = ITEM_FLAG_BLOCK;
+		block->hardness = 0;
+		block->no_harvest_time = 0;
+		block->weakness = ITEM_FLAG_NONE;
+		block->harvest = ITEM_FLAG_NONE;
+		block->on_mine = NULL;
+		block->on_place = NULL;
 
-		block = &b;
+		bedrock_list_add(&blocks, block);
 	}
 
 	return block;

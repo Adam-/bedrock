@@ -144,8 +144,7 @@ enum block_type
 
 struct block
 {
-	uint8_t id;
-	char *name;
+	struct item item;
 	double hardness;                    /* Hardness. Time it takes to mine this block with different tools is calculated by this. */
 	double no_harvest_time;             /* Time in seconds it takes to mine this block without the required tools to harvest the block. */
 	enum item_flags weakness;   /* Item and type required to speed up mining this block. Anything not in this mask takes no_harvest_time to mine. */

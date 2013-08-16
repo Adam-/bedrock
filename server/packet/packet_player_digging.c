@@ -136,7 +136,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 
 		block = block_find_or_create(*block_id);
 
-		bedrock_log(LEVEL_DEBUG, "player digging: %s is digging coords %d,%d,%d which is of type %s", client->name, x, y, z, block->name);
+		bedrock_log(LEVEL_DEBUG, "player digging: %s is digging coords %d,%d,%d which is of type %s", client->name, x, y, z, block->item.name);
 
 		delay = calculate_block_time(client, block, item);
 
@@ -153,7 +153,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 			client->digging_data.x = x;
 			client->digging_data.y = y;
 			client->digging_data.z = z;
-			client->digging_data.block_id = block->id;
+			client->digging_data.block_id = block->item.id;
 			client->digging_data.item_id = item->id;
 			client->digging_data.end.tv_sec = bedrock_time.tv_sec + delay / 1;
 			client->digging_data.end.tv_nsec = bedrock_time.tv_nsec + modulus(delay, 1.0);

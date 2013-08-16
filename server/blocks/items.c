@@ -101,7 +101,6 @@ void item_shutdown()
 
 struct item *item_find(enum item_type id)
 {
-	static struct item i;
 	struct block *block;
 	bedrock_node *node;
 
@@ -116,12 +115,7 @@ struct item *item_find(enum item_type id)
 	block = block_find(id);
 
 	if (block != NULL)
-	{
-		i.id = id;
-		i.name = block->name;
-		i.flags = ITEM_FLAG_BLOCK;
-		return &i;
-	}
+		return &block->item;
 
 	return NULL;
 }
@@ -141,25 +135,27 @@ struct item *item_find_by_name(const char *name)
 
 	block = block_find_by_name(name);
 	if (block != NULL)
-		return item_find_or_create(block->id);
+		return item_find_or_create(block->item.id);
 
 	return NULL;
 }
 
 struct item *item_find_or_create(enum item_type id)
 {
-	static struct item i;
 	struct item *item = item_find(id);
+	
+	bedrock_assert(id <= INT16_MAX, return NULL);
 
 	if (item == NULL)
 	{
 		bedrock_log(LEVEL_DEBUG, "item: Unrecognized item %d", id);
 
-		i.id = id;
-		i.name = "Unknown";
-		i.flags = 0;
+		item = bedrock_malloc(sizeof(struct item));
+		item->id = id;
+		item->name = bedrock_strdup("Unknown");
+		item->flags = 0;
 
-		item = &i;
+		bedrock_list_add(&items, item);
 	}
 
 	return item;
