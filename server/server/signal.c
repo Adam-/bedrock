@@ -9,7 +9,7 @@
 static struct event sigbus_signal;
 #endif
 
-static struct event sigterm_signal, sigint_signal;
+static struct event sigterm_signal, sigint_signal, sigpipe_signal;
 
 static void signal_handler(evutil_socket_t signum, short bedrock_attribute_unused events, void bedrock_attribute_unused *data)
 {
@@ -21,10 +21,11 @@ static void signal_handler(evutil_socket_t signum, short bedrock_attribute_unuse
 
 	switch (signum)
 	{
+		case SIGPIPE:
 #ifndef WIN32
 		case SIGBUS:
-			break;
 #endif
+			break;
 		case SIGTERM:
 		case SIGINT:
 		{
@@ -55,6 +56,7 @@ void signal_init()
 #endif
 	io_signal(&sigterm_signal, SIGTERM, signal_handler);
 	io_signal(&sigint_signal, SIGINT, signal_handler);
+	io_signal(&sigpipe_signal, SIGPIPE, signal_handler);
 }
 
 void signal_shutdown()
@@ -64,5 +66,6 @@ void signal_shutdown()
 #endif
 	io_disable(&sigterm_signal);
 	io_disable(&sigint_signal);
+	io_disable(&sigpipe_signal);
 }
 
