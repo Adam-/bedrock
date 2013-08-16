@@ -19,7 +19,11 @@ typedef struct bedrock_cond bedrock_cond;
 
 struct bedrock_spinlock
 {
-	pthread_spinlock_t spinlock;
+	union
+	{
+		pthread_spinlock_t spinlock;
+		pthread_mutex_t mutex;
+	} u;
 	char desc[32];
 };
 typedef struct bedrock_spinlock bedrock_spinlock;

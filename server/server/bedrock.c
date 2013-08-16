@@ -213,6 +213,13 @@ int main(int argc, char **argv)
 	struct event send_keepalive_timer, save_timer;
 
 	srand(time(NULL));
+
+	util_init();
+	bedrock_memory_init();
+	bedrock_fd_init();
+
+	io_init();
+	bedrock_threadengine_start();
 	bedrock_log_init();
 
 	parse_cli_args(argc, argv);
@@ -222,6 +229,11 @@ int main(int argc, char **argv)
 
 	bedrock_log(LEVEL_INFO, "Bedrock %d.%d%s starting up", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 	bedrock_log(LEVEL_INFO, "Listening on %s:%d with %d max players - %s", server_ip, server_port, server_maxusers, server_desc);
+	if (running_on_valgrind)
+	{
+		bedrock_log(LEVEL_INFO, "Running on valgrind!");
+		foreground = true;
+	}
 
 	if (world_list.count == 0)
 		exit(1);
@@ -240,11 +252,9 @@ int main(int argc, char **argv)
 	do_fork();
 
 	crypto_init();
-	io_init();
 	signal_init();
 	listener_init();
 	console_init();
-	bedrock_threadengine_start();
 
 	if (block_init() || item_init())
 		exit(1);
@@ -272,17 +282,17 @@ int main(int argc, char **argv)
 	block_shutdown();
 	item_shutdown();
 
-	bedrock_thread_exit_all();
-	bedrock_threadengine_stop();
-
 	console_shutdown();
 	listener_shutdown();
 	signal_shutdown();
-	io_shutdown();
 	crypto_shutdown();
 
 	bedrock_list_clear(&oper_conf_list);
+
 	bedrock_log_close();
+	bedrock_thread_exit_all();
+	bedrock_threadengine_stop();
+	io_shutdown();
 
 	bedrock_assert(memory_size == 0, ;);
 	bedrock_assert(fdlist.count == 0, ;);

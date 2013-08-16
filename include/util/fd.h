@@ -42,6 +42,7 @@ struct bedrock_fd
 extern bedrock_mutex fdlist_mutex;
 extern bedrock_list fdlist;
 
+extern void bedrock_fd_init();
 extern void bedrock_fd_open(struct bedrock_fd *f, int fd, bedrock_fd_type type, const char *desc);
 extern void bedrock_fd_close(struct bedrock_fd *f);
 extern struct bedrock_fd *bedrock_fd_find(int fd);

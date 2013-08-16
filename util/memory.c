@@ -3,25 +3,23 @@
 long long memory_size = 0;
 bedrock_spinlock memory_lock;
 
+void bedrock_memory_init()
+{
+	bedrock_spinlock_init(&memory_lock, "memory spinlock");
+}
+
 void *bedrock_malloc(size_t size)
 {
 	void *memory = calloc(1, size + sizeof(size_t));
 	size_t *sz;
-	static bool init = false;
 
 	if (memory == NULL)
 		abort();
 
 	sz = memory;
-	memory = ((size_t *) memory) + 1;
+	memory = sz + 1;
 
 	*sz = size;
-
-	if (!init)
-	{
-		bedrock_spinlock_init(&memory_lock, "memory spinlock");
-		init = true;
-	}
 
 	bedrock_spinlock_lock(&memory_lock);
 	memory_size += size + sizeof(size_t);
@@ -42,8 +40,9 @@ void *bedrock_realloc(void *pointer, size_t size)
 		return NULL;
 	}
 
-	pointer = ((size_t *) pointer) - 1;
 	sz = pointer;
+	--sz;
+	pointer = sz;
 
 	bedrock_spinlock_lock(&memory_lock);
 	memory_size -= *sz + sizeof(size_t);
@@ -55,7 +54,7 @@ void *bedrock_realloc(void *pointer, size_t size)
 		abort();
 
 	sz = pointer;
-	pointer = ((size_t *) pointer) + 1;
+	pointer = sz + 1;
 
 	*sz = size;
 
@@ -73,7 +72,8 @@ void bedrock_free(void *pointer)
 	if (pointer == NULL)
 		return;
 
-	sz = ((size_t *) pointer) - 1;
+	sz = pointer;
+	--sz;
 
 	bedrock_spinlock_lock(&memory_lock);
 	memory_size -= *sz + sizeof(size_t);

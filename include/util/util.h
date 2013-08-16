@@ -54,4 +54,8 @@ typedef enum bedrock_log_level bedrock_log_level;
 
 extern void bedrock_log(bedrock_log_level level, const char *msg, ...);
 
+extern int running_on_valgrind;
+
+extern void util_init();
+
 #endif // BEDROCK_UTIL_H

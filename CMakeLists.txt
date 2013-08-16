@@ -30,6 +30,12 @@ check_type_size(uint32_t UINT32_T)
 check_type_size(int64_t INT64_T)
 check_type_size(uint64_t UINT64_T)
 
+include(CheckIncludeFiles)
+CHECK_INCLUDE_FILES("valgrind/valgrind.h" HAVE_VALGRIND_H)
+
+configure_file(include/util/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/util/config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/util/)
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # required packages for compile

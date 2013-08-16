@@ -207,7 +207,11 @@ void bedrock_spinlock_init(bedrock_spinlock *lock, const char *desc)
 
 	strncpy(lock->desc, desc, sizeof(lock->desc));
 
-	i = pthread_spin_init(&lock->spinlock, PTHREAD_PROCESS_PRIVATE);
+	/* valgrind does not support spinlocks, so emulate them using mutexes */
+	if (running_on_valgrind)
+		i = pthread_mutex_init(&lock->u.mutex, NULL);
+	else
+		i = pthread_spin_init(&lock->u.spinlock, PTHREAD_PROCESS_PRIVATE);
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to initialize spinlock %s - %s", desc, strerror(errno));
 	else
@@ -220,7 +224,10 @@ void bedrock_spinlock_destroy(bedrock_spinlock *lock)
 
 	bedrock_assert(lock != NULL, return);
 
-	i = pthread_spin_destroy(&lock->spinlock);
+	if (running_on_valgrind)
+		i = pthread_mutex_destroy(&lock->u.mutex);
+	else
+		i = pthread_spin_destroy(&lock->u.spinlock);
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to destroy spinlock %s - %s", lock->desc, strerror(errno));
 	else
@@ -233,7 +240,10 @@ void bedrock_spinlock_lock(bedrock_spinlock *lock)
 
 	bedrock_assert(lock != NULL, return);
 
-	i = pthread_spin_lock(&lock->spinlock);
+	if (running_on_valgrind)
+		i = pthread_mutex_lock(&lock->u.mutex);
+	else
+		i = pthread_spin_lock(&lock->u.spinlock);
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to lock spinlock %s - %s", lock->desc, strerror(errno));
 	else
@@ -246,7 +256,10 @@ void bedrock_spinlock_unlock(bedrock_spinlock *lock)
 
 	bedrock_assert(lock != NULL, return);
 
-	i = pthread_spin_unlock(&lock->spinlock);
+	if (running_on_valgrind)
+		i = pthread_mutex_unlock(&lock->u.mutex);
+	else
+		i = pthread_spin_unlock(&lock->u.spinlock);
 	if (i)
 		bedrock_log(LEVEL_CRIT, "thread: Unable to unlock spinlock %s - %s", lock->desc, strerror(errno));
 	else
