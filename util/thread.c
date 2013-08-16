@@ -1,5 +1,6 @@
 #include "util/thread.h"
 #include "util/memory.h"
+#include "util/string.h"
 
 #include <errno.h>
 
@@ -126,7 +127,7 @@ void bedrock_mutex_init(bedrock_mutex *mutex, const char *desc)
 {
 	int i;
 
-	strncpy(mutex->desc, desc, sizeof(mutex->desc));
+	bedrock_strncpy(mutex->desc, desc, sizeof(mutex->desc));
 
 	i = pthread_mutex_init(&mutex->mutex, NULL);
 	if (i)
@@ -182,7 +183,7 @@ void bedrock_mutex_unlock(bedrock_mutex *mutex)
 
 void bedrock_cond_init(bedrock_cond *cond, const char *desc)
 {
-	strncpy(cond->desc, desc, sizeof(cond->desc));
+	bedrock_strncpy(cond->desc, desc, sizeof(cond->desc));
 	pthread_cond_init(&cond->cond, NULL);
 }
 
@@ -205,7 +206,7 @@ void bedrock_spinlock_init(bedrock_spinlock *lock, const char *desc)
 {
 	int i;
 
-	strncpy(lock->desc, desc, sizeof(lock->desc));
+	bedrock_strncpy(lock->desc, desc, sizeof(lock->desc));
 
 	/* valgrind does not support spinlocks, so emulate them using mutexes */
 	if (running_on_valgrind)

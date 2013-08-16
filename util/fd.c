@@ -2,6 +2,7 @@
 #include "util/io.h"
 #include "util/memory.h"
 #include "util/list.h"
+#include "util/string.h"
 
 bedrock_mutex fdlist_mutex;
 bedrock_list fdlist = LIST_INIT;
@@ -18,7 +19,7 @@ void bedrock_fd_open(struct bedrock_fd *f, int fd, bedrock_fd_type type, const c
 	f->fd = fd;
 	f->type = type;
 	if (desc != NULL)
-		strncpy(f->desc, desc, sizeof(f->desc));
+		bedrock_strncpy(f->desc, desc, sizeof(f->desc));
 	f->open = true;
 
 	bedrock_mutex_lock(&fdlist_mutex);

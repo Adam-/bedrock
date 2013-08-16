@@ -4,6 +4,7 @@
 #include "config/config.h"
 #include "packet/packet_chat_message.h"
 #include "util/io.h"
+#include "util/string.h"
 
 int packet_list_ping(struct client *client, const bedrock_packet *p)
 {
@@ -30,7 +31,7 @@ int packet_list_ping(struct client *client, const bedrock_packet *p)
 	string[len++] = 0;
 	len += snprintf(string + len, sizeof(string) - len, "bedrock-%d.%d%s", BEDROCK_VERSION_MAJOR, BEDROCK_VERSION_MINOR, BEDROCK_VERSION_EXTRA);
 	string[len++] = 0;
-	strncpy(string + len, server_desc, sizeof(string) - len);
+	bedrock_strncpy(string + len, server_desc, sizeof(string) - len);
 	len += strlen(server_desc) + 1;
 	len += snprintf(string + len, sizeof(string) - len, "%d", authenticated_client_count);
 	string[len++] = 0;

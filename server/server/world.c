@@ -6,6 +6,7 @@
 #include "server/world.h"
 #include "nbt/nbt.h"
 #include "config/hard.h"
+#include "util/string.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,8 +20,8 @@ bedrock_list world_list = LIST_INIT;
 struct world *world_create(const char *name, const char *path)
 {
 	struct world *world = bedrock_malloc(sizeof(struct world));
-	strncpy(world->name, name, sizeof(world->name));
-	strncpy(world->path, path, sizeof(world->path));
+	bedrock_strncpy(world->name, name, sizeof(world->name));
+	bedrock_strncpy(world->path, path, sizeof(world->path));
 	bedrock_list_add(&world_list, world);
 	return world;
 }
@@ -120,7 +121,7 @@ void world_save(struct world *world)
 {
 	struct world_save_info *wi = bedrock_malloc(sizeof(struct world_save_info));
 
-	strncpy(wi->name, world->name, sizeof(wi->name));
+	bedrock_strncpy(wi->name, world->name, sizeof(wi->name));
 	snprintf(wi->path, sizeof(wi->path), "%s/%s", world->path, BEDROCK_WORLD_LEVEL_FILE);
 	wi->nbt_out = nbt_write(world->data);
 

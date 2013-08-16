@@ -1,5 +1,6 @@
 #include "util/yml.h"
 #include "util/memory.h"
+#include "util/string.h"
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 
@@ -33,7 +34,7 @@ struct yaml_object *yaml_parse(const char *file)
 			case YAML_STREAM_START_TOKEN:
 				bedrock_assert(object == NULL, ;);
 				object = bedrock_malloc(sizeof(struct yaml_object));
-				strncpy(object->name, "root", sizeof(object->name));
+				bedrock_strncpy(object->name, "root", sizeof(object->name));
 				break;
 			case YAML_STREAM_END_TOKEN:
 				bedrock_assert(object->parent == NULL, ;);
@@ -58,7 +59,7 @@ struct yaml_object *yaml_parse(const char *file)
 				bedrock_list_add(&object->objects, obj);
 
 				object = obj;
-				strncpy(obj->name, "entry", sizeof(obj->name));
+				bedrock_strncpy(obj->name, "entry", sizeof(obj->name));
 				break;
 			}
 			case YAML_BLOCK_END_TOKEN:
@@ -105,7 +106,7 @@ struct yaml_object *yaml_parse(const char *file)
 				scalar = obj->value;
 				object = obj;
 
-				strncpy(obj->name, "sequence", sizeof(obj->name));
+				bedrock_strncpy(obj->name, "sequence", sizeof(obj->name));
 				break;
 			}
 			case YAML_FLOW_SEQUENCE_END_TOKEN:
@@ -120,7 +121,7 @@ struct yaml_object *yaml_parse(const char *file)
 				}
 				break;
 			case YAML_TAG_TOKEN:
-				strncpy(object->type, (char *) token.data.tag.suffix, sizeof(object->type));
+				bedrock_strncpy(object->type, (char *) token.data.tag.suffix, sizeof(object->type));
 				break;
 			case YAML_BLOCK_SEQUENCE_START_TOKEN:
 				break;

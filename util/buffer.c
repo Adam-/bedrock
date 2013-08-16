@@ -1,4 +1,5 @@
 #include "util/buffer.h"
+#include "util/string.h"
 
 #include <limits.h>
 
@@ -9,7 +10,7 @@ bedrock_buffer *bedrock_buffer_create(const char *name, const void *data, size_t
 	bedrock_assert(length <= capacity, return NULL);
 
 	buffer = bedrock_malloc(sizeof(bedrock_buffer));
-	strncpy(buffer->name, name, sizeof(buffer->name));
+	bedrock_strncpy(buffer->name, name, sizeof(buffer->name));
 	buffer->data = bedrock_malloc(capacity);
 	buffer->length = 0;
 	buffer->capacity = capacity;

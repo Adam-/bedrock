@@ -29,3 +29,12 @@ void bedrock_strlcat(char *dest, const char *src, size_t dest_size)
 	dest[dest_len] = 0;
 }
 
+/** Like strncpy, but always nul terminates the buffer
+ */
+void bedrock_strncpy(char *dest, const char *src, size_t sz)
+{
+	strncpy(dest, src, sz);
+	if (sz)
+		dest[sz - 1] = 0;
+}
+

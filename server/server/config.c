@@ -39,9 +39,9 @@ int config_parse(const char *config)
 					struct yaml_object *attr = node3->data;
 
 					if (!strcmp(attr->name, "name"))
-						strncpy(world->name, attr->value, sizeof(world->name));
+						bedrock_strncpy(world->name, attr->value, sizeof(world->name));
 					else if (!strcmp(attr->name, "path"))
-						strncpy(world->path, attr->value, sizeof(world->path));
+						bedrock_strncpy(world->path, attr->value, sizeof(world->path));
 				}
 
 				bedrock_list_add(&world_list, world);
@@ -58,11 +58,11 @@ int config_parse(const char *config)
 				struct yaml_object *attr = node2->data;
 
 				if (!strcmp(attr->name, "description"))
-					strncpy(server_desc, attr->value, sizeof(server_desc));
+					bedrock_strncpy(server_desc, attr->value, sizeof(server_desc));
 				else if (!strcmp(attr->name, "maxusers"))
 					server_maxusers = atoi(attr->value);
 				else if (!strcmp(attr->name, "ip"))
-					strncpy(server_ip, attr->value, sizeof(server_ip));
+					bedrock_strncpy(server_ip, attr->value, sizeof(server_ip));
 				else if (!strcmp(attr->name, "port"))
 					server_port = atoi(attr->value);
 				else if (!strcmp(attr->name, "log_level"))
@@ -116,9 +116,9 @@ int config_parse(const char *config)
 					struct yaml_object *attr = node3->data;
 
 					if (!strcmp(attr->name, "name"))
-						strncpy(oper->username, attr->value, sizeof(oper->username));
+						bedrock_strncpy(oper->username, attr->value, sizeof(oper->username));
 					else if (!strcmp(attr->name, "password"))
-						strncpy(oper->password, attr->value, sizeof(oper->password));
+						bedrock_strncpy(oper->password, attr->value, sizeof(oper->password));
 					else if (!strcmp(attr->name, "commands"))
 					{
 						bedrock_node *node4;

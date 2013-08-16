@@ -1,6 +1,7 @@
 #include "server/bedrock.h"
 #include "server/command.h"
 #include "packet/packet_chat_message.h"
+#include "util/string.h"
 #include "command/command_fdlist.h"
 #include "command/command_gamemode.h"
 #include "command/command_help.h"
@@ -65,7 +66,7 @@ void command_run(struct command_source *source, const char *buf)
 	int argc = 0;
 	char *argv[MAX_PARAMETERS];
 
-	strncpy(command_buf, buf, sizeof(command_buf));
+	bedrock_strncpy(command_buf, buf, sizeof(command_buf));
 
 	front = command_buf;
 	end = strchr(command_buf, ' ');

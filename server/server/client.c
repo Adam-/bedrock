@@ -7,6 +7,7 @@
 #include "util/endian.h"
 #include "util/file.h"
 #include "util/io.h"
+#include "util/string.h"
 #include "nbt/nbt.h"
 #include "packet/packet_chat_message.h"
 #include "packet/packet_collect_item.h"
@@ -291,7 +292,7 @@ void client_save(struct client *client)
 {
 	struct client_save_info *ci = bedrock_malloc(sizeof(struct client_save_info));
 
-	strncpy(ci->name, client->name, sizeof(ci->name));
+	bedrock_strncpy(ci->name, client->name, sizeof(ci->name));
 	snprintf(ci->path, sizeof(ci->path), BEDROCK_PLAYER_PATH, client->world->path, client->name);
 	ci->nbt_out = client_save_nbt(client);
 
@@ -528,7 +529,7 @@ void client_send_packet(struct client *client, bedrock_packet *packet)
 
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
-	strncpy(p->name, packet->name, sizeof(p->name));
+	bedrock_strncpy(p->name, packet->name, sizeof(p->name));
 
 	if (client->authenticated >= STATE_LOGGED_IN)
 	{

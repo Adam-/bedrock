@@ -1,6 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "config/config.h"
+#include "util/string.h"
 #include "packet/packet_disconnect.h"
 #include "packet/packet_encryption_request.h"
 
@@ -47,7 +48,7 @@ int packet_handshake(struct client *client, const bedrock_packet *p)
 	world = world_list.head->data;
 	bedrock_assert(world != NULL, return ERROR_UNKNOWN);
 
-	strncpy(client->name, username, sizeof(client->name));
+	bedrock_strncpy(client->name, username, sizeof(client->name));
 	client->authenticated = STATE_HANDSHAKING;
 	client->world = world;
 
