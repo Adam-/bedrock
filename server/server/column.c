@@ -68,12 +68,23 @@ void column_load(struct column *column, nbt_tag *data)
 void column_free(struct column *column)
 {
 	int i;
+	bedrock_node *node;
 
 	bedrock_assert(column->players.count == 0, ;);
 	bedrock_assert(!column->flags, ;);
 
 	bedrock_log(LEVEL_COLUMN, "column: Freeing column %d,%d", column->x, column->z);
 
+	LIST_FOREACH(&pending_updates, node)
+	{
+		struct pending_column_update *pc = node->data;
+		if (pc->column == column)
+		{
+			bedrock_list_del_node(&pending_updates, node);
+			bedrock_free(node);
+			break;
+		}
+	}
 	bedrock_list_del(&column->region->columns, column);
 
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
@@ -227,6 +238,7 @@ void column_set_pending(struct column *column, enum column_flag flag)
 	pc->column = column;
 	column->flags = flag;
 
+	pending_updates.free = bedrock_free;
 	bedrock_list_add(&pending_updates, pc);
 }
 
@@ -276,23 +288,21 @@ void column_process_pending()
 				region_operation_schedule(op);
 			}
 		}
-		/* Column must be *only* empty */
-		else if (column->flags == COLUMN_FLAG_EMPTY)
-		{
-			column->flags = 0;
-			if (column->players.count == 0)
-			{
-				column_free(column);
-				goto remove;
-			}
-		}
 
-		if (!column->flags)
+		/* If there is a flag other than empty set keep the column in the pending state */
+		if (!column->flags || column->flags == COLUMN_FLAG_EMPTY)
 		{
-		 remove:
+			/* remove from list */
 			bedrock_list_del_node(&pending_updates, node);
-			bedrock_free(dc);
 			bedrock_free(node);
+
+			/* Column must be *only* empty */
+			if (column->flags == COLUMN_FLAG_EMPTY)
+			{
+				column->flags = 0;
+				if (!column->players.count)
+					column_free(column);
+			}
 		}
 	}
 }

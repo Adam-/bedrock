@@ -453,6 +453,8 @@ struct region *region_create(struct world *world, int x, int z)
 
 void region_free(struct region *region)
 {
+	bedrock_list_del(&pending_updates, region);
+
 	bedrock_thread_set_exit(region->worker);
 	bedrock_cond_wakeup(&region->worker_condition);
 	bedrock_thread_join(region->worker);
@@ -538,16 +540,20 @@ void region_process_pending()
 	LIST_FOREACH_SAFE(&pending_updates, node, node2)
 	{
 		struct region *region = node->data;
+		bool del = false;
 
 		if (region->flags & REGION_FLAG_EMPTY)
 		{
 			if (region->columns.count - region->empty_columns == 0)
-				region_free(region);
+				del = true;
 			else
 				region->flags &= ~REGION_FLAG_EMPTY;
 		}
 
 		bedrock_list_del_node(&pending_updates, node);
 		bedrock_free(node);
+
+		if (del)
+			region_free(region);
 	}
 }
