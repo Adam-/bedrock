@@ -10,7 +10,7 @@ struct recipe
 	struct item_stack output;
 };
 
-extern bedrock_list recipies;
+extern bedrock_list recipes;
 
 extern void recipe_init();
 extern void recipe_shutdown();

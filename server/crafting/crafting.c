@@ -79,7 +79,7 @@ void crafting_process(struct item_stack *in, size_t length, struct item_stack *o
 	else
 		return;
 
-	LIST_FOREACH(&recipies, node)
+	LIST_FOREACH(&recipes, node)
 	{
 		struct recipe *recipe = node->data;
 

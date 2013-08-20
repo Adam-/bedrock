@@ -5,14 +5,14 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-bedrock_list recipies = LIST_INIT;
+bedrock_list recipes = LIST_INIT;
 
 void recipe_init()
 {
-	DIR *dir = opendir("data/recipies");
+	DIR *dir = opendir("data/recipes");
 	struct dirent *ent;
 
-	recipies.free = bedrock_free;
+	recipes.free = bedrock_free;
 
 	if (!dir)
 		return;
@@ -27,7 +27,7 @@ void recipe_init()
 		if (!strstr(ent->d_name, ".yml"))
 			continue;
 
-		snprintf(filename, sizeof(filename), "data/recipies/%s", ent->d_name);
+		snprintf(filename, sizeof(filename), "data/recipes/%s", ent->d_name);
 
 		yaml = yaml_parse(filename);
 		if (yaml == NULL)
@@ -89,18 +89,18 @@ void recipe_init()
 				recipe->output.count = atoi(obj->value);
 		}
 
-		bedrock_list_add(&recipies, recipe);
+		bedrock_list_add(&recipes, recipe);
 
 		yaml_object_free(yaml);
 	}
 
 	closedir(dir);
 
-	bedrock_log(LEVEL_DEBUG, "crafting: Loaded %d recipies.", recipies.count);
+	bedrock_log(LEVEL_DEBUG, "crafting: Loaded %d recipes.", recipes.count);
 }
 
 void recipe_shutdown()
 {
-	bedrock_list_clear(&recipies);
+	bedrock_list_clear(&recipes);
 }
 
