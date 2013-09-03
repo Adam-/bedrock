@@ -23,11 +23,6 @@ static struct item *get_weilded_item(struct client *client)
 	return item_find_or_create(ITEM_NONE);
 }
 
-static double modulus(double x, double y)
-{
-	return x - (double) (int) (x / y) * y;
-}
-
 /* Is the given item a weakness for the given block? */
 static bool is_weakness(struct block *block, struct item *item)
 {
@@ -155,13 +150,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 			client->digging_data.z = z;
 			client->digging_data.block_id = block->item.id;
 			client->digging_data.item_id = item->id;
-			client->digging_data.end.tv_sec = bedrock_time.tv_sec + delay / 1;
-			client->digging_data.end.tv_nsec = bedrock_time.tv_nsec + modulus(delay, 1.0);
-			if (client->digging_data.end.tv_nsec >= 1000000000)
-			{
-				++client->digging_data.end.tv_sec;
-				client->digging_data.end.tv_nsec -= 1000000000;
-			}
+			client->digging_data.end = bedrock_time + (delay * 1000.0);
 		}
 	}
 	if (status == FINISHED_DIGGING)
@@ -191,17 +180,17 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 		}
 		else
 		{
-			if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end.tv_sec == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
+			if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
 			{
 				bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %d I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
-						client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end.tv_sec, client->digging_data.item_id, client->digging_data.block_id,
+						client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end, client->digging_data.item_id, client->digging_data.block_id,
 						x, y, z, item->id, *block_id);
 
 				packet_send_block_change(client, x, y, z, *block_id, 0);
 				return offset;
 			}
 
-			if (bedrock_time.tv_sec < client->digging_data.end.tv_sec || (bedrock_time.tv_sec == client->digging_data.end.tv_sec && bedrock_time.tv_nsec < client->digging_data.end.tv_nsec))
+			if (bedrock_time < client->digging_data.end)
 			{
 				packet_send_block_change(client, x, y, z, *block_id, 0);
 				return offset;

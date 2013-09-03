@@ -19,17 +19,7 @@ int packet_keep_alive(struct client *client, const bedrock_packet *p)
 	}
 	else
 	{
-		uint64_t second_diff = bedrock_time.tv_sec - client->ping_time_sent.tv_sec;
-		int64_t nanosecond_diff = bedrock_time.tv_nsec - client->ping_time_sent.tv_nsec;
-
-		if (nanosecond_diff < 0)
-		{
-			bedrock_assert(second_diff, ;);
-			--second_diff;
-			nanosecond_diff += 1000000000;
-		}
-
-		client->ping = second_diff * 1000 + nanosecond_diff / 1000000;
+		client->ping = bedrock_time - client->ping_time_sent;
 
 		if (client->authenticated & STATE_IN_GAME && client->authenticated & STATE_BURSTING)
 		{

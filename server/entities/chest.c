@@ -6,15 +6,13 @@ struct tile_entity *chest_load(nbt_tag *tag)
 {
 	struct chest *chest = bedrock_malloc(sizeof(struct chest));
 	nbt_tag *items;
-	bedrock_node *node3;
-	struct tile_entity *entity;
+	bedrock_node *node;
 
-	entity = &chest->entity;
 	items = nbt_get(tag, TAG_LIST, 1, "Items");
 
-	LIST_FOREACH(&items->payload.tag_list.list, node3)
+	LIST_FOREACH(&items->payload.tag_list.list, node)
 	{
-		nbt_tag *chest_item = node3->data;
+		nbt_tag *chest_item = node->data;
 		uint8_t slot;
 		struct item_stack *stack;
 
@@ -28,21 +26,15 @@ struct tile_entity *chest_load(nbt_tag *tag)
 		nbt_copy(chest_item, TAG_BYTE, &stack->count, sizeof(stack->count), 1, "Count");
 	}
 
-	return entity;
+	bedrock_assert(!offsetof(struct chest, entity), ;);
+	return &chest->entity;
 }
 
-void chest_save(nbt_tag *tag, struct tile_entity *entity)
+void chest_save(nbt_tag *entity_tag, struct tile_entity *entity)
 {
 	struct chest *chest = (struct chest *) entity;
-	nbt_tag *entity_tag, *items;
+	nbt_tag *items;
 	int i;
-
-	entity_tag = nbt_add(tag, TAG_COMPOUND, NULL, NULL, 0);
-
-	nbt_add(entity_tag, TAG_STRING, "id", "Chest", strlen("Chest"));
-	nbt_add(entity_tag, TAG_INT, "x", &entity->x, sizeof(entity->x));
-	nbt_add(entity_tag, TAG_INT, "y", &entity->y, sizeof(entity->y));
-	nbt_add(entity_tag, TAG_INT, "z", &entity->z, sizeof(entity->z));
 
 	items = nbt_add(entity_tag, TAG_LIST, "Items", NULL, 0);
 
@@ -69,10 +61,6 @@ void chest_operate(struct client *client, struct tile_entity *entity)
 	int i;
 
 	packet_send_open_window(client, WINDOW_CHEST, NULL, ENTITY_CHEST_SLOTS);
-
-	client->window_data.x = entity->x;
-	client->window_data.y = entity->y;
-	client->window_data.z = entity->z;
 
 	for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
 	{
@@ -112,8 +100,7 @@ void chest_mine(struct client *client, struct chunk *chunk, int32_t x, uint8_t y
 			column_add_item(chunk->column, di);
 		}
 
-		bedrock_list_del(&chunk->column->tile_entities, chest);
-		bedrock_free(chest);
+		entity_free(&chest->entity);
 	}
 }
 
@@ -125,5 +112,29 @@ void chest_place(struct client bedrock_attribute_unused *client, struct chunk *c
 	chest->entity.y = y;
 	chest->entity.z = z;
 	bedrock_list_add(&chunk->column->tile_entities, chest);
+}
+
+void chest_propagate(struct chest *chest)
+{
+	/* contents of chest might have changed, sync changes with clients who are viewing it */
+	bedrock_node *node;
+
+	bedrock_assert(chest != NULL, return);
+
+	LIST_FOREACH(&chest->entity.clients, node)
+	{
+		struct client *c = node->data;
+		int i;
+
+		for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
+		{
+			struct item_stack *stack = &chest->items[i];
+
+			if (stack->id)
+				packet_send_set_slot(c, c->window_data.id, i, item_find_or_create(stack->id), stack->count, stack->metadata);
+			else
+				packet_send_set_slot(c, c->window_data.id, i, NULL, 0, 0);
+		}
+	}
 }
 

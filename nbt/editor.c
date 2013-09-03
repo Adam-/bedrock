@@ -348,6 +348,8 @@ int main(int argc, char **argv)
 	nbt_tag *tag;
 	int i;
 
+	util_init();
+
 	parse_args(argc, argv);
 
 	fd = open(file_name, O_RDWR | _O_BINARY);

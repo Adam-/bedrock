@@ -25,6 +25,7 @@
 #include "packet/packet_set_slot.h"
 #include "packet/packet_time.h"
 #include "windows/window.h"
+#include "entities/entity.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -317,6 +318,12 @@ void client_save_all()
 static void client_free(struct client *client)
 {
 	bedrock_node *node;
+
+	if (client->window_data.entity != NULL)
+	{
+		bedrock_list_del(&client->window_data.entity->clients, client);
+		client->window_data.entity = NULL;
+	}
 
 	if (client->authenticated & STATE_IN_GAME)
 	{

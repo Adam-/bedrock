@@ -4,3 +4,4 @@ hardness: 3.000000
 no-harvest-time: 9.000000
 weakness: pickaxe
 on_mine: simple_drop
+furnace_output: 1

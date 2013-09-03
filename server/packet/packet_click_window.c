@@ -78,13 +78,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		return ERROR_NOT_ALLOWED;
 	else if (client->window_data.type == WINDOW_CHEST)
 	{
-		column = find_column_from_world_which_contains(client->world, client->window_data.x, client->window_data.z);
-		struct chest *chest;
-
-		if (column == NULL)
-			return ERROR_UNEXPECTED;
-
-		chest = (struct chest *) column_find_tile_entity(column, BLOCK_CHEST, client->window_data.x, client->window_data.y, client->window_data.z);
+		struct chest *chest = (struct chest *) client->window_data.entity;
 		if (chest == NULL)
 			return ERROR_UNEXPECTED;
 
@@ -102,6 +96,22 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		for (i = WORKBENCH_HELDITEMS_START; i < WORKBENCH_SIZE; ++i)
 			slots[i] = &client->inventory[INVENTORY_HOTBAR_START + (i - WORKBENCH_HELDITEMS_START)];
 		crafting_output = slot == WORKBENCH_OUTPUT;
+	}
+	else if (client->window_data.type == WINDOW_FURNACE)
+	{
+		/* 0 = in, 1 = fuel, 2 = out, 3-29 = inventory, 30-38 = held items */
+		struct furnace *furnace = (struct furnace *) client->window_data.entity;
+
+		slots[FURNACE_INPUT] = &furnace->in;
+		slots[FURNACE_FUEL] = &furnace->fuel;
+		slots[FURNACE_OUTPUT] = &furnace->out;
+
+		for (i = FURNACE_INVENTORY_START; i < FURNACE_HELDITEMS_START; ++i)
+			slots[i] = &client->inventory[INVENTORY_START + (i - FURNACE_INVENTORY_START)];
+		for (i = FURNACE_HELDITEMS_START; i < FURNACE_SIZE; ++i)
+			slots[i] = &client->inventory[INVENTORY_HOTBAR_START + (i - FURNACE_HELDITEMS_START)];
+
+		crafting_output = slot == FURNACE_OUTPUT;
 	}
 
 	if (slot == -999)
@@ -121,6 +131,11 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		else if (client->window_data.type == WINDOW_WORKBENCH)
 		{
 			if (slot < WORKBENCH_OUTPUT || slot >= WORKBENCH_SIZE)
+				return ERROR_NOT_ALLOWED;
+		}
+		else if (client->window_data.type == WINDOW_FURNACE)
+		{
+			if (slot < FURNACE_INPUT || slot >= FURNACE_SIZE)
 				return ERROR_NOT_ALLOWED;
 		}
 		else
@@ -544,25 +559,33 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 	packet_send_confirm_transaction(client, window, action, ok);
 
-	if (ok)
-	{
-		/* This column is now dirty and needs to be rewritten */
-		if (column)
-			column_set_pending(column, COLUMN_FLAG_DIRTY);
+	if (!ok)
+		return offset;
 
-		if (window == WINDOW_INVENTORY)
-		{
-			crafting_process(&client->inventory[INVENTOTY_CRAFT_START], INVENTORY_CRAFT_END - INVENTOTY_CRAFT_START + 1, &client->inventory[INVENTORY_CRAFT_OUTPUT]);
-			if (client->inventory[INVENTORY_CRAFT_OUTPUT].id)
-				/* the client automatically sets this slot to the proper item */
-				bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s", client->name, client->inventory[INVENTORY_CRAFT_OUTPUT].count, item_find_or_create(client->inventory[INVENTORY_CRAFT_OUTPUT].id)->name);
-		}
-		else if (client->window_data.type == WINDOW_WORKBENCH)
-		{
-			crafting_process(&client->window_data.crafting[WORKBENCH_CRAFT_START], WORKBENCH_INVENTORY_START - WORKBENCH_CRAFT_START, &client->window_data.crafting[WORKBENCH_OUTPUT]);
-			if (client->window_data.crafting[WORKBENCH_OUTPUT].id)
-				bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s at a workbench", client->name, client->window_data.crafting[WORKBENCH_OUTPUT].count, item_find_or_create(client->window_data.crafting[WORKBENCH_OUTPUT].id)->name);
-		}
+	/* This column is now dirty and needs to be rewritten */
+	if (column)
+		column_set_pending(column, COLUMN_FLAG_DIRTY);
+
+	if (window == WINDOW_INVENTORY)
+	{
+		crafting_process(&client->inventory[INVENTOTY_CRAFT_START], INVENTORY_CRAFT_END - INVENTOTY_CRAFT_START + 1, &client->inventory[INVENTORY_CRAFT_OUTPUT]);
+		if (client->inventory[INVENTORY_CRAFT_OUTPUT].id)
+			/* the client automatically sets this slot to the proper item */
+			bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s", client->name, client->inventory[INVENTORY_CRAFT_OUTPUT].count, item_find_or_create(client->inventory[INVENTORY_CRAFT_OUTPUT].id)->name);
+	}
+	else if (client->window_data.type == WINDOW_CHEST)
+	{
+		chest_propagate((struct chest *) client->window_data.entity);
+	}
+	else if (client->window_data.type == WINDOW_WORKBENCH)
+	{
+		crafting_process(&client->window_data.crafting[WORKBENCH_CRAFT_START], WORKBENCH_INVENTORY_START - WORKBENCH_CRAFT_START, &client->window_data.crafting[WORKBENCH_OUTPUT]);
+		if (client->window_data.crafting[WORKBENCH_OUTPUT].id)
+			bedrock_log(LEVEL_DEBUG, "click window: crafting: %s crafts %d %s at a workbench", client->name, client->window_data.crafting[WORKBENCH_OUTPUT].count, item_find_or_create(client->window_data.crafting[WORKBENCH_OUTPUT].id)->name);
+	}
+	else if (client->window_data.type == WINDOW_FURNACE)
+	{
+		furnace_propagate((struct furnace *) client->window_data.entity);
 	}
 
 	return offset;

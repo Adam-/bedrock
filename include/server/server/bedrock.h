@@ -16,7 +16,7 @@
 
 extern bool bedrock_running;
 extern time_t bedrock_start;
-extern struct timespec bedrock_time;
+extern uint64_t bedrock_time;
 extern uint32_t entity_id;
 
 extern uint16_t bedrock_conf_log_level;

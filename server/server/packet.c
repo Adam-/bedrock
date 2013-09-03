@@ -59,6 +59,7 @@ struct packet_info packet_handlers[] = {
 	{CLOSE_WINDOW,              2, STATE_IN_GAME,                          NONE,                    packet_close_window},
 	{CLICK_WINDOW,             10, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_click_window},
 	{SET_SLOT,                  4, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},
+	{UPDATE_WINDOW_PROPERTY,    6, 0,                                      SERVER_ONLY,             NULL},
 	{CONFIRM_TRANSACTION,       5, STATE_IN_GAME,                          NONE,                    packet_confirm_transaction},
 	{CREATIVE_INVENTORY_ACTION, 5, STATE_IN_GAME,                          SOFT_SIZE | CLIENT_ONLY, packet_creative_inventory_action},
 	{PLAYER_LIST,               6, 0,                                      SOFT_SIZE | SERVER_ONLY, NULL},

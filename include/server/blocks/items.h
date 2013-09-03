@@ -190,6 +190,8 @@ struct item
 	uint16_t id;
 	char *name;
 	enum item_flags flags;
+	short furnace_burn_time; /* time in ticks this item burns in a furnace, if this item is a fuel */
+	int16_t furnace_output; /* this item + a furnace = furnace_output */
 };
 
 struct item_stack

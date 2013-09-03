@@ -11,6 +11,7 @@
 #include "util/io.h"
 #include "protocol/console.h"
 #include "crafting/recipe.h"
+#include "entities/entity.h"
 
 #include <time.h>
 #include <errno.h>
@@ -22,43 +23,47 @@
 static bool foreground = false;
 bool bedrock_running = true;
 time_t bedrock_start;
-struct timespec bedrock_time = { 0, 0 };
+uint64_t bedrock_time;
 uint32_t entity_id = 0;
 
-static struct timespec last_tick;
+static uint64_t last_tick;
+
+/* retrieve the current time in ms using a monotonic clock */
+static uint64_t mtime()
+{
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+	{
+		bedrock_log(LEVEL_WARN, "bedrock: Unable to update clock - %s", strerror(errno));
+		abort();
+	}
+
+	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 
 static void update_time()
 {
-	uint64_t diff;
-	uint16_t tick_diff;
+	uint64_t diff, tick_diff;
 
-	if (clock_gettime(CLOCK_MONOTONIC, &bedrock_time) == -1)
-	{
-		bedrock_log(LEVEL_WARN, "bedrock: Unable to update clock - %s", strerror(errno));
-		return;
-	}
+	bedrock_time = mtime();
 
-	/* This is in nano seconds, which is 10^-9 */
-	diff = (bedrock_time.tv_sec * 1000000000 + bedrock_time.tv_nsec) - (last_tick.tv_sec * 1000000000 + last_tick.tv_nsec);
-	/* Get milli seconds */
-	diff /= 1000000;
-
+	diff = bedrock_time - last_tick;
 	tick_diff = diff / BEDROCK_TICK_LENGTH;
 	if (tick_diff > 0)
 	{
 		bedrock_node *node;
 
-		last_tick.tv_nsec += (tick_diff * BEDROCK_TICK_LENGTH) * 1000000;
-
-		last_tick.tv_sec += last_tick.tv_nsec / 1000000000;
-		last_tick.tv_nsec %= 1000000000;
+		last_tick += tick_diff * BEDROCK_TICK_LENGTH;
 
 		LIST_FOREACH(&world_list, node)
 		{
 			struct world *world = node->data;
+
 			world->time += tick_diff;
-			world->creation += tick_diff;
 		}
+
+		furnace_tick(tick_diff);
 	}
 }
 
@@ -215,8 +220,6 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 
 	util_init();
-	bedrock_memory_init();
-	bedrock_fd_init();
 
 	io_init();
 	bedrock_threadengine_start();
@@ -243,8 +246,7 @@ int main(int argc, char **argv)
 	bedrock_log(LEVEL_INFO, "Using world \"%s\" at %s", world->name, world->path);
 
 	bedrock_start = time(NULL);
-	clock_gettime(CLOCK_MONOTONIC, &bedrock_time);
-	last_tick = bedrock_time;
+	bedrock_time = last_tick = mtime();
 
 	if (world_load(world) == false)
 		exit(1);

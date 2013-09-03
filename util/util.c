@@ -1,4 +1,5 @@
 #include "config.h"
+#include "util/memory.h"
 
 int running_on_valgrind = 0;
 
@@ -11,5 +12,7 @@ void util_init()
 #ifdef RUNNING_ON_VALGRIND
 	running_on_valgrind = RUNNING_ON_VALGRIND;
 #endif
+	bedrock_memory_init();
+	bedrock_fd_init();
 }
 

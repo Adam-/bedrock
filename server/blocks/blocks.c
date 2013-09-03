@@ -95,10 +95,23 @@ int block_init()
 					b->weakness |= TOOL_TYPE_MASK_WOOD;
 			}
 			else if (!strcmp(attr->name, "on_mine"))
+			{
+				// XXX
 				if (!strcmp(attr->value, "simple_drop"))
 					b->on_mine = simple_drop;
+				else if (!strcmp(attr->value, "chest_mine"))
+					b->on_mine = chest_mine;
+			}
+			else if (!strcmp(attr->name, "on_place"))
+			{
+				if (!strcmp(attr->value, "chest_place"))
+					b->on_place = chest_place;
+			}
+			else if (!strcmp(attr->name, "furnace_burn_time"))
+				b->item.furnace_burn_time = atoi(attr->value);
+			else if (!strcmp(attr->name, "furnace_output"))
+				b->item.furnace_output = atoi(attr->value);
 		}
-
 		yaml_object_free(yaml);
 
 		bedrock_list_add(&blocks, b);

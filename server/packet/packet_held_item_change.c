@@ -18,10 +18,7 @@ int packet_held_item_change(struct client *client, const bedrock_packet *p)
 		return ERROR_UNEXPECTED;
 
 	stack = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
-	if (stack->count)
-		item = item_find_or_create(stack->id);
-	else
-		item = item_find_or_create(-1);
+	item = item_find_or_create(stack->id);
 
 	bedrock_log(LEVEL_DEBUG, "held item change: %s changes held item to slot %d, which contains %s", client->name, client->selected_slot, item->name);
 

@@ -3,3 +3,5 @@ name: Chest
 hardness: 3.750000
 no-harvest-time: 3.750000
 weakness: axe
+on_mine: chest_mine
+on_place: chest_place

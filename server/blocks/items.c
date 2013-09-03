@@ -82,6 +82,10 @@ int item_init()
 				else if (!strcmp(attr->value, "wood"))
 					i->flags |= ITEM_FLAG_WOOD;
 			}
+			else if (!strcmp(attr->name, "furnace_burn_time"))
+				i->furnace_burn_time = atoi(attr->value);
+			else if (!strcmp(attr->name, "furnace_output"))
+				i->furnace_output = atoi(attr->value);
 		}
 
 		yaml_object_free(yaml);

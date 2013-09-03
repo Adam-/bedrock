@@ -544,8 +544,7 @@ nbt_tag *nbt_add(nbt_tag *tag, nbt_tag_type type, const char *name, const void *
 		case TAG_STRING:
 		{
 			c->payload.tag_string = bedrock_malloc(src_size + 1);
-			bedrock_strncpy(c->payload.tag_string, src, src_size);
-			c->payload.tag_string[src_size] = 0;
+			bedrock_strncpy(c->payload.tag_string, src, src_size + 1);
 			break;
 		}
 		case TAG_LIST:

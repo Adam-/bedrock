@@ -42,6 +42,7 @@ enum
 	CLOSE_WINDOW                  = 0x65,
 	CLICK_WINDOW                  = 0x66,
 	SET_SLOT                      = 0x67,
+	UPDATE_WINDOW_PROPERTY        = 0x69,
 	CONFIRM_TRANSACTION           = 0x6A,
 	CREATIVE_INVENTORY_ACTION     = 0x6B,
 	PLAYER_LIST                   = 0xC9,

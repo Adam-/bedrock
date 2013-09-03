@@ -80,7 +80,7 @@ struct client
 
 	bedrock_list columns;                 /* columns this player knows about */
 
-	struct timespec ping_time_sent;       /* time keepalive was sent */
+	uint64_t ping_time_sent;              /* time keepalive was sent */
 	uint32_t ping_id;                     /* ping id sent */
 	uint16_t ping;                        /* ping in ms */
 
@@ -107,7 +107,7 @@ struct client
 		int32_t z;
 		uint8_t block_id;
 		uint16_t item_id;
-		struct timespec end;
+		uint64_t end;
 	}
 	digging_data;
 
@@ -117,10 +117,8 @@ struct client
 		uint8_t id;
 		uint8_t type;
 
-		/* Coords of tile entity, if this window is a tile entity */
-		int32_t x;
-		uint8_t y;
-		int32_t z;
+		/* Tile entity, if this window is a tile entity */
+		struct tile_entity *entity;
 
 		/* for crafting benches, output slot + input slots */
 		struct item_stack crafting[WORKBENCH_INVENTORY_START];

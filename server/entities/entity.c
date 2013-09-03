@@ -21,6 +21,9 @@ void entity_load(struct column *column, nbt_tag *data)
 			case BLOCK_CHEST:
 				entity = chest_load(tile_tag);
 				break;
+			case BLOCK_FURNACE:
+				entity = furnace_load(tile_tag);
+				break;
 			default:
 				continue;
 		}
@@ -32,6 +35,7 @@ void entity_load(struct column *column, nbt_tag *data)
 
 		nbt_free(tile_tag);
 
+		entity->column = column;
 		bedrock_list_add(&column->tile_entities, entity);
 
 		bedrock_log(LEVEL_DEBUG, "entity: Loaded entity %s at %d, %d, %d", item->name, entity->x, entity->y, entity->z);
@@ -47,16 +51,28 @@ void entity_save(struct column *column)
 	LIST_FOREACH(&column->tile_entities, node)
 	{
 		struct tile_entity *entity = node->data;
+		struct item *item = item_find(entity->blockid);
+		nbt_tag *entity_tag;
+
+		if (item == NULL)
+			continue;
+
+		entity_tag = nbt_add(tile_entities, TAG_COMPOUND, NULL, NULL, 0);
+
+		nbt_add(entity_tag, TAG_STRING, "id", item->name, strlen(item->name));
+		nbt_add(entity_tag, TAG_INT, "x", &entity->x, sizeof(entity->x));
+		nbt_add(entity_tag, TAG_INT, "y", &entity->y, sizeof(entity->y));
+		nbt_add(entity_tag, TAG_INT, "z", &entity->z, sizeof(entity->z));
 
 		switch (entity->blockid)
 		{
 			case BLOCK_CHEST:
-				chest_save(tile_entities, entity);
+				chest_save(entity_tag, entity);
 				break;
-			default:
-				continue;
+			case BLOCK_FURNACE:
+				furnace_save(entity_tag, entity);
+				break;
 		}
-
 	}
 }
 
@@ -70,13 +86,30 @@ void entity_cleanup(struct column *column)
 		nbt_tag *entity = node->data;
 
 		const char *id = nbt_read_string(entity, 1, "id");
-		if (id && !strcmp(id, "Chest"))
+
+		if (id == NULL)
+			continue;
+
+		if (!strcmp(id, "Chest") || !strcmp(id, "Furnace"))
 			nbt_free(entity);
 	}
 }
 
 void entity_free(struct tile_entity *entity)
 {
+	bedrock_node *node;
+
+	if (entity->on_free != NULL)
+		entity->on_free(entity);
+
+	bedrock_list_del(&entity->column->tile_entities, entity);
+
+	LIST_FOREACH(&entity->clients, node)
+	{
+		struct client *c = node->data;
+		c->window_data.entity = NULL;
+	}
+
 	bedrock_free(entity);
 }
 
@@ -86,6 +119,16 @@ void entity_operate(struct client *client, struct tile_entity *entity)
 	{
 		case BLOCK_CHEST:
 			chest_operate(client, entity);
+			break;
+		case BLOCK_FURNACE:
+			furnace_operate(client, entity);
+			break;
 	}
+	
+	if (client->window_data.entity != NULL)
+		bedrock_list_del(&client->window_data.entity->clients, client);
+
+	client->window_data.entity = entity;
+	bedrock_list_add(&entity->clients, client);
 }
 
