@@ -21,6 +21,7 @@ struct chunk
 extern struct chunk *chunk_create(struct column *column, uint8_t y);
 extern struct chunk *chunk_load(struct column *column, uint8_t y, nbt_tag *tag);
 extern uint8_t *chunk_get_block(struct chunk *chunk, int32_t x, uint8_t y, int32_t z);
+extern uint8_t chunk_get_data(struct chunk *chunk, int32_t x, uint8_t y, int32_t z);
 extern void chunk_free(struct chunk *chunk);
 extern struct chunk *find_chunk_which_contains(struct world *world, int32_t x, uint8_t y, int32_t z);
 

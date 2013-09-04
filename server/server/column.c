@@ -136,6 +136,26 @@ uint8_t *column_get_block(struct column *column, int32_t x, uint8_t y, int32_t z
 	return chunk_get_block(c, x, y, z);
 }
 
+uint8_t column_get_data(struct column *column, int32_t x, uint8_t y, int32_t z)
+{
+	uint8_t chunk = y / BEDROCK_BLOCKS_PER_CHUNK;
+	double column_x = (double) x / BEDROCK_BLOCKS_PER_CHUNK, column_z = (double) z / BEDROCK_BLOCKS_PER_CHUNK;
+	struct chunk *c;
+
+	column_x = floor(column_x);
+	column_z = floor(column_z);
+
+	bedrock_assert(chunk < BEDROCK_CHUNKS_PER_COLUMN, return 0);
+	bedrock_assert(column_x == column->x && column_z == column->z, return 0);
+
+	c = column->chunks[chunk];
+
+	if (c == NULL)
+		return 0;
+
+	return chunk_get_data(c, x, y, z);
+}
+
 int32_t *column_get_height_for(struct column *column, int32_t x, int32_t z)
 {
 	struct nbt_tag_int_array *tia = &nbt_get(column->data, TAG_INT_ARRAY, 2, "Level", "HeightMap")->payload.tag_int_array;

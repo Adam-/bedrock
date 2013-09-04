@@ -188,7 +188,8 @@ void furnace_burn(struct furnace *furnace)
 		if (furnace->burning)
 		{
 			/* 'block change' the furnace to the not lit version */
-			uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
+			uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z),
+				data = column_get_data(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
 			if (block)
 			{
 				*block = BLOCK_FURNACE;
@@ -199,7 +200,7 @@ void furnace_burn(struct furnace *furnace)
 			{
 				struct client *c = node->data;
 
-				packet_send_block_change(c, furnace->entity.x, furnace->entity.y, furnace->entity.z, BLOCK_FURNACE, 0); /// XXX direction
+				packet_send_block_change(c, furnace->entity.x, furnace->entity.y, furnace->entity.z, BLOCK_FURNACE, data);
 			}
 
 			bedrock_list_del(&burning_furnaces, furnace);
@@ -212,7 +213,8 @@ void furnace_burn(struct furnace *furnace)
 			return;
 
 		/* 'block change' the furnace to the lit version */
-		uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
+		uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z),
+			data = column_get_data(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
 		if (block)
 		{
 			*block = BLOCK_BURNING_FURNACE;
@@ -223,7 +225,7 @@ void furnace_burn(struct furnace *furnace)
 		{
 			struct client *c = node->data;
 
-			packet_send_block_change(c, furnace->entity.x, furnace->entity.y, furnace->entity.z, BLOCK_BURNING_FURNACE, 0); // XXX direction
+			packet_send_block_change(c, furnace->entity.x, furnace->entity.y, furnace->entity.z, BLOCK_BURNING_FURNACE, data);
 		}
 
 		bedrock_list_add(&burning_furnaces, furnace);

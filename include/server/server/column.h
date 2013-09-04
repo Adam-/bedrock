@@ -65,6 +65,7 @@ struct dropped_item
 extern void column_load(struct column *region, nbt_tag *data);
 extern void column_free(struct column *column);
 extern uint8_t *column_get_block(struct column *column, int32_t x, uint8_t y, int32_t z);
+extern uint8_t column_get_data(struct column *column, int32_t x, uint8_t y, int32_t z);
 extern int32_t *column_get_height_for(struct column *column, int32_t x, int32_t z);
 /* Finds the column which contains the point x and z */
 extern struct column *find_column_which_contains(struct region *region, double x, double z);

@@ -101,6 +101,31 @@ uint8_t *chunk_get_block(struct chunk *chunk, int32_t x, uint8_t y, int32_t z)
 	return &chunk->blocks[block_index];
 }
 
+uint8_t chunk_get_data(struct chunk *chunk, int32_t x, uint8_t y, int32_t z)
+{
+	uint16_t block_index;
+
+	bedrock_assert(chunk->data != NULL, return 0);
+
+	x %= BEDROCK_BLOCKS_PER_CHUNK;
+	y %= BEDROCK_BLOCKS_PER_CHUNK;
+	z %= BEDROCK_BLOCKS_PER_CHUNK;
+
+	if (x < 0)
+		x = BEDROCK_BLOCKS_PER_CHUNK - abs(x);
+	if (z < 0)
+		z = BEDROCK_BLOCKS_PER_CHUNK - abs(z);
+
+	block_index = (y * BEDROCK_BLOCKS_PER_CHUNK + z) * BEDROCK_BLOCKS_PER_CHUNK + x;
+
+	bedrock_assert(block_index / 2 < BEDROCK_DATA_LENGTH, return 0);
+
+	if (block_index % 2 == 0)
+		return chunk->data[block_index / 2] & 0xF;
+	else
+		return chunk->data[block_index / 2] >> 4;
+}
+
 void chunk_free(struct chunk *chunk)
 {
 	int i;
