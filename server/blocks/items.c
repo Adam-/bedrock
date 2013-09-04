@@ -7,7 +7,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-bedrock_list items = LIST_INIT;
+static bedrock_list items = LIST_INIT;
+static bedrock_mutex item_mutex;
 
 static void item_free(struct item *i)
 {
@@ -19,6 +20,8 @@ int item_init()
 {
 	DIR *dir = opendir("data/items");
 	struct dirent *ent;
+
+	bedrock_mutex_init(&item_mutex, "item mutex");
 
 	items.free = (bedrock_free_func) item_free;
 
@@ -108,13 +111,18 @@ struct item *item_find(enum item_type id)
 	struct block *block;
 	bedrock_node *node;
 
+	bedrock_mutex_lock(&item_mutex);
 	LIST_FOREACH(&items, node)
 	{
 		struct item *item = node->data;
 
 		if (item->id == id)
+		{
+			bedrock_mutex_unlock(&item_mutex);
 			return item;
+		}
 	}
+	bedrock_mutex_unlock(&item_mutex);
 
 	block = block_find(id);
 
@@ -129,13 +137,18 @@ struct item *item_find_by_name(const char *name)
 	struct block *block;
 	bedrock_node *node;
 
+	bedrock_mutex_lock(&item_mutex);
 	LIST_FOREACH(&items, node)
 	{
 		struct item *item = node->data;
 
 		if (!strcmp(name, item->name))
+		{
+			bedrock_mutex_unlock(&item_mutex);
 			return item;
+		}
 	}
+	bedrock_mutex_unlock(&item_mutex);
 
 	block = block_find_by_name(name);
 	if (block != NULL)
@@ -160,7 +173,9 @@ struct item *item_find_or_create(enum item_type id)
 		item->name = bedrock_strdup("Unknown");
 		item->flags = 0;
 
+		bedrock_mutex_lock(&item_mutex);
 		bedrock_list_add(&items, item);
+		bedrock_mutex_unlock(&item_mutex);
 	}
 
 	return item;

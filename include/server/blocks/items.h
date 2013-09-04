@@ -201,8 +201,6 @@ struct item_stack
 	int16_t metadata;
 };
 
-extern bedrock_list items;
-
 extern int item_init();
 extern void item_shutdown();
 extern struct item *item_find(enum item_type id);
