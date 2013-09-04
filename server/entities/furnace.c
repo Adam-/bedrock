@@ -117,23 +117,9 @@ static void furnace_on_free(struct furnace *furnace)
 	bedrock_mutex_unlock(&furnace_mutex);
 }
 
-void furnace_operate(struct client *client, struct tile_entity *entity)
+void furnace_operate(struct client *client, struct tile_entity bedrock_attribute_unused *entity)
 {
-	struct furnace *furnace = (struct furnace *) entity;
-	struct item_stack *stacks[] = { &furnace->in, &furnace->fuel, &furnace->out };
-	int i;
-
 	packet_send_open_window(client, WINDOW_FURNACE, NULL, ENTITY_FURNACE_SLOTS);
-
-	for (i = 0; i < 3; ++i)
-	{
-		struct item_stack *stack = stacks[i];
-
-		if (stack->id == 0)
-			continue;
-
-		packet_send_set_slot(client, client->window_data.id, i, item_find_or_create(stack->id), stack->count, stack->metadata);
-	}
 }
 
 void furnace_propagate(struct furnace *furnace)

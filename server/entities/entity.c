@@ -135,5 +135,15 @@ void entity_operate(struct client *client, struct tile_entity *entity)
 
 	client->window_data.entity = entity;
 	bedrock_list_add(&entity->clients, client);
+
+	switch (entity->blockid)
+	{
+		case BLOCK_CHEST:
+			chest_propagate((struct chest *) entity);
+			break;
+		case BLOCK_FURNACE:
+			furnace_propagate((struct furnace *) entity);
+			break;
+	}
 }
 

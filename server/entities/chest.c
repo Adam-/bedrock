@@ -55,22 +55,9 @@ void chest_save(nbt_tag *entity_tag, struct tile_entity *entity)
 	}
 }
 
-void chest_operate(struct client *client, struct tile_entity *entity)
+void chest_operate(struct client *client, struct tile_entity bedrock_attribute_unused *entity)
 {
-	struct chest *chest = (struct chest *) entity;
-	int i;
-
 	packet_send_open_window(client, WINDOW_CHEST, NULL, ENTITY_CHEST_SLOTS);
-
-	for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
-	{
-		struct item_stack *stack = &chest->items[i];
-
-		if (stack->id == 0)
-			continue;
-
-		packet_send_set_slot(client, client->window_data.id, i, item_find_or_create(stack->id), stack->count, stack->metadata);
-	}
 }
 
 void chest_mine(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block, bool harvest)
