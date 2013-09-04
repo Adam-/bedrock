@@ -2,6 +2,7 @@
 #define BEDROCK_BLOCKS_ITEMS_H
 
 #include "util/list.h"
+#include "util/yml.h"
 
 #include <stdint.h>
 
@@ -203,6 +204,7 @@ struct item_stack
 
 extern int item_init();
 extern void item_shutdown();
+extern void item_load(struct item *i, struct yaml_object *attr);
 extern struct item *item_find(enum item_type id);
 extern struct item *item_find_by_name(const char *name);
 extern struct item *item_find_or_create(enum item_type id);

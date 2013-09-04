@@ -49,46 +49,7 @@ int item_init()
 		{
 			struct yaml_object *attr = node->data;
 
-			if (!strcmp(attr->name, "id"))
-				i->id = atoi(attr->value);
-			else if (!strcmp(attr->name, "name"))
-				i->name = bedrock_strdup(attr->value);
-			else if (!strcmp(attr->name, "damageable"))
-				i->flags |= ITEM_FLAG_DAMAGABLE;
-			else if (!strcmp(attr->name, "enchantable"))
-				i->flags |= ITEM_FLAG_ENCHANTABLE;
-			else if (!strcmp(attr->name, "tool"))
-			{
-				if (!strcmp(attr->value, "shovel"))
-					i->flags |= ITEM_FLAG_SHOVEL;
-				else if (!strcmp(attr->value, "pickaxe"))
-					i->flags |= ITEM_FLAG_PICKAXE;
-				else if (!strcmp(attr->value, "axe"))
-					i->flags |= ITEM_FLAG_AXE;
-				else if (!strcmp(attr->value, "sword"))
-					i->flags |= ITEM_FLAG_SWORD;
-				else if (!strcmp(attr->value, "hoe"))
-					i->flags |= ITEM_FLAG_HOE;
-				else if (!strcmp(attr->value, "shears"))
-					i->flags |= ITEM_FLAG_SHEARS;
-			}
-			else if (!strcmp(attr->name, "tool-metal"))
-			{
-				if (!strcmp(attr->value, "gold"))
-					i->flags |= ITEM_FLAG_GOLD;
-				else if (!strcmp(attr->value, "diamond"))
-					i->flags |= ITEM_FLAG_DIAMOND;
-				else if (!strcmp(attr->value, "iron"))
-					i->flags |= ITEM_FLAG_IRON;
-				else if (!strcmp(attr->value, "stone"))
-					i->flags |= ITEM_FLAG_STONE;
-				else if (!strcmp(attr->value, "wood"))
-					i->flags |= ITEM_FLAG_WOOD;
-			}
-			else if (!strcmp(attr->name, "furnace_burn_time"))
-				i->furnace_burn_time = atoi(attr->value);
-			else if (!strcmp(attr->name, "furnace_output"))
-				i->furnace_output = atoi(attr->value);
+			item_load(i, attr);
 		}
 
 		yaml_object_free(yaml);
@@ -104,6 +65,50 @@ int item_init()
 void item_shutdown()
 {
 	bedrock_list_clear(&items);
+}
+
+void item_load(struct item *i, struct yaml_object *attr)
+{
+	if (!strcmp(attr->name, "id"))
+		i->id = atoi(attr->value);
+	else if (!strcmp(attr->name, "name"))
+		i->name = bedrock_strdup(attr->value);
+	else if (!strcmp(attr->name, "damageable"))
+		i->flags |= ITEM_FLAG_DAMAGABLE;
+	else if (!strcmp(attr->name, "enchantable"))
+		i->flags |= ITEM_FLAG_ENCHANTABLE;
+	else if (!strcmp(attr->name, "tool"))
+	{
+		if (!strcmp(attr->value, "shovel"))
+			i->flags |= ITEM_FLAG_SHOVEL;
+		else if (!strcmp(attr->value, "pickaxe"))
+			i->flags |= ITEM_FLAG_PICKAXE;
+		else if (!strcmp(attr->value, "axe"))
+			i->flags |= ITEM_FLAG_AXE;
+		else if (!strcmp(attr->value, "sword"))
+			i->flags |= ITEM_FLAG_SWORD;
+		else if (!strcmp(attr->value, "hoe"))
+			i->flags |= ITEM_FLAG_HOE;
+		else if (!strcmp(attr->value, "shears"))
+			i->flags |= ITEM_FLAG_SHEARS;
+	}
+	else if (!strcmp(attr->name, "tool-metal"))
+	{
+		if (!strcmp(attr->value, "gold"))
+			i->flags |= ITEM_FLAG_GOLD;
+		else if (!strcmp(attr->value, "diamond"))
+			i->flags |= ITEM_FLAG_DIAMOND;
+		else if (!strcmp(attr->value, "iron"))
+			i->flags |= ITEM_FLAG_IRON;
+		else if (!strcmp(attr->value, "stone"))
+			i->flags |= ITEM_FLAG_STONE;
+		else if (!strcmp(attr->value, "wood"))
+			i->flags |= ITEM_FLAG_WOOD;
+	}
+	else if (!strcmp(attr->name, "furnace_burn_time"))
+		i->furnace_burn_time = atoi(attr->value);
+	else if (!strcmp(attr->name, "furnace_output"))
+		i->furnace_output = atoi(attr->value);
 }
 
 struct item *item_find(enum item_type id)

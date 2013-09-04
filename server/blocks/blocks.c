@@ -64,11 +64,9 @@ int block_init()
 		{
 			struct yaml_object *attr = node->data;
 
-			if (!strcmp(attr->name, "id"))
-				b->item.id = atoi(attr->value);
-			else if (!strcmp(attr->name, "name"))
-				b->item.name = bedrock_strdup(attr->value);
-			else if (!strcmp(attr->name, "hardness"))
+			item_load(&b->item, attr);
+
+			if (!strcmp(attr->name, "hardness"))
 				b->hardness = atof(attr->value);
 			else if (!strcmp(attr->name, "no-harvest-time"))
 				b->no_harvest_time = atof(attr->value);
@@ -107,10 +105,6 @@ int block_init()
 				if (!strcmp(attr->value, "chest_place"))
 					b->on_place = chest_place;
 			}
-			else if (!strcmp(attr->name, "furnace_burn_time"))
-				b->item.furnace_burn_time = atoi(attr->value);
-			else if (!strcmp(attr->name, "furnace_output"))
-				b->item.furnace_output = atoi(attr->value);
 		}
 		yaml_object_free(yaml);
 
