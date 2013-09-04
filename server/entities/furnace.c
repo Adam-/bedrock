@@ -8,12 +8,20 @@ static void furnace_on_free(struct furnace *furnace);
 
 /* furnaces which are burning */
 static bedrock_list burning_furnaces = LIST_INIT;
+static bedrock_mutex furnace_mutex;
 
-struct tile_entity *furnace_load(nbt_tag *tag)
+void furnace_init()
+{
+	bedrock_mutex_init(&furnace_mutex, "furnace mutex");
+}
+
+struct tile_entity *furnace_load(struct column *column, nbt_tag *tag)
 {
 	struct furnace *furnace = bedrock_malloc(sizeof(struct furnace));
 	bedrock_node *node;
 	nbt_tag *items;
+	uint8_t *block;
+	int32_t x, y, z;
 
 	nbt_copy(tag, TAG_SHORT, &furnace->fuel_indicator, sizeof(furnace->fuel_indicator), 1, "BurnTime");
 	nbt_copy(tag, TAG_SHORT, &furnace->progress_arrow, sizeof(furnace->progress_arrow), 1, "CookTime");
@@ -57,9 +65,16 @@ struct tile_entity *furnace_load(nbt_tag *tag)
 
 	furnace->entity.on_free = (void (*)(struct tile_entity *)) furnace_on_free;
 
-	if (furnace->fuel_indicator)
+	nbt_copy(tag, TAG_INT, &x, sizeof(x), 1, "x");
+	nbt_copy(tag, TAG_INT, &y, sizeof(y), 1, "y");
+	nbt_copy(tag, TAG_INT, &z, sizeof(z), 1, "z");
+	block = column_get_block(column, x, y, z);
+	if (block && *block == BLOCK_BURNING_FURNACE)
 	{
-		// XXX synchronize and add to burning list
+		furnace->burning = true;
+		bedrock_mutex_lock(&furnace_mutex);
+		bedrock_list_add(&burning_furnaces, furnace);
+		bedrock_mutex_unlock(&furnace_mutex);
 	}
 
 	bedrock_assert(!offsetof(struct furnace, entity), ;);
@@ -97,7 +112,9 @@ void furnace_save(nbt_tag *entity_tag, struct tile_entity *entity)
 
 static void furnace_on_free(struct furnace *furnace)
 {
+	bedrock_mutex_lock(&furnace_mutex);
 	bedrock_list_del(&burning_furnaces, furnace);
+	bedrock_mutex_unlock(&furnace_mutex);
 }
 
 void furnace_operate(struct client *client, struct tile_entity *entity)
@@ -171,6 +188,13 @@ void furnace_burn(struct furnace *furnace)
 		if (furnace->burning)
 		{
 			/* 'block change' the furnace to the not lit version */
+			uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
+			if (block)
+			{
+				*block = BLOCK_FURNACE;
+				column_set_pending(furnace->entity.column, COLUMN_FLAG_DIRTY);
+			}
+
 			LIST_FOREACH(&furnace->entity.column->players, node)
 			{
 				struct client *c = node->data;
@@ -188,6 +212,13 @@ void furnace_burn(struct furnace *furnace)
 			return;
 
 		/* 'block change' the furnace to the lit version */
+		uint8_t *block = column_get_block(furnace->entity.column, furnace->entity.x, furnace->entity.y, furnace->entity.z);
+		if (block)
+		{
+			*block = BLOCK_BURNING_FURNACE;
+			column_set_pending(furnace->entity.column, COLUMN_FLAG_DIRTY);
+		}
+
 		LIST_FOREACH(&furnace->entity.column->players, node)
 		{
 			struct client *c = node->data;
@@ -204,6 +235,7 @@ void furnace_tick(uint64_t diff)
 {
 	bedrock_node *node, *node2;
 
+	bedrock_mutex_lock(&furnace_mutex);
 	LIST_FOREACH_SAFE(&burning_furnaces, node, node2)
 	{
 		struct furnace *furnace = node->data;
@@ -211,7 +243,10 @@ void furnace_tick(uint64_t diff)
 		int used_fuel;
 
 		if (item == NULL || !item->furnace_burn_time)
+		{
+			furnace_burn(furnace);
 			continue;
+		}
 
 		furnace->fuel_indicator += diff;
 		used_fuel = furnace->fuel_indicator / item->furnace_burn_time;
@@ -271,5 +306,6 @@ void furnace_tick(uint64_t diff)
 		/* Propagate changes to the various slots/indicators */
 		furnace_propagate(furnace);
 	}
+	bedrock_mutex_unlock(&furnace_mutex);
 }
 

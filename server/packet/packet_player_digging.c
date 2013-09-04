@@ -199,7 +199,6 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 
 		block = block_find_or_create(*block_id);
 		*block_id = BLOCK_AIR;
-		chunk->modified = true;
 		column_set_pending(chunk->column, COLUMN_FLAG_DIRTY);
 
 		// This is the height right *above* the highest block

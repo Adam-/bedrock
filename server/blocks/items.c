@@ -148,7 +148,8 @@ struct item *item_find_or_create(enum item_type id)
 {
 	struct item *item = item_find(id);
 	
-	bedrock_assert(id <= INT16_MAX, return NULL);
+	if (id > INT16_MAX)
+		return NULL;
 
 	if (item == NULL)
 	{

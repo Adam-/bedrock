@@ -200,7 +200,6 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	}
 
 	*being_placed = slot_data.id;
-	real_chunk->modified = true;
 	column_set_pending(real_chunk->column, COLUMN_FLAG_DIRTY);
 
 	/* Build has now succeeded to us, remove an item from the player

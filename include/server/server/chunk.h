@@ -11,9 +11,6 @@ struct chunk
 	/* Y coordinate */
 	uint8_t y;
 
-	/* True if this chunk is modified in memory */
-	bool modified;
-
 	/* These are pointers into the NBT structure for the column */
 	uint8_t *blocks;
 	uint8_t *data;

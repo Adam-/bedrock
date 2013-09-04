@@ -1,5 +1,10 @@
 #include "entities/entity.h"
 
+void entity_init()
+{
+	furnace_init();
+}
+
 /* load entities from data and put them into column */
 void entity_load(struct column *column, nbt_tag *data)
 {
@@ -22,7 +27,7 @@ void entity_load(struct column *column, nbt_tag *data)
 				entity = chest_load(tile_tag);
 				break;
 			case BLOCK_FURNACE:
-				entity = furnace_load(tile_tag);
+				entity = furnace_load(column, tile_tag);
 				break;
 			default:
 				continue;

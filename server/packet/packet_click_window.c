@@ -82,6 +82,8 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		if (chest == NULL)
 			return ERROR_UNEXPECTED;
 
+		column = chest->entity.column;
+
 		for (i = 0; i < CHEST_INVENTORY_START; ++i)
 			slots[i] = &chest->items[i];
 		for (i = 0; i < INVENTORY_SIZE - INVENTORY_START; ++i)
@@ -101,6 +103,10 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	{
 		/* 0 = in, 1 = fuel, 2 = out, 3-29 = inventory, 30-38 = held items */
 		struct furnace *furnace = (struct furnace *) client->window_data.entity;
+		if (furnace == NULL)
+			return ERROR_UNEXPECTED;
+
+		column = furnace->entity.column;
 
 		slots[FURNACE_INPUT] = &furnace->in;
 		slots[FURNACE_FUEL] = &furnace->fuel;

@@ -39,6 +39,7 @@ struct furnace
 	int16_t fuel_indicator; /* this goes from 0 to 200 every X/200 ticks, where X = length of time fuel lasts in ticks */
 };
 
+extern void entity_init();
 extern void entity_load(struct column *column, nbt_tag *data);
 extern void entity_save(struct column *column);
 extern void entity_cleanup(struct column *column);
@@ -52,7 +53,8 @@ extern void chest_mine(struct client *, struct chunk *, int32_t x, uint8_t y, in
 extern void chest_place(struct client *client, struct chunk *chunk, int32_t x, uint8_t y, int32_t z, struct block *block);
 extern void chest_propagate(struct chest *chest);
 
-extern struct tile_entity *furnace_load(nbt_tag *tag);
+extern void furnace_init();
+extern struct tile_entity *furnace_load(struct column *column, nbt_tag *tag);
 extern void furnace_save(nbt_tag *tag, struct tile_entity *entity);
 extern void furnace_operate(struct client *client, struct tile_entity *entity);
 extern void furnace_propagate(struct furnace *furnace);
