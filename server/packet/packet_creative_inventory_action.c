@@ -4,7 +4,7 @@
 
 int packet_creative_inventory_action(struct client *client, bedrock_packet *packet)
 {
-	uint16_t id;
+	int16_t id;
 	struct item_stack slot, *stack;
 	struct item *item;
 
@@ -17,18 +17,27 @@ int packet_creative_inventory_action(struct client *client, bedrock_packet *pack
 	if (client->gamemode != GAMEMODE_CREATIVE)
 		return ERROR_UNEXPECTED;
 
-	if (id >= INVENTORY_SIZE)
+	if (id < -1 || id >= INVENTORY_SIZE)
 		return ERROR_NOT_ALLOWED;
 
 	if (slot.id == -1)
 	{
 		// what is this?
+		bedrock_log(LEVEL_DEBUG, "creative inventory action: Negative slot for %s?", client->name);
 		return ERROR_OK;
 	}
 
 	item = item_find_or_create(slot.id);
 	if (item == NULL)
 		return ERROR_UNEXPECTED;
+
+	if (id == -1)
+	{
+		// Dropping item
+		bedrock_log(LEVEL_DEBUG, "creative inventory action: %s drops %s %s", client->name, slot.count, item->name);
+
+		return ERROR_OK;
+	}
 
 	bedrock_log(LEVEL_DEBUG, "creative inventory action: %s puts %d %s in to slot %d", client->name, slot.count, item->name, id);
 	
