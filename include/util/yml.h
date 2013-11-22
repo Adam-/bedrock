@@ -1,6 +1,7 @@
 #ifndef BEDROCK_UTIL_YML_H
 #define BEDROCK_UTIL_YML_H
 
+#include "util/util.h"
 #include "server/config/hard.h"
 #include "util/list.h"
 

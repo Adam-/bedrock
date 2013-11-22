@@ -20,13 +20,15 @@
 
 enum client_authentication_state
 {
-	STATE_UNAUTHENTICATED = 1 << 0,     /* Not at all authenticated */
-	STATE_HANDSHAKING     = 1 << 1,     /* Doing connection handshake, including encryption request/response */
-	STATE_LOGGING_IN      = 1 << 2,     /* Logging in, checking session.minecraft.net/whatever else, AES encryption is not enabled yet */
-	STATE_LOGGED_IN       = 1 << 3,     /* Successfully authenticated, AES encryption is enabled at this point */
-	STATE_BURSTING        = 1 << 4,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
-	STATE_IN_GAME         = 1 << 5,     /* In the game, eg logon sequence is complete */
-	STATE_ANY             = ~0,         /* Any state */
+	STATE_UNAUTHENTICATED   = 1 << 0,     /* Not at all authenticated */
+	STATE_STATUS            = 1 << 1,     /* Requesting status */
+	STATE_LOGIN             = 1 << 2,     /* Requesting login */
+	STATE_LOGIN_HANDSHAKING = 1 << 3,     /* Doing login connection handshake, including encryption request/response */
+	STATE_LOGGING_IN        = 1 << 4,     /* Logging in, checking session.minecraft.net/whatever else, AES encryption is not enabled yet */
+	STATE_LOGGED_IN         = 1 << 5,     /* Successfully authenticated, AES encryption is enabled at this point */
+	STATE_BURSTING          = 1 << 6,     /* Successfully authenticated, requested spawn, and in the process of being put into the game */
+	STATE_IN_GAME           = 1 << 7,     /* In the game, eg logon sequence is complete */
+	STATE_ANY               = ~0,         /* Any state */
 };
 
 enum client_entity_action
@@ -57,7 +59,7 @@ struct client
 	bedrock_list out_buffer;              /* list of packets to send, these are already encrypted! */
 
 	uint32_t id;                         /* unique entity id, shared across players and NPCs */
-	enum client_authentication_state authenticated;
+	enum client_authentication_state state;
 
 
 	char name[BEDROCK_USERNAME_MAX];

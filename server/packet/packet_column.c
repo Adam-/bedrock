@@ -4,7 +4,6 @@
 #include "nbt/nbt.h"
 #include "packet/packet_destroy_entity.h"
 #include "packet/packet_spawn_object.h"
-#include "packet/packet_spawn_named_entity.h"
 #include "util/compression.h"
 
 #define COLUMN_BUFFER_SIZE 8192
@@ -50,9 +49,8 @@ void packet_send_column_empty(struct client *client, struct column *column)
 	packet_column_remove_players(client, column);
 	packet_column_remove_items(client, column);
 
-	packet_init(&packet, MAP_COLUMN);
+	packet_init(&packet, SERVER_MAP_COLUMN);
 
-	packet_pack_header(&packet, MAP_COLUMN);
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
 	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
 	b = 1;

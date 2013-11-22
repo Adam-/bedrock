@@ -1,5 +1,8 @@
 /* Hard configuration for stuff that probably shouldn't change */
 
+#ifndef SERVER_CONFIG_HARD_H
+#define SERVER_CONFIG_HARD_H
+
 /* Tick length in milliseconds */
 #define BEDROCK_TICK_LENGTH 50
 /* Day length, in ticks */
@@ -14,7 +17,7 @@
 #define BEDROCK_VIEW_LENGTH 10
 
 /* Protocol version we support */
-#define BEDROCK_PROTOCOL_VERSION 74
+#define BEDROCK_PROTOCOL_VERSION 4
 
 /* Size of the initial buffer for clients */
 #define BEDROCK_CLIENT_SEND_SIZE 4096
@@ -59,4 +62,8 @@
 #define BEDROCK_SHARED_SECRET_LEN 16
 
 #define BEDROCK_DEFAUT_PLAYER_WALK_SPEED 0.1
+
+typedef uint32_t packet_id;
+
+#endif // SERVER_CONFIG_HARD_H
 

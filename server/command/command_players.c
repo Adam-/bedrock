@@ -9,7 +9,7 @@ void command_players(struct command_source *source, int bedrock_attribute_unused
 	{
 		struct client *c = node->data;
 
-		if (c->authenticated & STATE_IN_GAME)
+		if (c->state & STATE_IN_GAME)
 		{
 			command_reply(source, "%s", c->name);
 			++players;

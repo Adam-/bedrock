@@ -19,9 +19,8 @@ enum
 	UPDATE = 0xFF
 };
 
-int packet_block_placement(struct client *client, const bedrock_packet *p)
+int packet_block_placement(struct client *client, bedrock_packet *p)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	int32_t x, z;
 	uint8_t y;
 	uint8_t d;
@@ -42,17 +41,17 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	bedrock_node *node;
 	struct tile_entity *entity;
 
-	packet_read_int(p, &offset, &x, sizeof(x));
-	packet_read_int(p, &offset, &y, sizeof(y));
-	packet_read_int(p, &offset, &z, sizeof(z));
-	packet_read_int(p, &offset, &d, sizeof(d));
-	packet_read_slot(p, &offset, &slot_data);
-	packet_read_int(p, &offset, &cursor_x, sizeof(cursor_x));
-	packet_read_int(p, &offset, &cursor_y, sizeof(cursor_y));
-	packet_read_int(p, &offset, &cursor_z, sizeof(cursor_z));
+	packet_read_int(p, &x, sizeof(x));
+	packet_read_int(p, &y, sizeof(y));
+	packet_read_int(p, &z, sizeof(z));
+	packet_read_int(p, &d, sizeof(d));
+	packet_read_slot(p, &slot_data);
+	packet_read_int(p, &cursor_x, sizeof(cursor_x));
+	packet_read_int(p, &cursor_y, sizeof(cursor_y));
+	packet_read_int(p, &cursor_z, sizeof(cursor_z));
 
-	if (offset <= ERROR_UNKNOWN)
-		return offset;
+	if (p->error)
+		return p->error;
 
 	real_x = x;
 	real_y = y;
@@ -94,7 +93,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 			// This packet has a special case where X, Y, Z, and Direction are all -1.
 			// This special packet indicates that the currently held item for the player should have its state
 			// updated such as eating food, shooting bows, using buckets, etc.
-			return offset;
+			return ERROR_OK;
 		default: // Unknown direction
 			return ERROR_NOT_ALLOWED;
 	}
@@ -121,7 +120,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		bedrock_log(LEVEL_DEBUG, "player building: Rejecting block placement for %s because they are building on air at %d, %d, %d", client->name, real_x, real_y, real_z);
 		client_add_inventory_item(client, item);
 		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
-		return offset;
+		return ERROR_OK;
 	}
 	
 	entity = column_find_tile_entity(target_chunk->column, ITEM_NONE, x, y, z);
@@ -129,14 +128,14 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	{
 		bedrock_log(LEVEL_DEBUG, "player building: %s operates entity %s at %d, %d, %d", client->name, item_find_or_create(entity->blockid)->name, real_x, real_y, real_z);
 		entity_operate(client, entity);
-		return offset;
+		return ERROR_OK;
 	}
 
 	if (*placed_on == BLOCK_CRAFTING_TABLE)
 	{
 		packet_send_open_window(client, WINDOW_WORKBENCH, NULL, WORKBENCH_SIZE);
 		bedrock_log(LEVEL_DEBUG, "player building: %s operates crafting bench", client->name);
-		return offset;
+		return ERROR_OK;
 	}
 
 	bedrock_log(LEVEL_DEBUG, "player building: %s is building on %s with %s", client->name, item_find_or_create(*placed_on)->name, item->name);
@@ -147,7 +146,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		if (slot_data.id != -1)
 			return ERROR_UNEXPECTED;
 		else
-			return offset;
+			return ERROR_OK;
 	}
 
 	if ((item->flags & ITEM_FLAG_BLOCK) == 0)
@@ -157,7 +156,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		client_add_inventory_item(client, item);
 		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
 
-		return offset;
+		return ERROR_OK;
 	}
 
 	bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
@@ -188,7 +187,7 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 		bedrock_log(LEVEL_DEBUG, "player building: Rejecting block placement for %s because a block is already at %d, %d, %d", client->name, real_x, real_y, real_z);
 		client_add_inventory_item(client, item);
 		packet_send_block_change(client, real_x, real_y, real_z, being_placed != NULL ? *being_placed : BLOCK_AIR, 0);
-		return offset;
+		return ERROR_OK;
 	}
 
 	// This is the height right *above* the highest block
@@ -226,5 +225,5 @@ int packet_block_placement(struct client *client, const bedrock_packet *p)
 	if (block != NULL && block->on_place != NULL)
 		block->on_place(client, target_chunk, real_x, real_y, real_z, block);
 
-	return offset;
+	return ERROR_OK;
 }

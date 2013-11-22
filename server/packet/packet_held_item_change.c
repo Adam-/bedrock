@@ -5,16 +5,15 @@
 #include "nbt/nbt.h"
 #include "util/list.h"
 
-int packet_held_item_change(struct client *client, const bedrock_packet *p)
+int packet_held_item_change(struct client *client, bedrock_packet *p)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	bedrock_node *node;
 	struct item_stack *stack;
 	struct item *item;
 
-	packet_read_int(p, &offset, &client->selected_slot, sizeof(client->selected_slot));
+	packet_read_int(p, &client->selected_slot, sizeof(client->selected_slot));
 
-	if (client->selected_slot < 0 || client->selected_slot >= INVENTORY_HOTBAR_SIZE)
+	if (p->error || client->selected_slot < 0 || client->selected_slot >= INVENTORY_HOTBAR_SIZE)
 		return ERROR_UNEXPECTED;
 
 	stack = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
@@ -36,5 +35,5 @@ int packet_held_item_change(struct client *client, const bedrock_packet *p)
 			packet_send_entity_equipment(c, client, ENTITY_EQUIPMENT_HELD, item, stack != NULL ? stack->metadata : 0);
 		}
 
-	return offset;
+	return ERROR_OK;
 }

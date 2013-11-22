@@ -5,72 +5,45 @@
 #include "packet/packet_disconnect.h"
 #include "packet/packet_encryption_request.h"
 
-int packet_handshake(struct client *client, const bedrock_packet *p)
+enum
 {
-	int offset = PACKET_HEADER_LENGTH;
-	struct world *world;
-	uint8_t protocol;
-	char username[BEDROCK_USERNAME_MAX];
-	char server_host[64];
-	uint32_t server_port;
+	STATUS = 1,
+	LOGIN = 2
+};
 
-	packet_read_int(p, &offset, &protocol, sizeof(protocol));
-	packet_read_string(p, &offset, username, sizeof(username));
-	packet_read_string(p, &offset, server_host, sizeof(server_host));
-	packet_read_int(p, &offset, &server_port, sizeof(server_port));
+int packet_handshake(struct client *client, bedrock_packet *p)
+{
+	int32_t proto;
+	char server_address[BEDROCK_MAX_STRING_LENGTH];
+	uint16_t server_port;
+	int32_t state;
 
-	if (offset <= ERROR_UNKNOWN)
-		return offset;
+	packet_read_varint(p, &proto);
+	packet_read_string(p, server_address, sizeof(server_address));
+	packet_read_int(p, &server_port, sizeof(server_port));
+	packet_read_varint(p, &state);
 
-	if (client_valid_username(username) == false)
-		return ERROR_INVALID_FORMAT;
-	else if (protocol != BEDROCK_PROTOCOL_VERSION)
+	if (p->error)
+		return p->error;
+
+	if (proto != BEDROCK_PROTOCOL_VERSION)
 	{
 		packet_send_disconnect(client, "Incorrect version");
-		return offset;
+		return ERROR_OK;
 	}
-	else if (authenticated_client_count >= server_maxusers)
+
+	switch (state)
 	{
-		packet_send_disconnect(client, "Server is full");
-		return offset;
-	}
-	else if (client_find(username) != NULL)
-	{
-		packet_send_disconnect(client, "Your account is already logged in");
-		return offset;
-	}
-	else if (world_list.count == 0)
-	{
-		packet_send_disconnect(client, "Server misconfiguration - no default world");
-		return offset;
+		case STATUS:
+			client->state = STATE_STATUS;
+			break;
+		case LOGIN:
+			client->state = STATE_LOGIN;
+			break;
+		default:
+			packet_send_disconnect(client, "Unknown state");
+			return ERROR_UNEXPECTED;
 	}
 
-	world = world_list.head->data;
-	bedrock_assert(world != NULL, return ERROR_UNKNOWN);
-
-	bedrock_strncpy(client->name, username, sizeof(client->name));
-	client->authenticated = STATE_HANDSHAKING;
-	client->world = world;
-
-	client_load(client);
-	if (client->data == NULL)
-	{
-		if (allow_new_users == false)
-		{
-			packet_send_disconnect(client, "Unknown user");
-			return offset;
-		}
-
-		client_new(client);
-
-		if (client->data == NULL)
-		{
-			packet_send_disconnect(client, "Error creating user");
-			return offset;
-		}
-	}
-
-	packet_send_encryption_request(client);
-
-	return offset;
+	return ERROR_OK;
 }

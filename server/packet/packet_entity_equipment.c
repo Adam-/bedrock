@@ -11,9 +11,8 @@ void packet_send_entity_equipment(struct client *client, struct client *c, uint1
 	stack.count = 1;
 	stack.metadata = damage;
 
-	packet_init(&packet, ENTITY_EQUIPMENT);
+	packet_init(&packet, SERVER_ENTITY_EQUIPMENT);
 
-	packet_pack_header(&packet, ENTITY_EQUIPMENT);
 	packet_pack_int(&packet, &c->id, sizeof(c->id));
 	packet_pack_int(&packet, &slot, sizeof(slot));
 	packet_pack_slot(&packet, &stack);

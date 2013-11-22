@@ -14,9 +14,8 @@ void packet_send_entity_teleport(struct client *client, struct client *targ)
 	new_y = (targ->yaw / 360.0) * 256;
 	new_p = (targ->pitch / 360.0) * 256;
 
-	packet_init(&packet, ENTITY_TELEPORT);
+	packet_init(&packet, SERVER_ENTITY_TELEPORT);
 
-	packet_pack_header(&packet, ENTITY_TELEPORT);
 	packet_pack_int(&packet, &targ->id, sizeof(targ->id));
 	packet_pack_int(&packet, &a_x, sizeof(a_x));
 	packet_pack_int(&packet, &a_y, sizeof(a_y));

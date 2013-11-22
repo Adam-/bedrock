@@ -1,31 +1,15 @@
 #include "server/client.h"
 #include "server/packet.h"
-#include "packet/packet_login_response.h"
 
-enum
+int packet_client_status(struct client bedrock_attribute_unused *client, bedrock_packet *p)
 {
-	INITIAL_SPAWN,
-	RESPAWN
-};
-
-int packet_client_status(struct client *client, const bedrock_packet *p)
-{
-	int offset = PACKET_HEADER_LENGTH;
 	uint8_t b;
 
-	packet_read_int(p, &offset, &b, sizeof(b));
+	packet_read_int(p, &b, sizeof(b));
 
-	if (b == INITIAL_SPAWN)
-	{
-		if (client->authenticated != STATE_LOGGED_IN)
-			return ERROR_UNEXPECTED;
-		packet_send_login_response(client);
-	}
-	else if (b == RESPAWN)
-		;
-	else
-		return ERROR_UNEXPECTED;
-	
-	return offset;
+	if (p->error)
+		return p->error;
+
+	return ERROR_OK;
 }
 

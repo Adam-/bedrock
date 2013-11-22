@@ -1,3 +1,3 @@
 
-extern int packet_player(struct client *client, const bedrock_packet *p);
+extern int packet_player(struct client *client, bedrock_packet *p);
 

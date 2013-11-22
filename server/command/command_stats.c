@@ -53,7 +53,7 @@ void command_stats(struct command_source *source, int bedrock_attribute_unused a
 	{
 		struct client *client = node->data;
 
-		if (client->authenticated & STATE_IN_GAME)
+		if (client->state & STATE_IN_GAME)
 			++players;
 		++connections;
 	}

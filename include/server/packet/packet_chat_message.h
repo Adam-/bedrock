@@ -1,5 +1,9 @@
 
-#define SPECIAL_CHAR 0xA7
+enum
+{
+	SPECIAL_CHAR_1 = 0xC2,
+	SPECIAL_CHAR_2 = 0xA7
+};
 
 enum
 {
@@ -31,5 +35,5 @@ enum
 	STYLE_PLAIN         = 0x72  // r
 };
 
-extern int packet_chat_message(struct client *client, const bedrock_packet *p);
+extern int packet_chat_message(struct client *client, bedrock_packet *p);
 extern void packet_send_chat_message(struct client *client, const char *buf, ...);

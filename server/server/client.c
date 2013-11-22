@@ -20,7 +20,6 @@
 #include "packet/packet_keep_alive.h"
 #include "packet/packet_position_and_look.h"
 #include "packet/packet_player_list_item.h"
-#include "packet/packet_spawn_named_entity.h"
 #include "packet/packet_spawn_point.h"
 #include "packet/packet_set_slot.h"
 #include "packet/packet_time.h"
@@ -50,7 +49,7 @@ struct client *client_create()
 	EVP_CIPHER_CTX_init(&client->in_cipher_ctx);
 	EVP_CIPHER_CTX_init(&client->out_cipher_ctx);
 	client->id = ++entity_id;
-	client->authenticated = STATE_UNAUTHENTICATED;
+	client->state = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
 	bedrock_list_add(&client_list, client);
 	return client;
@@ -310,7 +309,7 @@ void client_save_all()
 	{
 		struct client *c = node->data;
 
-		if ((c->authenticated & STATE_IN_GAME) && !(c->authenticated & STATE_BURSTING))
+		if ((c->state & STATE_IN_GAME) && !(c->state & STATE_BURSTING))
 			client_save(c);
 	}
 }
@@ -325,16 +324,16 @@ static void client_free(struct client *client)
 		client->window_data.entity = NULL;
 	}
 
-	if (client->authenticated & STATE_IN_GAME)
+	if (client->state & STATE_IN_GAME)
 	{
-		if (!(client->authenticated & STATE_BURSTING))
+		if (!(client->state & STATE_BURSTING))
 			client_save(client);
 
 		LIST_FOREACH(&client_list, node)
 		{
 			struct client *c = node->data;
 
-			if (c->authenticated & STATE_IN_GAME && c != client)
+			if (c->state & STATE_IN_GAME && c != client)
 			{
 				packet_send_player_list_item(c, client, false);
 				packet_send_chat_message(c, "%s left the game", client->name);
@@ -342,7 +341,7 @@ static void client_free(struct client *client)
 		}
 	}
 
-	if (client->authenticated >= STATE_BURSTING)
+	if (client->state >= STATE_BURSTING)
 	{
 		--authenticated_client_count;
 		bedrock_assert(authenticated_client_count >= 0, authenticated_client_count = 0);
@@ -443,27 +442,45 @@ void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events
 		return;
 	}
 
-	if (client->authenticated >= STATE_LOGGED_IN)
+#if 0
+	if (client->state >= STATE_LOGGED_IN)
 	{
-		bedrock_assert(i == crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len), ;);
+		int d = crypto_aes_decrypt(&client->in_cipher_ctx, buffer, i, client->in_buffer + client->in_buffer_len, sizeof(client->in_buffer) - client->in_buffer_len);
+		bedrock_assert(i == d, ;);
 	}
 	else
+#endif
 		memcpy(client->in_buffer + client->in_buffer_len, buffer, i);
 
 	client->in_buffer_len += i;
 
-	packet.data = client->in_buffer;
-	packet.length = client->in_buffer_len;
-	packet.capacity = sizeof(client->in_buffer);
+	packet.buffer.data = client->in_buffer;
+	packet.buffer.length = client->in_buffer_len;
+	packet.buffer.capacity = sizeof(client->in_buffer);
+	packet.offset = 0;
+	packet.error = ERROR_OK;
 
-	while (io_is_pending(&client->fd.event_read, EV_READ) && (i = packet_parse(client, &packet)) > 0)
+	for (;;)
 	{
-		bedrock_assert((size_t) i <= client->in_buffer_len, break);
+		if (!client->in_buffer_len)
+			break; // Nothing to read
 
-		packet.length = client->in_buffer_len -= i;
+		if (!io_is_pending(&client->fd.event_read, EV_READ))
+			break; // No longer want to read
 
-		if (client->in_buffer_len > 0)
-			memmove(client->in_buffer, client->in_buffer + i, client->in_buffer_len);
+		// Parse packet
+		i = packet_parse(client, &packet);
+		if (i <= 0)
+			break; // Error or EAGAIN, client might already be kicked
+
+		bedrock_assert(client->in_buffer_len >= (size_t) i, break);
+
+		// We parsed i bytes, so remove them from the buffer
+		memmove(client->in_buffer, client->in_buffer + i, client->in_buffer_len);
+		client->in_buffer_len -= i;
+
+		packet.offset = 0; // Reset offset
+		bedrock_assert(packet.error == ERROR_OK, ;);
 	}
 }
 
@@ -486,7 +503,7 @@ void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused event
 	node = client->out_buffer.head;
 	packet = node->data;
 
-	i = send(fd, packet->data, packet->length, 0);
+	i = send(fd, packet->buffer.data, packet->buffer.length, 0);
 	if (i <= 0)
 	{
 		if (bedrock_list_has_data(&exiting_client_list, client) == false)
@@ -498,10 +515,10 @@ void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused event
 		return;
 	}
 
-	packet->length -= i;
-	if (packet->length > 0)
+	packet->buffer.length -= i;
+	if (packet->buffer.length > 0)
 	{
-		memmove(packet->data, packet->data + i, packet->length);
+		memmove(packet->buffer.data, packet->buffer.data + i, packet->buffer.length);
 	}
 	else
 	{
@@ -521,47 +538,45 @@ void client_event_write(evutil_socket_t fd, short bedrock_attribute_unused event
 void client_send_packet(struct client *client, bedrock_packet *packet)
 {
 	bedrock_packet *p;
-	struct packet_info *pi;
+	packet_id id;
 
-	bedrock_assert(client != NULL && packet != NULL && packet->length > 0, return);
+	bedrock_assert(client != NULL && packet != NULL && packet->buffer.length > 0, return);
 
-	pi = packet_find(*packet->data);
-	bedrock_assert(pi != NULL, bedrock_log(LEVEL_PACKET_DEBUG, "packet: Sending unknown packet 0x%02x", *packet->data));
-	if (pi != NULL)
-	{
-		bedrock_assert((pi->flags & SOFT_SIZE) ? packet->length >= pi->len : packet->length == pi->len, ;);
-		bedrock_assert((pi->flags & CLIENT_ONLY) == 0, ;);
-	}
-	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet header 0x%02x for %s (%s)", *packet->data, *client->name ? client->name : "(unknown)", client_get_ip(client));
+	packet->offset = 0;
+	packet_read_varuint(packet, &id);
+	packet->offset = 0;
+
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet 0x%02x length %d for %s (%s) state: %d", id, packet->buffer.length, *client->name ? client->name : "(unknown)", client_get_ip(client), client->state);
 
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
-	bedrock_strncpy(p->name, packet->name, sizeof(p->name));
+	bedrock_strncpy(p->buffer.name, packet->buffer.name, sizeof(p->buffer.name));
+	packet_pack_varuint(p, packet->buffer.length);
+	bedrock_buffer_append(&p->buffer, packet->buffer.data, packet->buffer.length);
 
-	if (client->authenticated >= STATE_LOGGED_IN)
+#if 0
+	if (client->state >= STATE_LOGGED_IN)
 	{
-		bedrock_buffer_ensure_capacity(p, packet->capacity + EVP_CIPHER_CTX_block_size(&client->out_cipher_ctx));
-		p->length = crypto_aes_encrypt(&client->out_cipher_ctx, packet->data, packet->length, p->data, p->capacity);
+		bedrock_packet *encrypted = bedrock_malloc(sizeof(bedrock_packet));
 
-		bedrock_free(packet->data);
-		packet->data = NULL;
-		packet->length = 0;
-		packet->capacity = 0;
-	}
-	else
-	{
-		p->data = packet->data;
-		p->length = packet->length;
-		p->capacity = packet->capacity;
+		bedrock_strncpy(encrypted->buffer.name, p->buffer.name, sizeof(encrypted->buffer.name));
+		bedrock_buffer_ensure_capacity(&encrypted->buffer, p->buffer.length + EVP_CIPHER_CTX_block_size(&client->out_cipher_ctx));
+		encrypted->buffer.length = crypto_aes_encrypt(&client->out_cipher_ctx, p->buffer.data, p->buffer.length, encrypted->buffer.data, encrypted->buffer.capacity);
 
-		packet->data = NULL;
-		packet->length = 0;
-		packet->capacity = 0;
+		bedrock_free(p->buffer.data);
+		bedrock_free(p);
+		p = encrypted;
 	}
+#endif
 
 	bedrock_list_add(&client->out_buffer, p);
 
 	io_enable(&client->fd.event_write);
+
+	bedrock_free(packet->buffer.data);
+	packet->buffer.data = NULL;
+	packet->buffer.length = 0;
+	packet->buffer.capacity = 0;
 }
 
 const char *client_get_ip(struct client *client)
@@ -729,7 +744,7 @@ void client_update_columns(struct client *client)
 			client_update_column(client, &columns, c);
 
 			/* Loading the column the player is in on a bursting player, finish burst */
-			if (client->authenticated == STATE_BURSTING)
+			if (client->state == STATE_BURSTING)
 				finish = true;
 		}
 
@@ -822,7 +837,7 @@ void client_update_position(struct client *client, double x, double y, double z,
 	if (old_x == x && old_y == y && old_z == z && old_yaw == yaw && old_pitch == pitch && old_stance == stance && old_on_ground == on_ground)
 		return;
 	/* Don't allow bursting clients to move around */
-	else if (client->authenticated & STATE_BURSTING)
+	else if (client->state & STATE_BURSTING)
 		return;
 
 	if (old_x != x)
@@ -902,7 +917,7 @@ void client_update_position(struct client *client, double x, double y, double z,
  */
 void client_start_login_sequence(struct client *client)
 {
-	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
+	bedrock_assert(client != NULL && client->state == STATE_BURSTING, return);
 
 	/* Send time */
 	packet_send_time(client);
@@ -920,7 +935,7 @@ void client_finish_login_sequence(struct client *client)
 	struct oper *oper;
 	int i;
 
-	bedrock_assert(client != NULL && client->authenticated == STATE_BURSTING, return);
+	bedrock_assert(client != NULL && client->state == STATE_BURSTING, return);
 
 	/* Send player position */
 	packet_send_position_and_look(client);
@@ -943,7 +958,7 @@ void client_finish_login_sequence(struct client *client)
 	{
 		struct client *c = node->data;
 
-		if (c == client || c->authenticated & STATE_IN_GAME)
+		if (c == client || c->state & STATE_IN_GAME)
 		{
 			/* Send this new client to every client that is authenticated */
 			packet_send_player_list_item(c, client, true);
@@ -959,7 +974,7 @@ void client_finish_login_sequence(struct client *client)
 	/* Once this comes back we know the client is synced */
 	packet_send_keep_alive(client, ~0);
 
-	client->authenticated |= STATE_IN_GAME;
+	client->state |= STATE_IN_GAME;
 
 	oper = oper_find(client->name);
 	if (oper != NULL && *oper->password == 0)

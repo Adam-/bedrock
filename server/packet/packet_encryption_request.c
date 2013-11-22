@@ -8,9 +8,8 @@ void packet_send_encryption_request(struct client *client)
 	int16_t verify_token_length = BEDROCK_VERIFY_TOKEN_LEN;
 	bedrock_packet packet;
 
-	packet_init(&packet, ENCRYPTION_REQUEST);
+	packet_init(&packet, LOGIN_SERVER_ENCRYPTION_REQUEST);
 
-	packet_pack_header(&packet, ENCRYPTION_REQUEST);
 	packet_pack_string(&packet, "-"); // server ID
 
 	packet_pack_int(&packet, &pubkey_len, sizeof(pubkey_len));

@@ -126,7 +126,7 @@ static void send_keepalive(evutil_socket_t bedrock_attribute_unused fd, short be
 	{
 		struct client *client = n->data;
 
-		if ((client->authenticated & STATE_IN_GAME) && !(client->authenticated & STATE_BURSTING))
+		if ((client->state & STATE_IN_GAME) && !(client->state & STATE_BURSTING))
 			packet_send_keep_alive(client, id);
 	}
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 		exit(1);
 	recipe_init();
 
-	io_timer_schedule(&send_keepalive_timer, 400, EV_PERSIST, send_keepalive, NULL);
+	io_timer_schedule(&send_keepalive_timer, 100, EV_PERSIST, send_keepalive, NULL);
 	io_timer_schedule(&save_timer, 6000, EV_PERSIST, save, NULL);
 
 	while (bedrock_running || client_list.count > 0)

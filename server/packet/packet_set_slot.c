@@ -11,9 +11,8 @@ void packet_send_set_slot(struct client *client, uint8_t window_id, uint16_t slo
 	slot_data.count = count;
 	slot_data.metadata = damage;
 
-	packet_init(&packet, SET_SLOT);
+	packet_init(&packet, SERVER_SET_SLOT);
 
-	packet_pack_header(&packet, SET_SLOT);
 	packet_pack_int(&packet, &window_id, sizeof(window_id));
 	packet_pack_int(&packet, &slot, sizeof(slot));
 	packet_pack_slot(&packet, &slot_data);

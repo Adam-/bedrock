@@ -387,7 +387,7 @@ static void region_operations_notify(struct region *region)
 					{
 						struct client *client = node3->data;
 
-						if (client->authenticated >= STATE_BURSTING)
+						if (client->state >= STATE_BURSTING)
 						{
 							client_update_columns(client);
 						}

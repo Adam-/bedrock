@@ -37,6 +37,7 @@ Bedrock is a Minecraft Server whose goal is to fully emulate vanilla Minecraft.
   * ZLIB (http://www.zlib.net/)
   * Libevent 2 (http://libevent.org/)
   * Libyaml (http://pyyaml.org/wiki/LibYAML)
+  * Jansson (http://www.digip.org/jansson/)
   
 ## Installation
 

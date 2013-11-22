@@ -119,11 +119,12 @@ void command_reply(struct command_source *source, const char *fmt, ...)
 
 	if (source->user != NULL)
 	{
-		message[0] = (char) SPECIAL_CHAR;
-		message[1] = COLOR_GREY;
+		message[0] = (char) SPECIAL_CHAR_1;
+		message[1] = (char) SPECIAL_CHAR_2;
+		message[2] = COLOR_GREY;
 
 		va_start(args, fmt);
-		vsnprintf(message + 2, sizeof(message) - 2, fmt, args);
+		vsnprintf(message + 3, sizeof(message) - 3, fmt, args);
 		va_end(args);
 
 		packet_send_chat_message(source->user, "%s", message);

@@ -4,7 +4,7 @@
 #include "nbt/nbt.h"
 #include "config/config.h"
 
-void packet_send_login_response(struct client *client)
+void packet_send_join_game(struct client *client)
 {
 	bedrock_packet packet;
 	int32_t dimension;
@@ -12,25 +12,22 @@ void packet_send_login_response(struct client *client)
 
 	nbt_copy(client->data, TAG_INT, &dimension, sizeof(dimension), 1, "Dimension");
 
-	packet_init(&packet, LOGIN_RESPONSE);
+	packet_init(&packet, SERVER_JOIN_GAME);
 
-	packet_pack_header(&packet, LOGIN_RESPONSE);
 	packet_pack_int(&packet, &client->id, sizeof(client->id)); /* Entity ID */
-	packet_pack_string(&packet, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Generator name */
 	b = client->gamemode;
 	packet_pack_int(&packet, &b, sizeof(b));
 	b = dimension;
 	packet_pack_int(&packet, &b, sizeof(b));
 	packet_pack_int(&packet, nbt_read(client->world->data, TAG_BYTE, 2, "Data", "hardcore"), sizeof(uint8_t)); /* hardcore */
-	b = 0;
-	packet_pack_int(&packet, &b, sizeof(b)); /* Not used */
 	b = server_maxusers;
 	packet_pack_int(&packet, &b, sizeof(b)); /* Max players */
+	packet_pack_string(&packet, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Level type */
 
 	client_send_packet(client, &packet);
 
-	bedrock_assert(client->authenticated == STATE_LOGGED_IN, ;);
-	client->authenticated = STATE_BURSTING;
+	bedrock_assert(client->state == STATE_LOGGED_IN, ;);
+	client->state = STATE_BURSTING;
 	++authenticated_client_count;
 	client_start_login_sequence(client);
 

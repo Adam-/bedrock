@@ -15,9 +15,8 @@ void packet_send_open_window(struct client *client, uint8_t type, const char *ti
 
 	while (++window_id == 0);
 	
-	packet_init(&packet, OPEN_WINDOW);
+	packet_init(&packet, SERVER_OPEN_WINDOW);
 
-	packet_pack_header(&packet, OPEN_WINDOW);
 	packet_pack_int(&packet, &window_id, sizeof(window_id));
 	packet_pack_int(&packet, &type, sizeof(type));
 	packet_pack_string(&packet, title);

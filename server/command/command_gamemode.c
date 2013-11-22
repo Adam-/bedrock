@@ -41,7 +41,7 @@ void command_gamemode(struct command_source *source, int bedrock_attribute_unuse
 	{
 		struct client *c = node->data;
 
-		if (c->authenticated & STATE_IN_GAME)
+		if (c->state & STATE_IN_GAME)
 		{
 			packet_send_chat_message(c, "%s changed game mode of %s to %d", source->user ? source->user->name : "[Server]", targ->name, opt);
 		}

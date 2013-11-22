@@ -93,20 +93,22 @@ static double calculate_block_time(struct client bedrock_attribute_unused *clien
 	return delay;
 }
 
-int packet_player_digging(struct client *client, const bedrock_packet *p)
+int packet_player_digging(struct client *client, bedrock_packet *p)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	uint8_t status;
 	int32_t x;
 	uint8_t y;
 	int32_t z;
 	uint8_t face;
 
-	packet_read_int(p, &offset, &status, sizeof(status));
-	packet_read_int(p, &offset, &x, sizeof(x));
-	packet_read_int(p, &offset, &y, sizeof(y));
-	packet_read_int(p, &offset, &z, sizeof(z));
-	packet_read_int(p, &offset, &face, sizeof(face));
+	packet_read_int(p, &status, sizeof(status));
+	packet_read_int(p, &x, sizeof(x));
+	packet_read_int(p, &y, sizeof(y));
+	packet_read_int(p, &z, sizeof(z));
+	packet_read_int(p, &face, sizeof(face));
+
+	if (p->error)
+		return p->error;
 
 	if (status == STARTED_DIGGING)
 	{
@@ -137,7 +139,7 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 
 		// Special case, unmineable
 		if (delay < 0)
-			return offset;
+			return ERROR_OK;
 
 		if (client->gamemode == GAMEMODE_CREATIVE)
 		{
@@ -187,13 +189,13 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 						x, y, z, item->id, *block_id);
 
 				packet_send_block_change(client, x, y, z, *block_id, 0);
-				return offset;
+				return ERROR_OK;
 			}
 
 			if (bedrock_time < client->digging_data.end)
 			{
 				packet_send_block_change(client, x, y, z, *block_id, 0);
-				return offset;
+				return ERROR_OK;
 			}
 		}
 
@@ -276,5 +278,5 @@ int packet_player_digging(struct client *client, const bedrock_packet *p)
 	else
 		bedrock_log(LEVEL_DEBUG, "player digging: Unrecognized dig status %d", status);
 
-	return offset;
+	return ERROR_OK;
 }

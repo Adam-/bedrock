@@ -33,7 +33,7 @@ if(WIN32)
 endif(WIN32)
 
 add_executable(bedrock ${BEDROCK_SOURCES})
-target_link_libraries(bedrock nbt util)
+target_link_libraries(bedrock nbt util ${JANSSON_LIBRARY})
 if(WIN32)
   target_link_libraries(bedrock ws2_32)
 else(WIN32)

@@ -3,108 +3,149 @@
 
 #include "util/buffer.h"
 
-typedef bedrock_buffer bedrock_packet;
+enum packet_error
+{
+	ERROR_OK             =  0,
+	ERROR_UNKNOWN        = -1,
+	ERROR_EAGAIN         = -2,
+	ERROR_INVALID_FORMAT = -3,
+	ERROR_UNEXPECTED     = -4,
+	ERROR_NOT_ALLOWED    = -5
+};
+
+
+struct bedrock_packet
+{
+	bedrock_buffer buffer;
+	size_t offset; // Current read offset
+	enum packet_error error; // Error reading?
+};
+typedef struct bedrock_packet bedrock_packet;
 
 #include "server/client.h"
 #include "blocks/items.h"
 
-enum
+/* Packets from non registered clients */
+enum unknown_packet_id
 {
-	KEEP_ALIVE                    = 0x00,
-	LOGIN_RESPONSE                = 0x01,
-	HANDSHAKE                     = 0x02,
-	CHAT_MESSAGE                  = 0x03,
-	TIME                          = 0x04,
-	ENTITY_EQUIPMENT              = 0x05,
-	SPAWN_POINT                   = 0x06,
-	PLAYER                        = 0x0A,
-	PLAYER_POS                    = 0x0B,
-	PLAYER_LOOK                   = 0x0C,
-	PLAYER_POS_LOOK               = 0x0D,
-	PLAYER_DIGGING                = 0x0E,
-	PLAYER_BLOCK_PLACEMENT        = 0x0F,
-	HELD_ITEM_CHANGE              = 0x10,
-	ENTITY_ANIMATION              = 0x12,
-	ENTITY_ACTION                 = 0x13,
-	SPAWN_NAMED_ENTITY            = 0x14,
-	COLLECT_ITEM                  = 0x16,
-	SPAWN_OBJECT                  = 0x17,
-	DESTROY_ENTITY                = 0x1D,
-	ENTITY_TELEPORT               = 0x22,
-	ENTITY_HEAD_LOOK              = 0x23,
-	ENTITY_METADATA               = 0x28,
-	ENTITY_PROPERTIES             = 0x2C,
-	MAP_COLUMN                    = 0x33,
-	BLOCK_CHANGE                  = 0x35,
-	MAP_COLUMN_BULK               = 0x38,
-	CHANGE_GAME_STATE             = 0x46,
-	OPEN_WINDOW                   = 0x64,
-	CLOSE_WINDOW                  = 0x65,
-	CLICK_WINDOW                  = 0x66,
-	SET_SLOT                      = 0x67,
-	UPDATE_WINDOW_PROPERTY        = 0x69,
-	CONFIRM_TRANSACTION           = 0x6A,
-	CREATIVE_INVENTORY_ACTION     = 0x6B,
-	PLAYER_LIST                   = 0xC9,
-	PLAYER_ABILITIES              = 0xCA,
-	CLIENT_SETTINGS               = 0xCC,
-	CLIENT_STATUS                 = 0xCD,
-	PLUGIN_MESSAGE                = 0xFA,
-	ENCRYPTION_RESPONSE           = 0xFC,
-	ENCRYPTION_REQUEST            = 0xFD,
-	LIST_PING                     = 0xFE,
-	DISCONNECT                    = 0xFF
+	UNKNOWN_HANDSHAKE = 0x00
 };
 
-enum
+/* Packets from clients in status state */
+enum status_packet_client_id
 {
-	NONE        = 0,
-	/* Size of this packet is not definite. Will be at least 'len' nutes */
-	SOFT_SIZE   = 1 << 0,
-	/* Only servers may send this packet */
-	SERVER_ONLY = 1 << 1,
-	/* Only clients may send this packet */
-	CLIENT_ONLY = 1 << 2
+	STATUS_CLIENT_REQUEST = 0x00,
+	STATUS_CLIENT_PING    = 0x01
 };
 
-enum
+/* Packets from the server to clients in the status state */
+enum status_packet_server_id
 {
-	ERROR_UNKNOWN        = 0,
-	ERROR_EAGAIN         = -1,
-	ERROR_INVALID_FORMAT = -2,
-	ERROR_UNEXPECTED     = -3,
-	ERROR_NOT_ALLOWED    = -4
+	STATUS_SERVER_RESPONSE = 0x00,
+	STATUS_SERVER_PING     = 0x01
+};
+
+/* Packets from clients in logging in state */
+enum login_packet_client_id
+{
+	LOGIN_CLIENT_START               = 0x00,
+	LOGIN_CLIENT_ENCRYPTION_RESPONSE = 0x01
+};
+
+/* Packets from the server to clients in logging in state */
+enum login_packet_server_id
+{
+	LOGIN_SERVER_DISCONNECT         = 0x00,
+	LOGIN_SERVER_ENCRYPTION_REQUEST = 0x01,
+	LOGIN_SERVER_LOGIN_SUCCESS      = 0x02
+};
+
+/* Packets from fully registered clients */
+enum client_packet_id
+{
+	CLIENT_KEEP_ALIVE                    = 0x00,
+	CLIENT_CHAT_MESSAGE                  = 0x01,
+	CLIENT_PLAYER                        = 0x03,
+	CLIENT_PLAYER_POS                    = 0x04,
+	CLIENT_PLAYER_LOOK                   = 0x05,
+	CLIENT_PLAYER_POS_LOOK               = 0x06,
+	CLIENT_PLAYER_DIGGING                = 0x07,
+	CLIENT_PLAYER_BLOCK_PLACEMENT        = 0x08,
+	CLIENT_HELD_ITEM_CHANGE              = 0x09,
+	CLIENT_ANIMATION                     = 0x0A,
+	CLIENT_ENTITY_ACTION                 = 0x0B,
+	CLIENT_CLOSE_WINDOW                  = 0x0D,
+	CLIENT_CLICK_WINDOW                  = 0x0E,
+	CLIENT_CONFIRM_TRANSACTION           = 0x0F,
+	CLIENT_CREATIVE_INVENTORY_ACTION     = 0x10,
+	CLIENT_PLAYER_ABILITIES              = 0x13,
+	CLIENT_CLIENT_SETTINGS               = 0x15,
+	CLIENT_CLIENT_STATUS                 = 0x16,
+	CLIENT_PLUGIN_MESSAGE                = 0x17,
+};
+
+/* Packets from the server */
+enum server_packet_id
+{
+	SERVER_KEEP_ALIVE                    = 0x00,
+	SERVER_JOIN_GAME                     = 0x01,
+	SERVER_CHAT_MESSAGE                  = 0x02,
+	SERVER_TIME                          = 0x03,
+	SERVER_ENTITY_EQUIPMENT              = 0x04,
+	SERVER_SPAWN_POINT                   = 0x05,
+	SERVER_PLAYER_POS_LOOK               = 0x08,
+	SERVER_HELD_ITEM_CHANGE              = 0x09,
+	SERVER_ANIMATION                     = 0x0B,
+	SERVER_SPAWN_PLAYER                  = 0x0C,
+	SERVER_COLLECT_ITEM                  = 0x0D,
+	SERVER_SPAWN_OBJECT                  = 0x0E,
+	SERVER_DESTROY_ENTITY                = 0x13,
+	SERVER_ENTITY_TELEPORT               = 0x18,
+	SERVER_ENTITY_HEAD_LOOK              = 0x19,
+	SERVER_ENTITY_METADATA               = 0x1C,
+	SERVER_ENTITY_PROPERTIES             = 0x20,
+	SERVER_MAP_COLUMN                    = 0x21,
+	SERVER_BLOCK_CHANGE                  = 0x23,
+	SERVER_MAP_COLUMN_BULK               = 0x26,
+	SERVER_CHANGE_GAME_STATE             = 0x2B,
+	SERVER_OPEN_WINDOW                   = 0x2D,
+	SERVER_CLOSE_WINDOW                  = 0x2E,
+	SERVER_SET_SLOT                      = 0x2F,
+	SERVER_UPDATE_WINDOW_PROPERTY        = 0x30,
+	SERVER_CONFIRM_TRANSACTION           = 0x32,
+	SERVER_PLAYER_LIST                   = 0x38,
+	SERVER_PLAYER_ABILITIES              = 0x39,
+	SERVER_PLUGIN_MESSAGE                = 0x3F,
+	SERVER_DISCONNECT                    = 0x40
 };
 
 struct client;
 
-struct packet_info
+/* Packet info for packets received from the client */
+struct client_packet_info
 {
-	uint8_t id;
-	uint8_t len;
-	uint8_t permission;
-	uint8_t flags;
-	int (*handler)(struct client *, const bedrock_packet *);
+	enum client_packet_id id;
+	int (*handler)(struct client *, bedrock_packet *);
 };
 
-#define PACKET_HEADER_LENGTH 1
+extern struct client_packet_info client_unknown_packet_handlers[], client_status_packet_handlers[], client_login_packet_handlers[], client_packet_handlers[];
 
-extern struct packet_info packet_handlers[];
-
-extern struct packet_info *packet_find(uint8_t id);
-extern void packet_init(bedrock_packet *packet, uint8_t id);
+extern void packet_init(bedrock_packet *packet, packet_id id);
 extern void packet_free(bedrock_packet *packet);
 
-extern int packet_parse(struct client *client, const bedrock_packet *packet);
+extern int packet_parse(struct client *client, bedrock_packet *packet);
 
-extern void packet_read(const bedrock_packet *packet, int *offset, void *dest, size_t dest_size);
-extern void packet_read_int(const bedrock_packet *packet, int *offset, void *dest, size_t dest_size);
-extern void packet_read_string(const bedrock_packet *packet, int *offset, char *dest, size_t dest_size);
-extern void packet_read_slot(const bedrock_packet *packet, int *offset, struct item_stack *stack);
+extern void packet_read(bedrock_packet *packet, void *dest, size_t dest_size);
+extern void packet_read_int(bedrock_packet *packet, void *dest, size_t dest_size);
+extern void packet_read_varint(bedrock_packet *packet, int32_t *dest);
+extern void packet_read_varuint(bedrock_packet *packet, uint32_t *dest);
+extern void packet_read_string(bedrock_packet *packet, char *dest, size_t dest_size);
+extern void packet_read_slot(bedrock_packet *packet, struct item_stack *stack);
 
-extern void packet_pack_header(bedrock_packet *packet, uint8_t header);
 extern void packet_pack(bedrock_packet *packet, const void *data, size_t size);
 extern void packet_pack_int(bedrock_packet *packet, const void *data, size_t size);
+extern void packet_pack_varint(bedrock_packet *packet, int32_t data);
+extern void packet_pack_varuint(bedrock_packet *packet, uint32_t data);
 extern void packet_pack_string(bedrock_packet *packet, const char *string);
 extern void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len);
 extern void packet_pack_slot(bedrock_packet *packet, struct item_stack *stack);

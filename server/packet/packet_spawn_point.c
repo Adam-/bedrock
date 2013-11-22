@@ -11,9 +11,8 @@ void packet_send_spawn_point(struct client *client)
 	spawn_y = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnY");
 	spawn_z = nbt_read(client->world->data, TAG_INT, 2, "Data", "SpawnZ");
 
-	packet_init(&packet, SPAWN_POINT);
+	packet_init(&packet, SERVER_SPAWN_POINT);
 
-	packet_pack_header(&packet, SPAWN_POINT);
 	packet_pack_int(&packet, spawn_x, sizeof(*spawn_x));
 	packet_pack_int(&packet, spawn_y, sizeof(*spawn_y));
 	packet_pack_int(&packet, spawn_z, sizeof(*spawn_z));

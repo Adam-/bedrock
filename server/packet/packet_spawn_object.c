@@ -4,17 +4,16 @@
 #include "server/column.h"
 #include "packet/packet_entity_metadata.h"
 
-void packet_spawn_object_item(struct client *client, struct dropped_item *di)
+int packet_spawn_object_item(struct client *client, struct dropped_item *di)
 {
 	bedrock_packet packet;
 	int32_t a_x, a_y, a_z;
 	uint8_t b;
 	uint32_t i;
 
-	packet_init(&packet, SPAWN_OBJECT);
+	packet_init(&packet, SERVER_SPAWN_OBJECT);
 
-	packet_pack_header(&packet, SPAWN_OBJECT);
-	packet_pack_int(&packet, &di->eid, sizeof(di->eid));
+	packet_pack_varuint(&packet, di->eid);
 
 	b = 2;
 	packet_pack_int(&packet, &b, sizeof(b));
@@ -37,4 +36,6 @@ void packet_spawn_object_item(struct client *client, struct dropped_item *di)
 	client_send_packet(client, &packet);
 
 	packet_send_entity_metadata_slot(client, di);
+
+	return ERROR_OK;
 }

@@ -13,17 +13,18 @@ enum
 	METADATA_EATING = 1 << 4
 };
 
-int packet_entity_action(struct client *client, const bedrock_packet *p)
+int packet_entity_action(struct client *client, bedrock_packet *p)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	uint32_t eid;
 	uint8_t aid;
 	int32_t unknown;
 
-	packet_read_int(p, &offset, &eid, sizeof(eid));
-	packet_read_int(p, &offset, &aid, sizeof(aid));
-	packet_read_int(p, &offset, &unknown, sizeof(unknown));
+	packet_read_int(p, &eid, sizeof(eid));
+	packet_read_int(p, &aid, sizeof(aid));
+	packet_read_int(p, &unknown, sizeof(unknown));
 
+	if (p->error)
+		return p->error;
 	if (eid != client->id)
 		return ERROR_UNEXPECTED;
 
@@ -55,5 +56,5 @@ int packet_entity_action(struct client *client, const bedrock_packet *p)
 			client->action = ACTION_NONE;
 	}
 
-	return offset;
+	return ERROR_OK;
 }

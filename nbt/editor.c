@@ -6,7 +6,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "server/config/hard.h"
 #include "util/compression.h"
 #include "util/file.h"
 #include "util/endian.h"

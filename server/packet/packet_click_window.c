@@ -33,9 +33,8 @@ enum
 
 #define MAX_SLOTS 89 // One window can't contain more than this many slots.
 
-int packet_click_window(struct client *client, const bedrock_packet *p)
+int packet_click_window(struct client *client, bedrock_packet *p)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	uint8_t window;
 	int16_t slot;
 	uint8_t button;
@@ -51,19 +50,19 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 
 	bool crafting_output = false;
 
-	packet_read_int(p, &offset, &window, sizeof(window));
-	packet_read_int(p, &offset, &slot, sizeof(slot));
-	packet_read_int(p, &offset, &button, sizeof(button));
-	packet_read_int(p, &offset, &action, sizeof(action));
-	packet_read_int(p, &offset, &mode, sizeof(mode));
-	packet_read_slot(p, &offset, &slot_data);
+	packet_read_int(p, &window, sizeof(window));
+	packet_read_int(p, &slot, sizeof(slot));
+	packet_read_int(p, &button, sizeof(button));
+	packet_read_int(p, &action, sizeof(action));
+	packet_read_int(p, &mode, sizeof(mode));
+	packet_read_slot(p, &slot_data);
 
-	if (offset <= ERROR_UNKNOWN)
-		return offset;
+	if (p->error)
+		return p->error;
 
 	/* Clicking on something other than a slot, but still inside of the window */
 	if (slot == -1)
-		return offset;
+		return p->error;
 
 	for (i = 0; i < MAX_SLOTS; ++i)
 		slots[i] = NULL;
@@ -566,7 +565,7 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 	packet_send_confirm_transaction(client, window, action, ok);
 
 	if (!ok)
-		return offset;
+		return p->error;
 
 	/* This column is now dirty and needs to be rewritten */
 	if (column)
@@ -594,5 +593,5 @@ int packet_click_window(struct client *client, const bedrock_packet *p)
 		furnace_propagate((struct furnace *) client->window_data.entity);
 	}
 
-	return offset;
+	return p->error;
 }

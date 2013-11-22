@@ -10,7 +10,7 @@ void command_me(struct command_source *source, int bedrock_attribute_unused argc
 	bedrock_node *node;
 
 	{
-		char *p = strrchr(message, SPECIAL_CHAR);
+		char *p = strrchr(message, SPECIAL_CHAR_1);
 		if (p != NULL && (size_t) (p - message) == strlen(message) - 1)
 			return;
 	}
@@ -26,7 +26,7 @@ void command_me(struct command_source *source, int bedrock_attribute_unused argc
 	{
 		struct client *c = node->data;
 
-		if (c->authenticated & STATE_IN_GAME)
+		if (c->state & STATE_IN_GAME)
 		{
 			packet_send_chat_message(c, "%s", final_message);
 		}

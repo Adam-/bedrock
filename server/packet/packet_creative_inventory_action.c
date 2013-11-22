@@ -2,18 +2,17 @@
 #include "nbt/nbt.h"
 #include "packet/packet_change_game_state.h"
 
-int packet_creative_inventory_action(struct client *client, const bedrock_packet *packet)
+int packet_creative_inventory_action(struct client *client, bedrock_packet *packet)
 {
-	int offset = PACKET_HEADER_LENGTH;
 	uint16_t id;
 	struct item_stack slot, *stack;
 	struct item *item;
 
-	packet_read_int(packet, &offset, &id, sizeof(id));
-	packet_read_slot(packet, &offset, &slot);
+	packet_read_int(packet, &id, sizeof(id));
+	packet_read_slot(packet, &slot);
 
-	if (offset <= ERROR_UNKNOWN)
-		return offset;
+	if (packet->error)
+		return packet->error;
 
 	if (client->gamemode != GAMEMODE_CREATIVE)
 		return ERROR_UNEXPECTED;
@@ -24,7 +23,7 @@ int packet_creative_inventory_action(struct client *client, const bedrock_packet
 	if (slot.id == -1)
 	{
 		// what is this?
-		return offset;
+		return ERROR_OK;
 	}
 
 	item = item_find_or_create(slot.id);
@@ -43,6 +42,6 @@ int packet_creative_inventory_action(struct client *client, const bedrock_packet
 
 	*stack = slot;
 
-	return offset;
+	return ERROR_OK;
 }
 

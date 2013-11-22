@@ -19,9 +19,8 @@ void packet_send_entity_metadata(struct client *client, enum entity_metadata_ind
 		if (client == c)
 			continue;
 
-		packet_init(&packet, ENTITY_METADATA);
+		packet_init(&packet, SERVER_ENTITY_METADATA);
 
-		packet_pack_header(&packet, ENTITY_METADATA);
 		packet_pack_int(&packet, &client->id, sizeof(client->id));
 		packet_pack_int(&packet, &header, sizeof(header));
 		packet_pack(&packet, data, size);
@@ -49,9 +48,8 @@ void packet_send_entity_metadata_slot(struct client *client, struct dropped_item
 	{
 		struct client *c = node->data;
 
-		packet_init(&packet, ENTITY_METADATA);
+		packet_init(&packet, SERVER_ENTITY_METADATA);
 
-		packet_pack_header(&packet, ENTITY_METADATA);
 		packet_pack_int(&packet, &di->eid, sizeof(di->eid));
 		packet_pack_int(&packet, &header, sizeof(header));
 		packet_pack_slot(&packet, &stack);

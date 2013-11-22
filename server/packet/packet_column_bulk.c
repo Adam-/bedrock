@@ -3,7 +3,7 @@
 #include "server/column.h"
 #include "server/chunk.h"
 #include "packet/packet_column_bulk.h"
-#include "packet/packet_spawn_named_entity.h"
+#include "packet/packet_spawn_player.h"
 #include "packet/packet_spawn_object.h"
 #include "util/compression.h"
 
@@ -27,8 +27,8 @@ static void packet_column_bulk_send_players(struct client *client, struct column
 		if (c->column == column)
 		{
 			/* Send this client */
-			packet_send_spawn_named_entity(client, c);
-			packet_send_spawn_named_entity(c, client);
+			packet_send_spawn_player(client, c);
+			packet_send_spawn_player(c, client);
 		}
 	}
 }
@@ -69,9 +69,8 @@ void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 	buffer = compression_compress_init(COLUMN_BUFFER_SIZE);
 	bedrock_assert(buffer, return);
 
-	packet_init(&packet, MAP_COLUMN_BULK);
+	packet_init(&packet, SERVER_MAP_COLUMN_BULK);
 	
-	packet_pack_header(&packet, MAP_COLUMN_BULK);
 	packet_pack_int(&packet, &count, sizeof(count));
 
 	LIST_FOREACH(columns, node)
@@ -128,7 +127,7 @@ void packet_send_column_bulk(struct client *client, packet_column_bulk *columns)
 	size = buffer->buffer->length;
 	packet_pack_int(&packet, &size, sizeof(size));
 
-	b = 1;
+	b = 1; // Skylight
 	packet_pack_int(&packet, &b, sizeof(b));
 
 	packet_pack(&packet, buffer->buffer->data, buffer->buffer->length);
