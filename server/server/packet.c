@@ -157,7 +157,7 @@ int packet_parse(struct client *client, bedrock_packet *packet)
 	{
 		const char *error;
 
-		switch (packet->error)
+		switch (i != ERROR_OK ? i : packet->error)
 		{
 			default:
 			case ERROR_UNKNOWN:
