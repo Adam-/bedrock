@@ -33,18 +33,13 @@ int packet_position_and_look(struct client *client, bedrock_packet *p)
 void packet_send_position_and_look(struct client *client)
 {
 	bedrock_packet packet;
+	double real_y;
 
 	packet_init(&packet, SERVER_PLAYER_POS_LOOK);
 
 	packet_pack_int(&packet, &client->x, sizeof(client->x)); // X
-	/*if (client->stance)
-		packet_pack_int(&packet, &client->stance, sizeof(client->stance)); // Stance
-	else
-	{
-		double d = client->y + 2;
-		packet_pack_int(&packet, &d, sizeof(d)); // Stance
-	}*/
-	packet_pack_int(&packet, &client->y, sizeof(client->y)); // Y
+	real_y = client->y + BEDROCK_PLAYER_HEIGHT;
+	packet_pack_int(&packet, &real_y, sizeof(real_y)); // Y
 	packet_pack_int(&packet, &client->z, sizeof(client->z)); // Z
 	packet_pack_int(&packet, &client->yaw, sizeof(client->yaw)); // Yaw
 	packet_pack_int(&packet, &client->pitch, sizeof(client->pitch)); // Pitch

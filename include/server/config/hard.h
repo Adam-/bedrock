@@ -63,6 +63,8 @@
 
 #define BEDROCK_DEFAUT_PLAYER_WALK_SPEED 0.1
 
+#define BEDROCK_PLAYER_HEIGHT 1.65
+
 typedef uint32_t packet_id;
 
 #endif // SERVER_CONFIG_HARD_H
