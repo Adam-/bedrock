@@ -49,6 +49,6 @@ void command_fdlist(struct command_source *source, int bedrock_attribute_unused 
 
 #ifndef WIN32
 	if (!getrlimit(RLIMIT_NOFILE, &rlim))
-		command_reply(source, "Soft limit: %d, Hard limit: %d", rlim.rlim_cur, rlim.rlim_max);
+		command_reply(source, "Soft limit: %lu, Hard limit: %lu", rlim.rlim_cur, rlim.rlim_max);
 #endif
 }

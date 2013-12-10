@@ -33,8 +33,10 @@
 // Ignore gcc warnings about unused variables
 #if defined(__GNUC__) || defined(__clang__) || defined(__ICC)
 # define bedrock_attribute_unused __attribute__((unused))
+# define bedrock_printf(last) __attribute__((format(printf, last, last + 1)))
 #else
 # define bedrock_attribute_unused
+# define bedrock_printf(last)
 #endif
 
 enum bedrock_log_level
@@ -52,7 +54,7 @@ enum bedrock_log_level
 };
 typedef enum bedrock_log_level bedrock_log_level;
 
-extern void bedrock_log(bedrock_log_level level, const char *msg, ...);
+extern void bedrock_log(bedrock_log_level level, const char *msg, ...) bedrock_printf(2);
 
 extern int running_on_valgrind;
 

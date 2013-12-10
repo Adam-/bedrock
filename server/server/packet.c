@@ -183,7 +183,7 @@ int packet_parse(struct client *client, bedrock_packet *packet)
 
 	if (s + length != packet->offset)
 	{
-		bedrock_log(LEVEL_WARN, "packet: Length mismatch for packet 0x%02x from client %s, was told %d but parsed %d - dropping client", id, client_get_ip(client), s + length, packet->offset);
+		bedrock_log(LEVEL_WARN, "packet: Length mismatch for packet 0x%02x from client %s, was told %lu but parsed %lu - dropping client", id, client_get_ip(client), s + length, packet->offset);
 		client_exit(client);
 		return -1;
 	}

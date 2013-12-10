@@ -34,7 +34,7 @@ int packet_creative_inventory_action(struct client *client, bedrock_packet *pack
 	if (id == -1)
 	{
 		// Dropping item
-		bedrock_log(LEVEL_DEBUG, "creative inventory action: %s drops %s %s", client->name, slot.count, item->name);
+		bedrock_log(LEVEL_DEBUG, "creative inventory action: %s drops %d %s", client->name, slot.count, item->name);
 
 		return ERROR_OK;
 	}

@@ -79,7 +79,7 @@ void command_run(struct command_source *source, const char *buf)
 
 	if (command->max_parameters > MAX_PARAMETERS)
 	{
-		bedrock_log(LEVEL_INFO, "command: Warning: command %s allows more than the maximum parameters - %d", MAX_PARAMETERS);
+		bedrock_log(LEVEL_INFO, "command: Warning: command %s allows more than the maximum parameters - %d", command->name, MAX_PARAMETERS);
 		command->max_parameters = MAX_PARAMETERS;
 	}
 

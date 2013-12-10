@@ -222,7 +222,7 @@ static void region_worker_write(struct region_operation *op)
 		}
 		else if (pos % BEDROCK_REGION_SECTOR_SIZE)
 		{
-			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %d more bytes", region->path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
+			bedrock_log(LEVEL_WARN, "column: Region file %s does not have correct padding, expecting %lu more bytes", region->path, BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE));
 
 			j = BEDROCK_REGION_SECTOR_SIZE - (pos % BEDROCK_REGION_SECTOR_SIZE);
 			memset(&padding, 0, j);
@@ -253,7 +253,7 @@ static void region_worker_write(struct region_operation *op)
 		offset_buffer <<= 8;
 		offset_buffer |= required_sectors;
 
-		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header of position %d with %d sectors", offset, pos / BEDROCK_REGION_SECTOR_SIZE, required_sectors);
+		bedrock_log(LEVEL_DEBUG, "column: Number of sectors are NOT sufficient, moved file offset to %d to write new offset header of position %lu with %d sectors", offset, pos / BEDROCK_REGION_SECTOR_SIZE, required_sectors);
 
 		convert_endianness((unsigned char *) &offset_buffer, sizeof(offset_buffer));
 

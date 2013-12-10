@@ -96,7 +96,7 @@ void recipe_init()
 
 	closedir(dir);
 
-	bedrock_log(LEVEL_DEBUG, "crafting: Loaded %d recipes.", recipes.count);
+	bedrock_log(LEVEL_DEBUG, "crafting: Loaded %lu recipes.", recipes.count);
 }
 
 void recipe_shutdown()

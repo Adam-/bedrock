@@ -546,7 +546,7 @@ void client_send_packet(struct client *client, bedrock_packet *packet)
 	packet_read_varuint(packet, &id);
 	packet->offset = 0;
 
-	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet 0x%02x length %d for %s (%s) state: %d", id, packet->buffer.length, *client->name ? client->name : "(unknown)", client_get_ip(client), client->state);
+	bedrock_log(LEVEL_PACKET_DEBUG, "packet: Queueing packet 0x%02x length %lu for %s (%s) state: %d", id, packet->buffer.length, *client->name ? client->name : "(unknown)", client_get_ip(client), client->state);
 
 	p = bedrock_malloc(sizeof(bedrock_packet));
 
@@ -899,13 +899,13 @@ void client_update_position(struct client *client, double x, double y, double z,
 
 				if (!di->count)
 				{
-					bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %d,%d,%d", client->name, di->item->name, di->x, di->y, di->z);
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %f, %f, %f", client->name, di->item->name, di->x, di->y, di->z);
 					packet_send_collect_item(client, di);
 					column_free_dropped_item(di);
 				}
 				else
 				{
-					bedrock_log(LEVEL_DEBUG, "client: %s picks up all but %d item %s at %d,%d,%d", client->name, di->count, di->item->name, di->x, di->y, di->z);
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up all but %d item %s at %f, %f, %f", client->name, di->count, di->item->name, di->x, di->y, di->z);
 				}
 			}
 		}

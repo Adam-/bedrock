@@ -7,7 +7,7 @@ static bool read_bytes(void *dest, size_t dst_size, const unsigned char **src, s
 {
 	if (dst_size > *src_size)
 	{
-		bedrock_log(LEVEL_CRIT, "nbt: Out of data to read, %d > %d", dst_size, *src_size);
+		bedrock_log(LEVEL_CRIT, "nbt: Out of data to read, %lu > %lu", dst_size, *src_size);
 		return false;
 	}
 
@@ -142,7 +142,7 @@ static nbt_tag *read_unnamed_tag(nbt_tag *tag, const unsigned char **data, size_
 	return tag;
 
  error:
-	bedrock_log(LEVEL_CRIT, "nbt: Data corruption error on tag %s, type %d, offset %d", tag->name ? tag->name : "(unknown)", tag->type, *size);
+	bedrock_log(LEVEL_CRIT, "nbt: Data corruption error on tag %s, type %d, offset %lu", tag->name ? tag->name : "(unknown)", tag->type, *size);
 	nbt_free(tag);
 	return NULL;
 }
@@ -170,7 +170,7 @@ static nbt_tag *read_named_tag(nbt_tag *tag, const unsigned char **data, size_t 
 	return read_unnamed_tag(tag, data, size);
 
  error:
-	bedrock_log(LEVEL_CRIT, "nbt: Data corruption error on tag %s, type %d, offset %d", tag->name ? tag->name : "(unknown)", tag->type, *size);
+	bedrock_log(LEVEL_CRIT, "nbt: Data corruption error on tag %s, type %d, offset %lu", tag->name ? tag->name : "(unknown)", tag->type, *size);
 	nbt_free(tag);
 	return NULL;
 }

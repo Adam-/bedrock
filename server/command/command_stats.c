@@ -59,6 +59,6 @@ void command_stats(struct command_source *source, int bedrock_attribute_unused a
 	}
 
 	command_reply(source, "Worlds: %llu, Regions: %llu, Columns: %llu, Chunks: %llu, Blocks: %llu", worlds, regions, columns, chunks, blocks);
-	command_reply(source, "Players: %ld, Console clients: %d, Connections: %ld", players, console_list.count, connections);
+	command_reply(source, "Players: %ld, Console clients: %lu, Connections: %ld", players, console_list.count, connections);
 
 }

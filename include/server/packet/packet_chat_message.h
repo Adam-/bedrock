@@ -36,4 +36,4 @@ enum
 };
 
 extern int packet_chat_message(struct client *client, bedrock_packet *p);
-extern void packet_send_chat_message(struct client *client, const char *buf, ...);
+extern void packet_send_chat_message(struct client *client, const char *buf, ...) bedrock_printf(2);

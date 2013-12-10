@@ -67,7 +67,7 @@ struct bedrock_thread *bedrock_thread_start(bedrock_thread_entry entry, bedrock_
 		thread = NULL;
 	}
 	else
-		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", thread->handle);
+		bedrock_log(LEVEL_THREAD, "thread: Created thread %d", (int) thread->handle);
 
 	return thread;
 }
@@ -99,7 +99,7 @@ void bedrock_thread_join(struct bedrock_thread *thread)
 	if (pthread_join(thread->handle, NULL))
 		bedrock_log(LEVEL_CRIT, "thread: Unable to join thread - %s", strerror(errno));
 	else
-		bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", thread->handle);
+		bedrock_log(LEVEL_THREAD, "thread: Joining thread %d", (int) thread->handle);
 
 	if (thread->at_exit)
 		thread->at_exit(thread->data);

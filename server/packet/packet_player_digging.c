@@ -184,7 +184,7 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		{
 			if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
 			{
-				bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %d I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
+				bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %lu I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
 						client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end, client->digging_data.item_id, client->digging_data.block_id,
 						x, y, z, item->id, *block_id);
 

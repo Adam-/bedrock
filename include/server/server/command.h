@@ -28,4 +28,4 @@ extern bool command_use_oper(struct command_source *source, struct command *comm
 extern struct command *command_find(const char *command);
 extern void command_run(struct command_source *source, const char *buf);
 
-extern void command_reply(struct command_source *source, const char *fmt, ...);
+extern void command_reply(struct command_source *source, const char *fmt, ...) bedrock_printf(2);

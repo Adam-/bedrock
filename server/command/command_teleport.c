@@ -72,7 +72,7 @@ void command_teleport(struct command_source *source, int argc, const char **argv
 			return;
 		}
 
-		command_reply(source, "Teleporting %s to %d, %d, %d", user_source->name, long_x, long_y, long_z);
+		command_reply(source, "Teleporting %s to %ld, %ld, %ld", user_source->name, long_x, long_y, long_z);
 
 		client_update_position(user_source, long_x, long_y, long_z, user_source->yaw, user_source->pitch, user_source->stance, user_source->on_ground);
 		packet_send_entity_teleport(user_source, user_source);
