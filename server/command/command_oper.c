@@ -1,5 +1,5 @@
 #include "server/command.h"
-#include "packet/packet_chat_message.h"
+#include "server/packets.h"
 
 void command_oper(struct command_source *source, int bedrock_attribute_unused argc, const char **argv)
 {

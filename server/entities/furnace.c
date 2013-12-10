@@ -1,8 +1,5 @@
 #include "entities/entity.h"
-#include "packet/packet_open_window.h"
-#include "packet/packet_set_slot.h"
-#include "packet/packet_block_change.h"
-#include "packet/packet_update_window_property.h"
+#include "server/packets.h"
 
 static void furnace_on_free(struct furnace *furnace);
 

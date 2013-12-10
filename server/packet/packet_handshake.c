@@ -1,9 +1,8 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "config/config.h"
 #include "util/string.h"
-#include "packet/packet_disconnect.h"
-#include "packet/packet_encryption_request.h"
 
 enum
 {

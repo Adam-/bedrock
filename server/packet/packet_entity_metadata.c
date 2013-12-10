@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
-#include "packet/packet_entity_metadata.h"
 
 void packet_send_entity_metadata(struct client *client, enum entity_metadata_index index, enum entity_metadata_type type, const void *data, size_t size)
 {

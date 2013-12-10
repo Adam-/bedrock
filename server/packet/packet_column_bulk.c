@@ -1,10 +1,8 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
 #include "server/chunk.h"
-#include "packet/packet_column_bulk.h"
-#include "packet/packet_spawn_player.h"
-#include "packet/packet_spawn_object.h"
 #include "util/compression.h"
 
 #define COLUMN_BULK_MAX 100

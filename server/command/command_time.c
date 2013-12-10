@@ -1,6 +1,6 @@
 #include "server/command.h"
 #include "command/command_time.h"
-#include "packet/packet_time.h"
+#include "server/packets.h"
 
 #include <errno.h>
 

@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
-#include "packet/packet_disconnect.h"
+#include "server/packets.h"
 
 int packet_keep_alive(struct client *client, bedrock_packet *p)
 {

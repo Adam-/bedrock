@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
-#include "packet/packet_entity_animation.h"
 
 enum
 {

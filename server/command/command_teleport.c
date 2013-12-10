@@ -1,7 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/command.h"
-#include "packet/packet_entity_teleport.h"
+#include "server/packets.h"
 
 #include <errno.h>
 

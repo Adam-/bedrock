@@ -1,8 +1,8 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "blocks/items.h"
 #include "nbt/nbt.h"
-#include "packet/packet_entity_head_look.h"
 
 void packet_send_spawn_player(struct client *client, struct client *c)
 {

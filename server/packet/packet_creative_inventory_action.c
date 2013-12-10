@@ -1,6 +1,5 @@
 #include "server/client.h"
 #include "nbt/nbt.h"
-#include "packet/packet_change_game_state.h"
 
 int packet_creative_inventory_action(struct client *client, bedrock_packet *packet)
 {

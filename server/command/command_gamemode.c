@@ -1,8 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/command.h"
-#include "packet/packet_chat_message.h"
-#include "packet/packet_change_game_state.h"
+#include "server/packets.h"
 #include "nbt/nbt.h"
 
 #include <errno.h>

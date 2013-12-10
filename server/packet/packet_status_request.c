@@ -2,7 +2,6 @@
 #include "server/client.h"
 #include "server/packet.h"
 #include "config/config.h"
-#include "packet/packet_chat_message.h"
 #include "util/io.h"
 #include "util/string.h"
 

@@ -1,12 +1,11 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
 #include "entities/entity.h"
 #include "nbt/nbt.h"
 #include "blocks/blocks.h"
 #include "windows/window.h"
-#include "packet/packet_block_change.h"
-#include "packet/packet_open_window.h"
 
 enum
 {

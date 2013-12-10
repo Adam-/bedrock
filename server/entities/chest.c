@@ -1,6 +1,5 @@
 #include "entities/entity.h"
-#include "packet/packet_open_window.h"
-#include "packet/packet_set_slot.h"
+#include "server/packets.h"
 
 struct tile_entity *chest_load(nbt_tag *tag)
 {

@@ -1,6 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
-#include "packet/packet_disconnect.h"
+#include "server/packets.h"
 
 int packet_position_and_look(struct client *client, bedrock_packet *p)
 {

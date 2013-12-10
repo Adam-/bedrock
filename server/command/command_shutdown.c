@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
 #include "server/command.h"
-#include "packet/packet_disconnect.h"
+#include "server/packets.h"
 
 void command_shutdown(struct client bedrock_attribute_unused *client, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {

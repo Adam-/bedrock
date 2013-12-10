@@ -1,8 +1,8 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/command.h"
-#include "packet/packet_chat_message.h"
 
 #include <jansson.h>
 

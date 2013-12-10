@@ -1,10 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "config/config.h"
-#include "packet/packet_disconnect.h"
-#include "packet/packet_encryption_request.h"
-#include "packet/packet_join_game.h"
-#include "packet/packet_login.h"
 #include "util/string.h"
 
 int packet_login(struct client *client, bedrock_packet *p)

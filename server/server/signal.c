@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
 #include "server/client.h"
-#include "packet/packet_disconnect.h"
+#include "server/packets.h"
 #include "util/io.h"
 
 #include <signal.h>

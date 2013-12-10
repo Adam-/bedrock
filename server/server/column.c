@@ -1,12 +1,11 @@
 #include "server/column.h"
 #include "server/client.h"
+#include "server/packets.h"
 #include "entities/entity.h"
 #include "nbt/nbt.h"
 #include "util/compression.h"
 #include "util/endian.h"
 #include "util/memory.h"
-#include "packet/packet_spawn_object.h"
-#include "packet/packet_destroy_entity.h"
 
 #include <math.h>
 

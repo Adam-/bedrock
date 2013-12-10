@@ -1,5 +1,6 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "util/crypto.h"
 
 void packet_send_encryption_request(struct client *client)

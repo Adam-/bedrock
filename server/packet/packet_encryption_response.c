@@ -1,8 +1,7 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
-#include "packet/packet_encryption_response.h"
-#include "packet/packet_disconnect.h"
+#include "server/packets.h"
 #include "util/crypto.h"
 
 int packet_encryption_response(struct client *client, bedrock_packet *p)

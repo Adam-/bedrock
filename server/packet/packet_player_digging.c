@@ -1,19 +1,10 @@
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
 #include "blocks/blocks.h"
 #include "nbt/nbt.h"
-#include "packet/packet_block_change.h"
-#include "packet/packet_set_slot.h"
-#include "packet/packet_change_game_state.h"
 #include "windows/window.h"
-
-enum
-{
-	STARTED_DIGGING,
-	FINISHED_DIGGING = 2,
-	DROP_ITEM = 4
-};
 
 static struct item *get_weilded_item(struct client *client)
 {
@@ -110,7 +101,7 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 	if (p->error)
 		return p->error;
 
-	if (status == STARTED_DIGGING)
+	if (status == START_DIGGING)
 	{
 		struct chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
 		uint8_t *block_id;
@@ -143,7 +134,7 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 
 		if (client->gamemode == GAMEMODE_CREATIVE)
 		{
-			status = FINISHED_DIGGING;
+			status = STOP_DIGGING;
 		}
 		else
 		{
@@ -155,7 +146,7 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 			client->digging_data.end = bedrock_time + (delay * 1000.0);
 		}
 	}
-	if (status == FINISHED_DIGGING)
+	if (status == STOP_DIGGING)
 	{
 		struct item *item = get_weilded_item(client);
 		struct chunk *chunk;

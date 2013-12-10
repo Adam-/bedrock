@@ -1,6 +1,6 @@
 #include "server/bedrock.h"
 #include "server/command.h"
-#include "packet/packet_chat_message.h"
+#include "server/packets.h"
 #include "util/string.h"
 #include "command/command_fdlist.h"
 #include "command/command_gamemode.h"

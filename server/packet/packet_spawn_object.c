@@ -1,10 +1,10 @@
 #include "server/bedrock.h"
 #include "server/client.h"
 #include "server/packet.h"
+#include "server/packets.h"
 #include "server/column.h"
-#include "packet/packet_entity_metadata.h"
 
-int packet_spawn_object_item(struct client *client, struct dropped_item *di)
+void packet_spawn_object_item(struct client *client, struct dropped_item *di)
 {
 	bedrock_packet packet;
 	int32_t a_x, a_y, a_z;
@@ -36,6 +36,4 @@ int packet_spawn_object_item(struct client *client, struct dropped_item *di)
 	client_send_packet(client, &packet);
 
 	packet_send_entity_metadata_slot(client, di);
-
-	return ERROR_OK;
 }
