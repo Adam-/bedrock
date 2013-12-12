@@ -453,6 +453,8 @@ struct region *region_create(struct world *world, int x, int z)
 
 void region_free(struct region *region)
 {
+	int i;
+
 	bedrock_list_del(&pending_updates, region);
 
 	bedrock_thread_set_exit(region->worker);
@@ -486,10 +488,11 @@ void region_free(struct region *region)
 
 	bedrock_pipe_close(&region->finished_operations_pipe);
 
-	bedrock_assert(!bedrock_running || region->columns.count - region->empty_columns == 0, ;);
+	bedrock_assert(!bedrock_running || region->num_columns - region->empty_columns == 0, ;);
 
-	region->columns.free = (bedrock_free_func) column_free;
-	bedrock_list_clear(&region->columns);
+	for (i = 0; i < BEDROCK_COLUMNS_PER_REGION * BEDROCK_COLUMNS_PER_REGION; ++i)
+		if (region->columns[i] != NULL)
+			column_free(region->columns[i]);
 
 	bedrock_free(region);
 }
@@ -544,7 +547,7 @@ void region_process_pending()
 
 		if (region->flags & REGION_FLAG_EMPTY)
 		{
-			if (region->columns.count - region->empty_columns == 0)
+			if (region->num_columns - region->empty_columns == 0)
 				del = true;
 			else
 				region->flags &= ~REGION_FLAG_EMPTY;

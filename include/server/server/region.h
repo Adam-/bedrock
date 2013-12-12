@@ -4,6 +4,7 @@
 #include "nbt/tag.h"
 #include "util/thread.h"
 #include "util/buffer.h"
+#include "config/hard.h"
 
 #include <limits.h>
 
@@ -60,7 +61,9 @@ struct region
 	bedrock_cond worker_condition;
 
 	/* Columns in this region */
-	bedrock_list columns;
+	struct column *columns[BEDROCK_COLUMNS_PER_REGION * BEDROCK_COLUMNS_PER_REGION];
+	/* Number of columns in this region */
+	int num_columns;
 	/* Nonexistant columns in this region. Eg, columns with no ->data */
 	int empty_columns;
 };

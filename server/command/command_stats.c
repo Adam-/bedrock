@@ -4,8 +4,7 @@
 
 void command_stats(struct command_source *source, int bedrock_attribute_unused argc, const char bedrock_attribute_unused **argv)
 {
-	bedrock_node *node, *node2, *node3;
-	int i;
+	bedrock_node *node, *node2;
 	long long unsigned worlds = 0, regions = 0, columns = 0, chunks = 0, blocks = 0;
 	long players = 0, connections = 0;
 
@@ -18,14 +17,16 @@ void command_stats(struct command_source *source, int bedrock_attribute_unused a
 		LIST_FOREACH(&world->regions, node2)
 		{
 			struct region *region = node2->data;
+			int idx;
 
 			++regions;
 
-			LIST_FOREACH(&region->columns, node3)
+			for (idx = 0; idx < BEDROCK_COLUMNS_PER_REGION * BEDROCK_COLUMNS_PER_REGION; ++idx)
 			{
-				struct column *column = node3->data;
+				struct column *column = region->columns[idx];
+				int i;
 
-				if (column->data == NULL)
+				if (column == NULL || column->data == NULL)
 					continue;
 
 				++columns;

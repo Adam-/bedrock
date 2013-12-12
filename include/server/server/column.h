@@ -27,6 +27,8 @@ struct column
 	int32_t x;
 	int32_t z;
 
+	int idx;
+
 	/* Players in render distance of this column */
 	bedrock_list players;
 

@@ -84,7 +84,11 @@ void column_free(struct column *column)
 			break;
 		}
 	}
-	bedrock_list_del(&column->region->columns, column);
+
+	bedrock_assert(column->region->columns[column->idx] == column, ;);
+	column->region->columns[column->idx] = NULL;
+	--column->region->num_columns;
+	bedrock_assert(column->region->num_columns >= 0, column->region->num_columns = 0);
 
 	column->items.free = (bedrock_free_func) column_free_dropped_item;
 	bedrock_list_clear(&column->items);
@@ -107,7 +111,7 @@ void column_free(struct column *column)
 	 * Also be sure the region worker still exists. If it doesn't then the region
 	 * is being free'd right now and this column is being free'd as a result of it.
 	 */
-	if (column->region->columns.count - column->region->empty_columns == 0 && column->region->worker != NULL)
+	if (column->region->num_columns - column->region->empty_columns == 0 && column->region->worker != NULL)
 	{
 		region_set_pending(column->region, REGION_FLAG_EMPTY);
 	}
@@ -182,10 +186,11 @@ int32_t *column_get_height_for(struct column *column, int32_t x, int32_t z)
 
 struct column *find_column_which_contains(struct region *region, double x, double z)
 {
-	bedrock_node *n;
 	double column_x = x / BEDROCK_BLOCKS_PER_CHUNK, column_z = z / BEDROCK_BLOCKS_PER_CHUNK;
 	int region_x, region_z;
-	struct column *column = NULL;
+	struct column *column;
+	int cx, cz;
+	int idx;
 
 	if (region == NULL)
 		return NULL;
@@ -199,16 +204,16 @@ struct column *find_column_which_contains(struct region *region, double x, doubl
 	bedrock_assert(region_x == region->x, ;);
 	bedrock_assert(region_z == region->z, ;);
 
-	LIST_FOREACH(&region->columns, n)
-	{
-		struct column *c = n->data;
+	cx = (int) column_x % BEDROCK_COLUMNS_PER_REGION;
+	if (cx < 0)
+		cx = BEDROCK_COLUMNS_PER_REGION - abs(cx);
+	cz = (int) column_z % BEDROCK_COLUMNS_PER_REGION;
+	if (cz < 0)
+		cz = BEDROCK_COLUMNS_PER_REGION - abs(cz);
 
-		if (c->x == column_x && c->z == column_z)
-		{
-			column = c;
-			break;
-		}
-	}
+	idx = cx * BEDROCK_COLUMNS_PER_REGION + cz;
+	bedrock_assert(idx >= 0 && idx < BEDROCK_COLUMNS_PER_REGION * BEDROCK_COLUMNS_PER_REGION, return NULL);
+	column = region->columns[idx];
 
 	if (column == NULL)
 	{
@@ -217,8 +222,11 @@ struct column *find_column_which_contains(struct region *region, double x, doubl
 		column->region = region;
 		column->x = column_x;
 		column->z = column_z;
+		column->idx = idx;
 
-		bedrock_list_add(&region->columns, column);
+		bedrock_assert(region->columns[idx] == NULL, ;);
+		region->columns[idx] = column;
+		++column->region->num_columns;
 
 		column->flags |= COLUMN_FLAG_READ;
 
