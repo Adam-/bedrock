@@ -39,6 +39,7 @@ int packet_login(struct client *client, bedrock_packet *p)
 	bedrock_assert(world != NULL, return ERROR_UNKNOWN);
 
 	bedrock_strncpy(client->name, username, sizeof(client->name));
+	uuid_v3_generate(&client->uuid);
 	client->state = STATE_LOGIN_HANDSHAKING;
 	client->world = world;
 
@@ -71,8 +72,8 @@ void packet_send_login_success(struct client *client)
 	bedrock_packet packet;
 
 	packet_init(&packet, LOGIN_SERVER_LOGIN_SUCCESS);
+	packet_pack_string(&packet, uuid_to_string(&client->uuid));
 	packet_pack_string(&packet, client->name);
-	packet_pack_string(&packet, client->name); // UID?
 	client_send_packet(client, &packet);
 
 	client->state = STATE_LOGGED_IN;

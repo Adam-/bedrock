@@ -5,6 +5,7 @@
 #include "util/list.h"
 #include "util/buffer.h"
 #include "util/memory.h"
+#include "util/uuid.h"
 #include "config/hard.h"
 #include "server/world.h"
 #include "server/packet.h"
@@ -63,6 +64,7 @@ struct client
 
 
 	char name[BEDROCK_USERNAME_MAX];
+	struct uuid uuid;
 	char ip[INET6_ADDRSTRLEN];
 
 	double x;

@@ -320,7 +320,7 @@ void packet_pack_varint(bedrock_packet *packet, int32_t data)
 
 void packet_pack_varuint(bedrock_packet *packet, uint32_t data)
 {
-	unsigned char outbuf[5]; // Packet int32 can be at most 5 bytes
+	unsigned char outbuf[5]; // Packed int32 can be at most 5 bytes
 
 	bedrock_assert(packet != NULL, return);
 

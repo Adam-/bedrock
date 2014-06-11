@@ -29,8 +29,9 @@ void packet_send_spawn_player(struct client *client, struct client *c)
 	packet_init(&packet, SERVER_SPAWN_PLAYER);
 
 	packet_pack_varuint(&packet, c->id);
-	packet_pack_string(&packet, c->name); // XXX uuid?
+	packet_pack_string(&packet, uuid_to_string(&c->uuid));
 	packet_pack_string(&packet, c->name);
+	packet_pack_varuint(&packet, 0); // data count
 	packet_pack_int(&packet, &abs_x, sizeof(abs_x));
 	packet_pack_int(&packet, &abs_y, sizeof(abs_y));
 	packet_pack_int(&packet, &abs_z, sizeof(abs_z));
