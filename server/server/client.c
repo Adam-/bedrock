@@ -861,6 +861,9 @@ void client_update_position(struct client *client, double x, double y, double z,
 				struct client *c = node->data;
 				bool sees_new = newc && bedrock_list_has_data(&c->columns, newc);
 
+				if (c == client)
+					continue;
+
 				if (sees_new)
 				{
 					packet_send_entity_teleport(c, client);
@@ -881,6 +884,9 @@ void client_update_position(struct client *client, double x, double y, double z,
 			{
 				struct client *c = node->data;
 				bool sees_old = oldc && bedrock_list_has_data(&c->columns, oldc);
+
+				if (c == client)
+					continue;
 
 				if (!sees_old)
 					packet_send_spawn_player(c, client);
