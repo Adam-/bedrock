@@ -7,7 +7,7 @@ void packet_send_entity_equipment(struct client *client, struct client *c, uint1
 	bedrock_packet packet;
 	struct item_stack stack;
 
-	stack.id = item->id;
+	stack.id = item->id ? item->id : -1;
 	stack.count = 1;
 	stack.metadata = damage;
 
