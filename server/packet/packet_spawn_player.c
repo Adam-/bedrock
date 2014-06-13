@@ -11,7 +11,6 @@ void packet_send_spawn_player(struct client *client, struct client *c)
 	int8_t y, p;
 	struct item_stack *weilded_item;
 	struct item *item;
-	uint8_t b = 127;
 
 	weilded_item = &client->inventory[INVENTORY_HOTBAR_START + client->selected_slot];
 	if (weilded_item->count)
@@ -38,7 +37,16 @@ void packet_send_spawn_player(struct client *client, struct client *c)
 	packet_pack_int(&packet, &y, sizeof(y));
 	packet_pack_int(&packet, &p, sizeof(p));
 	packet_pack_int(&packet, &item->id, sizeof(item->id));
-	packet_pack_int(&packet, &b, sizeof(b)); // XXX metadata
+
+	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+	{
+		uint8_t health_float = 102;
+		float health = 10;
+		uint8_t b = 127;
+		packet_pack_int(&packet, &health_float, sizeof(health_float));
+		packet_pack_int(&packet, &health, sizeof(health));
+		packet_pack_int(&packet, &b, sizeof(b)); // XXX metadata
+	}
 
 	client_send_packet(client, &packet);
 
