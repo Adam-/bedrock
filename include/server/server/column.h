@@ -27,6 +27,7 @@ struct column
 	int32_t x;
 	int32_t z;
 
+	/* index into region->columns */
 	int idx;
 
 	/* Players in render distance of this column */
@@ -38,7 +39,7 @@ struct column
 	/* Chunks in this column */
 	struct chunk *chunks[BEDROCK_CHUNKS_PER_COLUMN];
 
-	/* Biome data, a pointer to the NBT structure */
+	/* Biome data, a pointer in to the NBT structure */
 	uint8_t *biomes;
 
 	/* List of dropped_item structures for dropped items within the column */
@@ -46,22 +47,9 @@ struct column
 
 	/* tile entities in this column */
 	bedrock_list tile_entities;
-};
 
-/* An item dropped on the map somewhere */
-struct dropped_item
-{
-	/* Entity id */
-	uint32_t eid;
-	/* Column this item is in */
-	struct column *column;
-	/* This item */
-	struct item *item;
-	uint8_t count;
-	uint16_t data;
-	double x;
-	double y;
-	double z;
+	/* moving projectiles in this column */
+	bedrock_list projectiles;
 };
 
 extern void column_load(struct column *region, nbt_tag *data);

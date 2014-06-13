@@ -1,6 +1,7 @@
 #ifndef BEDROCK_BLOCKS_ITEMS_H
 #define BEDROCK_BLOCKS_ITEMS_H
 
+#include "server/physics.h"
 #include "util/list.h"
 #include "util/yml.h"
 
@@ -200,6 +201,19 @@ struct item_stack
 	int16_t id;
 	uint8_t count;
 	int16_t metadata;
+};
+
+/* An item dropped on the map somewhere */
+struct dropped_item
+{
+	/* Projectile data for this item */
+	struct projectile p;
+	/* This item */
+	struct item *item;
+	uint8_t count;
+	uint16_t data;
+	/* Node into column->items */
+	bedrock_node node;
 };
 
 extern int item_init();

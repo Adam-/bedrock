@@ -2,6 +2,7 @@
 #define BEDROCK_SERVER_PACKETS_H
 
 #include "server/column.h"
+#include "server/packet.h"
 
 /* packet function prototypes */
 
@@ -83,6 +84,7 @@ extern int packet_creative_inventory_action(struct client *client, bedrock_packe
 
 extern void packet_send_destroy_entity_player(struct client *client, struct client *c);
 extern void packet_send_destroy_entity_dropped_item(struct client *client, struct dropped_item *di);
+extern void packet_send_destroy_entity_projectile(struct client *client, struct projectile *p);
 
 extern int packet_disconnect(struct client *client, bedrock_packet *p);
 extern void packet_send_disconnect(struct client *client, const char *reason);
@@ -132,6 +134,7 @@ extern void packet_send_entity_metadata_slot(struct client *client, struct dropp
 extern void packet_send_entity_properties(struct client *client, const char *property, double value);
 
 extern void packet_send_entity_teleport(struct client *client, struct client *targ);
+extern void packet_send_entity_teleport_projectile(struct client *client, struct projectile *p);
 
 extern int packet_handshake(struct client *client, bedrock_packet *p);
 

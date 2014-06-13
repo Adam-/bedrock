@@ -23,7 +23,21 @@ void packet_send_destroy_entity_dropped_item(struct client *client, struct dropp
 	packet_init(&packet, SERVER_DESTROY_ENTITY);
 
 	packet_pack_int(&packet, &count, sizeof(count));
-	packet_pack_int(&packet, &di->eid, sizeof(di->eid));
+	packet_pack_int(&packet, &di->p.id, sizeof(di->p.id));
 
 	client_send_packet(client, &packet);
 }
+
+void packet_send_destroy_entity_projectile(struct client *client, struct projectile *p)
+{
+	bedrock_packet packet;
+	uint8_t count = 1;
+
+	packet_init(&packet, SERVER_DESTROY_ENTITY);
+
+	packet_pack_int(&packet, &count, sizeof(count));
+	packet_pack_int(&packet, &p->id, sizeof(p->id));
+
+	client_send_packet(client, &packet);
+}
+

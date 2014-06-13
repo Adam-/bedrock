@@ -101,6 +101,13 @@ uint8_t *chunk_get_block(struct chunk *chunk, int32_t x, uint8_t y, int32_t z)
 	return &chunk->blocks[block_index];
 }
 
+uint8_t *chunk_get_block_from_world(struct world *world, int32_t x, uint8_t y, int32_t z)
+{
+	struct column *c = find_column_from_world_which_contains(world, x, z);
+	bedrock_assert(c != NULL, return NULL);
+	return column_get_block(c, x, y, z);
+}
+
 uint8_t chunk_get_data(struct chunk *chunk, int32_t x, uint8_t y, int32_t z)
 {
 	uint16_t block_index;
@@ -155,6 +162,14 @@ struct chunk *find_chunk_which_contains(struct world *world, int32_t x, uint8_t 
 	if (column == NULL)
 		return NULL;
 
+	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
+	return column->chunks[y / BEDROCK_BLOCKS_PER_CHUNK];
+}
+
+struct chunk *find_chunk_from_column_which_contains(struct column *column, int32_t x, uint8_t y, int32_t z)
+{
+	// XXX verify column is correct
+	bedrock_assert(column != NULL, return NULL);
 	bedrock_assert(y / BEDROCK_BLOCKS_PER_CHUNK < BEDROCK_CHUNKS_PER_COLUMN, return NULL);
 	return column->chunks[y / BEDROCK_BLOCKS_PER_CHUNK];
 }

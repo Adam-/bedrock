@@ -67,7 +67,7 @@ void column_load(struct column *column, nbt_tag *data)
 void column_free(struct column *column)
 {
 	int i;
-	bedrock_node *node;
+	bedrock_node *node, *node2;
 
 	bedrock_assert(column->players.count == 0, ;);
 	bedrock_assert(!column->flags, ;);
@@ -90,11 +90,13 @@ void column_free(struct column *column)
 	--column->region->num_columns;
 	bedrock_assert(column->region->num_columns >= 0, column->region->num_columns = 0);
 
-	column->items.free = (bedrock_free_func) column_free_dropped_item;
-	bedrock_list_clear(&column->items);
+	LIST_FOREACH_SAFE(&column->items, node, node2)
+		column_free_dropped_item(node->data);
 
 	column->tile_entities.free = (bedrock_free_func) entity_free;
 	bedrock_list_clear(&column->tile_entities);
+
+	bedrock_assert(!column->projectiles.count, ;);
 
 	for (i = 0; i < BEDROCK_CHUNKS_PER_COLUMN; ++i)
 		chunk_free(column->chunks[i]);
@@ -338,13 +340,12 @@ void column_add_item(struct column *column, struct dropped_item *di)
 {
 	bedrock_node *node;
 
-	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %s (%d) at %f,%f,%f", di->item->name, di->count, di->x, di->y, di->z);
+	bedrock_log(LEVEL_DEBUG, "column: Creating dropped item %d %s (%d) at %f, %f, %f", di->count, di->item->name, di->p.id, di->p.pos.x, di->p.pos.y, di->p.pos.z);
 
-	bedrock_assert(di->eid == 0, ;);
-	di->eid = ++entity_id;
-	di->column = column;
+	bedrock_assert(di->p.id, ;);
+	bedrock_assert(di->p.column == column, ;);
 
-	bedrock_list_add(&column->items, di);
+	bedrock_list_add_node(&column->items, &di->node, di);
 
 	/* Send out this item to nearby players */
 	LIST_FOREACH(&column->players, node)
@@ -359,17 +360,20 @@ void column_free_dropped_item(struct dropped_item *item)
 {
 	bedrock_node *node;
 
-	bedrock_log(LEVEL_DEBUG, "column: Freeing dropped item %s at %f,%f,%f", item->item->name, item->x, item->y, item->z);
+	if (item->p.moving)
+		physics_remove(&item->p);
+
+	bedrock_log(LEVEL_DEBUG, "column: Freeing dropped item %s (%d) at %f, %f, %f", item->item->name, item->p.id, item->p.pos.x, item->p.pos.y, item->p.pos.z);
 
 	/* Delete this item from nearby players */
-	LIST_FOREACH(&item->column->players, node)
+	LIST_FOREACH(&item->p.column->players, node)
 	{
 		struct client *client = node->data;
 
 		packet_send_destroy_entity_dropped_item(client, item);
 	}
 
-	bedrock_list_del(&item->column->items, item);
+	bedrock_list_del_node(&item->p.column->items, &item->node);
 	bedrock_free(item);
 }
 

@@ -72,18 +72,23 @@ void chest_mine(struct client *client, struct chunk *chunk, int32_t x, uint8_t y
 		for (i = 0; i < ENTITY_CHEST_SLOTS; ++i)
 		{
 			struct item_stack *item = &chest->items[i];
+			struct dropped_item *di;
 
 			if (!item->count)
 				continue;
 
-			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
+			di = bedrock_malloc(sizeof(struct dropped_item));
 			di->item = item_find_or_create(item->id);
 			di->count = item->count;
 			di->data = item->metadata;
-			di->x = x;
-			di->y = y;
-			di->z = z;
+
+			di->p.id = ++entity_id;
+			physics_item_initialize(di, x, y, z);
+
+			di->p.column = chunk->column;
+
 			column_add_item(chunk->column, di);
+			physics_add(chunk->column, &di->p);
 		}
 
 		entity_free(&chest->entity);

@@ -8,6 +8,7 @@
 #include "nbt/nbt.h"
 #include "windows/window.h"
 #include "server/crafting/crafting.h"
+#include "util/math.h"
 
 #include <math.h>
 
@@ -435,26 +436,35 @@ int packet_click_window(struct client *client, bedrock_packet *p)
 			{
 				/* Spawn dropped item */
 				struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
-				struct column *col;
+				struct column *column;
+				struct item *item;
 
-				di->item = item_find_or_create(client->drag_data.stack.id);
+				item = item_find_or_create(client->drag_data.stack.id);
+
+				di->item = item;
 				di->count = client->drag_data.stack.count;
 				di->data = client->drag_data.stack.metadata;
-				di->x = client->x;
-				di->y = client->y;
-				di->z = client->z;
 
-				// XXX put in the direction the user is facing
-				di->x += rand() % 4;
-				di->z += rand() % 4;
+				di->p.id = ++entity_id;
 
-				col = find_column_from_world_which_contains(client->world, di->x, di->z);
-				if (col != NULL)
-					column_add_item(client->column, di);
-				else
+				math_unit_vector(client->yaw, client->pitch, &di->p.velocity.x, &di->p.velocity.y, &di->p.velocity.z);
+
+				physics_item_initialize(di, client->x + di->p.velocity.x, client->y + BEDROCK_PLAYER_HEIGHT + di->p.velocity.y, client->z + di->p.velocity.z);
+
+				column = find_column_from_world_which_contains(client->world, di->p.pos.x, di->p.pos.z);
+				if (column == NULL)
+				{
 					bedrock_free(di);
+				}
+				else
+				{
+					di->p.column = column;
 
-				bedrock_log(LEVEL_DEBUG, "click window: %s drops %d blocks of %s", client->name, client->drag_data.stack.count, item_find_or_create(client->drag_data.stack.id)->name);
+					column_add_item(column, di);
+					physics_add(column, &di->p);
+				}
+
+				bedrock_log(LEVEL_DEBUG, "click window: %s drops %d blocks of %s", client->name, client->drag_data.stack.count, item->name);
 
 				/* Zero drag state */
 				client->drag_data.stack.id = 0;

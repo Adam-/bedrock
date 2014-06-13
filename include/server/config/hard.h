@@ -37,6 +37,8 @@
 #define BEDROCK_CHUNKS_PER_COLUMN  16
 /* The number of columns on the side of a region. Square for (max) columns per region. */
 #define BEDROCK_COLUMNS_PER_REGION 32
+/* Max world height */
+#define BEDROCK_MAX_HEIGHT (BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_CHUNKS_PER_COLUMN)
 
 #define BEDROCK_BLOCK_LENGTH BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK
 #define BEDROCK_DATA_LENGTH BEDROCK_BLOCK_LENGTH / 2
@@ -66,6 +68,11 @@
 #define BEDROCK_PLAYER_HEIGHT 1.65
 
 typedef uint32_t packet_id;
+
+/* Acceleration due to gravity, drag, and terminal velocity of items */
+#define BEDROCK_ITEM_AG -0.04
+#define BEDROCK_ITEM_DRAG 0.02
+#define BEDROCK_ITEM_TV -1.96
 
 #endif // SERVER_CONFIG_HARD_H
 

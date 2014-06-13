@@ -879,20 +879,20 @@ void client_update_position(struct client *client, double x, double y, double z,
 		{
 			struct dropped_item *di = node->data;
 
-			if (abs(x - di->x) <= 1 && abs(y - di->y) <= 1 && abs(z - di->z) <= 1 && client_can_add_inventory_item(client, di->item))
+			if (abs(x - di->p.pos.x) <= 1 && abs(y - di->p.pos.y) <= 1 && abs(z - di->p.pos.z) <= 1 && client_can_add_inventory_item(client, di->item))
 			{
 				while (di->count && client_add_inventory_item(client, di->item))
 					--di->count;
 
 				if (!di->count)
 				{
-					bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %f, %f, %f", client->name, di->item->name, di->x, di->y, di->z);
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up item %s at %f, %f, %f", client->name, di->item->name, di->p.pos.x, di->p.pos.y, di->p.pos.z);
 					packet_send_collect_item(client, di);
 					column_free_dropped_item(di);
 				}
 				else
 				{
-					bedrock_log(LEVEL_DEBUG, "client: %s picks up all but %d item %s at %f, %f, %f", client->name, di->count, di->item->name, di->x, di->y, di->z);
+					bedrock_log(LEVEL_DEBUG, "client: %s picks up all but %d item %s at %f, %f, %f", client->name, di->count, di->item->name, di->p.pos.x, di->p.pos.y, di->p.pos.z);
 				}
 			}
 		}

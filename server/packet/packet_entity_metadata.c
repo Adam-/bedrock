@@ -50,7 +50,7 @@ void packet_send_entity_metadata_slot(struct client *client, struct dropped_item
 
 		packet_init(&packet, SERVER_ENTITY_METADATA);
 
-		packet_pack_int(&packet, &di->eid, sizeof(di->eid));
+		packet_pack_int(&packet, &di->p.id, sizeof(di->p.id));
 		packet_pack_int(&packet, &header, sizeof(header));
 		packet_pack_slot(&packet, &stack);
 		packet_pack_int(&packet, &footer, sizeof(footer));

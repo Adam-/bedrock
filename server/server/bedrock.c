@@ -64,6 +64,7 @@ static void update_time()
 		}
 
 		furnace_tick(tick_diff);
+		physics_process(tick_diff);
 	}
 }
 

@@ -19,11 +19,14 @@ void simple_drop(struct client *client, struct chunk *chunk, int32_t x, uint8_t 
 	di->item = item_find_or_create(block->item.id);
 	di->count = 1;
 	di->data = 0;
-	di->x = x;
-	di->y = y;
-	di->z = z;
+
+	di->p.id = ++entity_id;
+	di->p.column = chunk->column;
+
+	physics_item_initialize(di, x, y, z);
 
 	column_add_item(chunk->column, di);
+	physics_add(chunk->column, &di->p);
 }
 
 static void block_free(struct block *b)

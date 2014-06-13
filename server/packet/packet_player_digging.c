@@ -5,6 +5,7 @@
 #include "blocks/blocks.h"
 #include "nbt/nbt.h"
 #include "windows/window.h"
+#include "util/math.h"
 
 static struct item *get_weilded_item(struct client *client)
 {
@@ -185,6 +186,7 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 
 			if (bedrock_time < client->digging_data.end)
 			{
+				bedrock_log(LEVEL_DEBUG, "player digging: %s is digging too fast! Expected to end at %ld, but now it is %ld", client->name, client->digging_data.end, bedrock_time);
 				packet_send_block_change(client, x, y, z, *block_id, 0);
 				return ERROR_OK;
 			}
@@ -232,24 +234,32 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		if (weilded_item->count)
 		{
 			struct dropped_item *di = bedrock_malloc(sizeof(struct dropped_item));
-			struct column *col;
+			struct column *column;
 
 			di->item = item_find_or_create(weilded_item->id);
 			di->count = 1;
 			di->data = weilded_item->metadata;
-			di->x = client->x;
-			di->y = client->y;
-			di->z = client->z;
 
-			// XXX put in the direction the user is facing
-			di->x += rand() % 4;
-			di->z += rand() % 4;
+			di->p.id = ++entity_id;
 
-			col = find_column_from_world_which_contains(client->world, di->x, di->z);
-			if (col != NULL)
-				column_add_item(client->column, di);
-			else
+			math_unit_vector(client->yaw, client->pitch, &di->p.velocity.x, &di->p.velocity.y, &di->p.velocity.z);
+
+			physics_item_initialize(di, client->x + di->p.velocity.x, client->y + BEDROCK_PLAYER_HEIGHT + di->p.velocity.y, client->z + di->p.velocity.z);
+
+			/* Now that we have the starting positiion for this item, find the column it is in */
+			column = find_column_from_world_which_contains(client->world, di->p.pos.x, di->p.pos.z);
+			if (column == NULL)
+			{
+				/* Throwing item off of the world */
 				bedrock_free(di);
+			}
+			else
+			{
+				di->p.column = column;
+
+				column_add_item(column, di);
+				physics_add(column, &di->p);
+			}
 
 			bedrock_log(LEVEL_DEBUG, "player digging: %s drops a block of %s", client->name, item_find_or_create(weilded_item->id)->name);
 
