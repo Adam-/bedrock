@@ -1,14 +1,17 @@
 #include "util/util.h"
 #include "util/uuid.h"
+#include <openssl/md5.h>
 
-void uuid_v3_generate(struct uuid *uuid)
+void uuid_v3_from_name(struct uuid *uuid, const char *name)
 {
-	int i;
+	MD5_CTX ctx;
 
-	for (i = 0; i < UUID_LEN; ++i)
-		uuid->u[i] = rand();
+	MD5_Init(&ctx);
+	MD5_Update(&ctx, name, strlen(name));
+	MD5_Final(uuid->u, &ctx);
+
 	uuid->u[6] = 0x30 | (uuid->u[6] & 0xF);
-	uuid->u[8] = 0xB0 | (uuid->u[8] & 0xF);
+	uuid->u[8] = 0x80 | (uuid->u[8] & 0x3F);
 }
 
 const char *uuid_to_string(struct uuid *uuid)

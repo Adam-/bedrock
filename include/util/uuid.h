@@ -7,5 +7,5 @@ struct uuid
 	unsigned char u[UUID_LEN];
 };
 
-extern void uuid_v3_generate(struct uuid *uuid);
+extern void uuid_v3_from_name(struct uuid *uuid, const char *name);
 extern const char *uuid_to_string(struct uuid *uuid);
