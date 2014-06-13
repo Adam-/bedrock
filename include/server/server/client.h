@@ -82,6 +82,7 @@ struct client
 	struct world *world;          /* world this player is in */
 	struct column *column;        /* column this player is in, can be NULL if it an unloaded column! */
 
+	uint8_t view_distance; /* how far the player can see */
 	bedrock_list columns;                 /* columns this player knows about */
 
 	uint64_t ping_time_sent;              /* time keepalive was sent */

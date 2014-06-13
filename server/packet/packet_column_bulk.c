@@ -26,7 +26,6 @@ static void packet_column_bulk_send_players(struct client *client, struct column
 		{
 			/* Send this client */
 			packet_send_spawn_player(client, c);
-			packet_send_spawn_player(c, client);
 		}
 	}
 }

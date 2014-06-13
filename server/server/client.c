@@ -38,6 +38,7 @@ struct client *client_create()
 	client->id = ++entity_id;
 	client->state = STATE_UNAUTHENTICATED;
 	client->out_buffer.free = (bedrock_free_func) bedrock_buffer_free;
+	client->view_distance = BEDROCK_DEFAULT_VIEW_LENGTH;
 	bedrock_list_add(&client_list, client);
 	return client;
 }
@@ -669,6 +670,9 @@ bool client_add_inventory_item(struct client *client, struct item *item)
 
 static void client_update_column(struct client *client, packet_column_bulk *columns, struct column *column)
 {
+	if (column == NULL || bedrock_list_has_data(&client->columns, column))
+		return;
+
 	bedrock_log(LEVEL_COLUMN, "client: Allocating column %d, %d for %s", column->x, column->z, client->name);
 
 	packet_column_bulk_add(client, columns, column);
@@ -697,7 +701,7 @@ void client_update_columns(struct client *client)
 	{
 		c = node->data;
 
-		if (abs(c->x - player_x) > BEDROCK_VIEW_LENGTH || abs(c->z - player_z) > BEDROCK_VIEW_LENGTH)
+		if (abs(c->x - player_x) > client->view_distance || abs(c->z - player_z) > client->view_distance)
 		{
 			bedrock_list_del_node(&client->columns, node);
 			bedrock_free(node);
@@ -735,7 +739,7 @@ void client_update_columns(struct client *client)
 				finish = true;
 		}
 
-	for (i = 1; i < BEDROCK_VIEW_LENGTH; ++i)
+	for (i = 1; i < client->view_distance; ++i)
 	{
 		int j;
 
@@ -745,9 +749,6 @@ void client_update_columns(struct client *client)
 			region = find_region_which_contains(client->world, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z + (i * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z + (i * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL || bedrock_list_has_data(&client->columns, c))
-				continue;
 
 			client_update_column(client, &columns, c);
 		}
@@ -759,9 +760,6 @@ void client_update_columns(struct client *client)
 			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, client->x + (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 
-			if (c == NULL || bedrock_list_has_data(&client->columns, c))
-				continue;
-
 			client_update_column(client, &columns, c);
 		}
 
@@ -772,9 +770,6 @@ void client_update_columns(struct client *client)
 			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, client->x + (j * BEDROCK_BLOCKS_PER_CHUNK), client->z - (i * BEDROCK_BLOCKS_PER_CHUNK));
 
-			if (c == NULL || bedrock_list_has_data(&client->columns, c))
-				continue;
-
 			client_update_column(client, &columns, c);
 		}
 
@@ -784,9 +779,6 @@ void client_update_columns(struct client *client)
 			region = find_region_which_contains(client->world, client->x - (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
 			bedrock_assert(region != NULL, continue);
 			c = find_column_which_contains(region, client->x - (i * BEDROCK_BLOCKS_PER_CHUNK), client->z + (j * BEDROCK_BLOCKS_PER_CHUNK));
-
-			if (c == NULL || bedrock_list_has_data(&client->columns, c))
-				continue;
 
 			client_update_column(client, &columns, c);
 		}
@@ -856,7 +848,47 @@ void client_update_position(struct client *client, double x, double y, double z,
 	if (!update_loc && !update_rot)
 		return;
 
-	if (client->column != NULL)
+	if (update_col)
+	{
+		struct column *oldc = client->column, *newc;
+		client_update_columns(client);
+		newc = client->column;
+
+		if (oldc != NULL)
+		{
+			LIST_FOREACH(&oldc->players, node)
+			{
+				struct client *c = node->data;
+				bool sees_new = newc && bedrock_list_has_data(&c->columns, newc);
+
+				if (sees_new)
+				{
+					packet_send_entity_teleport(c, client);
+
+					if (update_rot)
+						packet_send_entity_head_look(c, client);
+				}
+				else
+				{
+					packet_send_destroy_entity_player(c, client); 
+				}
+			}
+		}
+
+		if (newc != NULL)
+		{
+			LIST_FOREACH(&newc->players, node)
+			{
+				struct client *c = node->data;
+				bool sees_old = oldc && bedrock_list_has_data(&c->columns, oldc);
+
+				if (!sees_old)
+					packet_send_spawn_player(c, client);
+			}
+		}
+	}
+	else if (client->column != NULL)
+	{
 		LIST_FOREACH(&client->column->players, node)
 		{
 			struct client *c = node->data;
@@ -869,9 +901,7 @@ void client_update_position(struct client *client, double x, double y, double z,
 			if (update_rot)
 				packet_send_entity_head_look(c, client);
 		}
-
-	if (update_col)
-		client_update_columns(client);
+	}
 
 	if (client->column != NULL)
 		/* Check if this player should pick up any dropped items near them */
@@ -966,4 +996,16 @@ void client_finish_login_sequence(struct client *client)
 	oper = oper_find(client->name);
 	if (oper != NULL && *oper->password == 0)
 		client->oper = oper;
+
+	/* spawn player to the other players */
+	if (client->column != NULL)
+		LIST_FOREACH(&client->column->players, node)
+		{
+			struct client *c = node->data;
+
+			if (c == client)
+				continue;
+
+			packet_send_spawn_player(c, client);
+		}
 }

@@ -1,7 +1,7 @@
 #include "server/client.h"
 #include "server/packet.h"
 
-int packet_client_settings(struct client bedrock_attribute_unused *client, bedrock_packet *packet)
+int packet_client_settings(struct client *client, bedrock_packet *packet)
 {
 	char locale[BEDROCK_MAX_STRING_LENGTH];
 	uint8_t view_distance, chat_flags, unused, difficulty, cape;
@@ -12,6 +12,14 @@ int packet_client_settings(struct client bedrock_attribute_unused *client, bedro
 	packet_read_int(packet, &unused, sizeof(unused));
 	packet_read_int(packet, &difficulty, sizeof(difficulty));
 	packet_read_int(packet, &cape, sizeof(cape));
+
+	if (packet->error == ERROR_OK)
+	{
+		if (view_distance > BEDROCK_MAX_VIEW_LENGTH)
+			return ERROR_NOT_ALLOWED;
+
+		client->view_distance = view_distance;
+	}
 
 	return ERROR_OK;
 }

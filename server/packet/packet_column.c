@@ -11,7 +11,7 @@ static void packet_column_remove_players(struct client *client, struct column *c
 {
 	bedrock_node *node;
 
-	/* This column is going away, find players in this column */
+	/* column goes away to client, so despawn any players in the column to them */
 	LIST_FOREACH(&column->players, node)
 	{
 		struct client *cl = node->data;
@@ -19,9 +19,8 @@ static void packet_column_remove_players(struct client *client, struct column *c
 		/* We only want players *in* this column not *near* this column */
 		if (cl->column == column)
 		{
-			/* Remove these clients from each other */
+			/* remove cl from clients view */
 			packet_send_destroy_entity_player(client, cl);
-			packet_send_destroy_entity_player(cl, client);
 		}
 	}
 }

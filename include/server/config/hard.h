@@ -13,8 +13,10 @@
 /* Max username length (with trailing \0), is there a standard for this? */
 #define BEDROCK_USERNAME_MAX 17
 
-/* The number of chunks around the player to send to them */
-#define BEDROCK_VIEW_LENGTH 10
+/* The maximum number of columns a user may see in any direction */
+#define BEDROCK_MAX_VIEW_LENGTH 16
+/* Default view length */
+#define BEDROCK_DEFAULT_VIEW_LENGTH 10
 
 /* Protocol version we support */
 #define BEDROCK_PROTOCOL_VERSION 5
