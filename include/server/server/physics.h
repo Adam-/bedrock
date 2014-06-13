@@ -56,6 +56,7 @@ struct projectile
 };
 
 extern void physics_add(struct column *column, struct projectile *);
+extern void physics_remove(struct projectile *p);
 extern void physics_process(long ticks);
 
 extern void projectile_update(struct projectile *p, void *data);

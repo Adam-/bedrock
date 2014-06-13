@@ -1,8 +1,9 @@
 #include "server/physics.h"
 #include "server/column.h"
 #include "server/client.h"
+#include "server/packets.h"
 
-void projectile_update(struct projectile *p, void *data)
+void projectile_update(struct projectile *p, void bedrock_attribute_unused *data)
 {
 	bedrock_node *node;
 
@@ -15,7 +16,7 @@ void projectile_update(struct projectile *p, void *data)
 	}
 }
 
-void projectile_move_column(struct projectile *p, struct column *oldc, struct column *newc, void *data)
+void projectile_move_column(struct projectile *p, struct column *oldc, struct column *newc, void bedrock_attribute_unused *data)
 {
 	bedrock_node *node;
 
@@ -47,15 +48,15 @@ void projectile_move_column(struct projectile *p, struct column *oldc, struct co
 	}
 }
 
-void projectile_collide(struct projectile *p, uint8_t *block, void *data)
+void projectile_collide(struct projectile bedrock_attribute_unused *p, uint8_t bedrock_attribute_unused *block, void bedrock_attribute_unused *data)
 {
 }
 
-void projectile_on_new_client(struct projectile *p, struct client *client, void *data)
+void projectile_on_new_client(struct projectile bedrock_attribute_unused *p, struct client bedrock_attribute_unused *client, void bedrock_attribute_unused *data)
 {
 }
 
-void projectile_destroy(struct projectile *p, void *data)
+void projectile_destroy(struct projectile *p, void bedrock_attribute_unused *data)
 {
 	bedrock_node *node;
 
