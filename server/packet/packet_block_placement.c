@@ -15,16 +15,15 @@ enum
 	UP_Z,
 	DOWN_X,
 	UP_X,
-	UPDATE = 0xFF
+	UPDATE = -1
 };
 
 int packet_block_placement(struct client *client, bedrock_packet *p)
 {
-	int32_t x, z;
-	uint8_t y;
-	uint8_t d;
+	struct position pos;
+	int8_t d;
 	struct item_stack slot_data;
-	uint8_t cursor_x, cursor_y, cursor_z;
+	int8_t cursor_x, cursor_y, cursor_z;
 
 	int32_t real_x, real_z;
 	uint8_t real_y;
@@ -40,21 +39,19 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 	bedrock_node *node;
 	struct tile_entity *entity;
 
-	packet_read_int(p, &x, sizeof(x));
-	packet_read_int(p, &y, sizeof(y));
-	packet_read_int(p, &z, sizeof(z));
-	packet_read_int(p, &d, sizeof(d));
+	packet_read_position(p, &pos);
+	packet_read_byte(p, &d);
 	packet_read_slot(p, &slot_data);
-	packet_read_int(p, &cursor_x, sizeof(cursor_x));
-	packet_read_int(p, &cursor_y, sizeof(cursor_y));
-	packet_read_int(p, &cursor_z, sizeof(cursor_z));
+	packet_read_byte(p, &cursor_x);
+	packet_read_byte(p, &cursor_y);
+	packet_read_byte(p, &cursor_z);
 
 	if (p->error)
 		return p->error;
 
-	real_x = x;
-	real_y = y;
-	real_z = z;
+	real_x = pos.x;
+	real_y = pos.y;
+	real_z = pos.z;
 
 	switch (d)
 	{
@@ -97,16 +94,16 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 			return ERROR_NOT_ALLOWED;
 	}
 
-	if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
+	if (abs(client->x - pos.x) > 6 || abs(client->y - pos.y) > 6 || abs(client->z - pos.z) > 6)
 		return ERROR_NOT_ALLOWED;
 
 	// They are building onto a block in this chunk
-	target_chunk = find_chunk_which_contains(client->world, x, y, z);
+	target_chunk = find_chunk_which_contains(client->world, pos.x, pos.y, pos.z);
 	if (target_chunk == NULL)
 		return ERROR_UNEXPECTED;
 
 	// They are building on to this block
-	placed_on = chunk_get_block(target_chunk, x, y, z);
+	placed_on = chunk_get_block(target_chunk, pos.x, pos.y, pos.z);
 	if (placed_on == NULL)
 		return ERROR_NOT_ALLOWED;
 
@@ -122,7 +119,7 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 		return ERROR_OK;
 	}
 	
-	entity = column_find_tile_entity(target_chunk->column, ITEM_NONE, x, y, z);
+	entity = column_find_tile_entity(target_chunk->column, ITEM_NONE, pos.x, pos.y, pos.z);
 	if (entity != NULL)
 	{
 		bedrock_log(LEVEL_DEBUG, "player building: %s operates entity %s at %d, %d, %d", client->name, item_find_or_create(entity->blockid)->name, real_x, real_y, real_z);
@@ -150,7 +147,7 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 
 	if ((item->flags & ITEM_FLAG_BLOCK) == 0)
 	{
-		bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, weilded_item->id, x, y, z, d);
+		bedrock_log(LEVEL_DEBUG, "player building: %s is trying to place unknown or non-placeable block %d at %d,%d,%d, direction %d", client->name, weilded_item->id, pos.x, pos.y, pos.z, d);
 
 		client_add_inventory_item(client, item);
 		packet_send_block_change(client, real_x, real_y, real_z, BLOCK_AIR, 0);
@@ -158,7 +155,7 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 		return ERROR_OK;
 	}
 
-	bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, x, y, z, d);
+	bedrock_log(LEVEL_DEBUG, "player building: %s is placing block of type %s at %d,%d,%d, direction %d", client->name, item->name, pos.x, pos.y, pos.z, d);
 
 	real_chunk = find_chunk_which_contains(client->world, real_x, real_y, real_z);
 	if (real_chunk == NULL)
@@ -166,7 +163,7 @@ int packet_block_placement(struct client *client, bedrock_packet *p)
 		struct column *col;
 
 		// If we can't find the new chunk it must be an up/down direction, not sideways
-		bedrock_assert(x == real_x && z == real_z, return ERROR_NOT_ALLOWED);
+		bedrock_assert(pos.x == real_x && pos.z == real_z, return ERROR_NOT_ALLOWED);
 
 		col = find_column_which_contains(find_region_which_contains(client->world, real_x, real_z), real_x, real_z);
 		bedrock_assert(col != NULL, return ERROR_NOT_ALLOWED);

@@ -4,21 +4,21 @@
 int packet_client_settings(struct client *client, bedrock_packet *packet)
 {
 	char locale[BEDROCK_MAX_STRING_LENGTH];
-	uint8_t view_distance, chat_flags, unused, difficulty, cape;
+	bool chat_colors;
+	int8_t view_distance, chat_flags, displayed_skin_parts;
 
 	packet_read_string(packet, locale, sizeof(locale));
-	packet_read_int(packet, &view_distance, sizeof(view_distance));
-	packet_read_int(packet, &chat_flags, sizeof(chat_flags));
-	packet_read_int(packet, &unused, sizeof(unused));
-	packet_read_int(packet, &difficulty, sizeof(difficulty));
-	packet_read_int(packet, &cape, sizeof(cape));
+	packet_read_byte(packet, &view_distance);
+	packet_read_byte(packet, &chat_flags);
+	packet_read_bool(packet, &chat_colors);
+	packet_read_byte(packet, &displayed_skin_parts);
 
 	if (packet->error == ERROR_OK)
 	{
-		if (view_distance > BEDROCK_MAX_VIEW_LENGTH)
-			return ERROR_NOT_ALLOWED;
+		//if (view_distance > BEDROCK_MAX_VIEW_LENGTH)
+		//	return ERROR_NOT_ALLOWED;
 
-		client->view_distance = view_distance;
+		client->view_distance = 8;//view_distance;
 	}
 
 	return ERROR_OK;

@@ -11,7 +11,7 @@ int packet_held_item_change(struct client *client, bedrock_packet *p)
 	struct item_stack *stack;
 	struct item *item;
 
-	packet_read_int(p, &client->selected_slot, sizeof(client->selected_slot));
+	packet_read_short(p, &client->selected_slot);
 
 	if (p->error || client->selected_slot < 0 || client->selected_slot >= INVENTORY_HOTBAR_SIZE)
 		return ERROR_UNEXPECTED;

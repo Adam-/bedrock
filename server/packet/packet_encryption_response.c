@@ -6,23 +6,23 @@
 
 int packet_encryption_response(struct client *client, bedrock_packet *p)
 {
-	uint16_t shared_secret_len, verify_token_len;
+	int16_t shared_secret_len, verify_token_len;
 	unsigned char shared_secret[512], verify_token[512];
 	unsigned char decrypted_shared_secret[512], decrypted_verify_token[512];
 	int decrypted_shared_secret_len;
 	static const EVP_CIPHER *cipher;
 
-	packet_read_int(p, &shared_secret_len, sizeof(shared_secret_len));
+	packet_read_short(p, &shared_secret_len);
 	if (p->error)
 		return p->error;
-	if (shared_secret_len > sizeof(shared_secret))
+	if (shared_secret_len < 0 || (uint16_t) shared_secret_len > sizeof(shared_secret))
 		return ERROR_NOT_ALLOWED;
 	packet_read(p, shared_secret, shared_secret_len);
 
-	packet_read_int(p, &verify_token_len, sizeof(verify_token_len));
+	packet_read_short(p, &verify_token_len);
 	if (p->error)
 		return p->error;
-	if (verify_token_len > sizeof(verify_token))
+	if (verify_token_len < 0 || (uint16_t) verify_token_len > sizeof(verify_token))
 		return ERROR_NOT_ALLOWED;
 	packet_read(p, verify_token, verify_token_len);
 	if (p->error)

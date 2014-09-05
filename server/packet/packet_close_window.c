@@ -4,9 +4,9 @@
 
 int packet_close_window(struct client *client, bedrock_packet *p)
 {
-	uint8_t window;
+	int8_t window;
 
-	packet_read_int(p, &window, sizeof(window));
+	packet_read_byte(p, &window);
 
 	if (p->error || client->window_data.id != window)
 		return ERROR_UNEXPECTED;

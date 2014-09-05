@@ -15,13 +15,13 @@ enum
 
 int packet_entity_action(struct client *client, bedrock_packet *p)
 {
-	uint32_t eid;
-	uint8_t aid;
-	int32_t unknown;
+	int32_t eid;
+	int8_t aid;
+	int32_t jump_boost;
 
-	packet_read_int(p, &eid, sizeof(eid));
-	packet_read_int(p, &aid, sizeof(aid));
-	packet_read_int(p, &unknown, sizeof(unknown));
+	packet_read_varint(p, &eid);
+	packet_read_byte(p, &aid);
+	packet_read_varint(p, &jump_boost);
 
 	if (p->error)
 		return p->error;

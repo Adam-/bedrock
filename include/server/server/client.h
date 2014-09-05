@@ -59,7 +59,7 @@ struct client
 
 	bedrock_list out_buffer;              /* list of packets to send, these are already encrypted! */
 
-	uint32_t id;                         /* unique entity id, shared across players and NPCs */
+	int32_t id;                           /* unique entity id, shared across players and NPCs */
 	enum client_authentication_state state;
 
 
@@ -86,7 +86,7 @@ struct client
 	bedrock_list columns;                 /* columns this player knows about */
 
 	uint64_t ping_time_sent;              /* time keepalive was sent */
-	uint32_t ping_id;                     /* ping id sent */
+	int32_t ping_id;                      /* ping id sent */
 	uint16_t ping;                        /* ping in ms */
 
 	enum client_entity_action action;  /* action the player is doing */

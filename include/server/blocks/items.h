@@ -199,7 +199,7 @@ struct item
 struct item_stack
 {
 	int16_t id;
-	uint8_t count;
+	int8_t count;
 	int16_t metadata;
 };
 

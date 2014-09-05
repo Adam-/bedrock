@@ -7,8 +7,8 @@ void packet_send_time(struct client *client)
 
 	packet_init(&packet, SERVER_TIME);
 
-	packet_pack_int(&packet, &client->world->creation, sizeof(client->world->creation));
-	packet_pack_int(&packet, &client->world->time, sizeof(client->world->time));
+	packet_pack_long(&packet, client->world->creation);
+	packet_pack_long(&packet, client->world->time);
 
 	client_send_packet(client, &packet);
 }

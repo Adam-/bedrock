@@ -72,6 +72,7 @@ void packet_send_chat_message(struct client *client, const char *buf, ...)
 
 	packet_init(&packet, SERVER_CHAT_MESSAGE);
 	packet_pack_string(&packet, c);
+	packet_pack_byte(&packet, 0);
 	client_send_packet(client, &packet);
 
 	free(c);

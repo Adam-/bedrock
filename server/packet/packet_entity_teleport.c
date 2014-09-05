@@ -17,12 +17,13 @@ void packet_send_entity_teleport(struct client *client, struct client *targ)
 
 	packet_init(&packet, SERVER_ENTITY_TELEPORT);
 
-	packet_pack_int(&packet, &targ->id, sizeof(targ->id));
-	packet_pack_int(&packet, &a_x, sizeof(a_x));
-	packet_pack_int(&packet, &a_y, sizeof(a_y));
-	packet_pack_int(&packet, &a_z, sizeof(a_z));
-	packet_pack_int(&packet, &new_y, sizeof(new_y));
-	packet_pack_int(&packet, &new_p, sizeof(new_p));
+	packet_pack_varint(&packet, targ->id);
+	packet_pack_int(&packet, a_x);
+	packet_pack_int(&packet, a_y);
+	packet_pack_int(&packet, a_z);
+	packet_pack_byte(&packet, new_y);
+	packet_pack_byte(&packet, new_p);
+	packet_pack_bool(&packet, targ->on_ground);
 
 	client_send_packet(client, &packet);
 }
@@ -42,12 +43,13 @@ void packet_send_entity_teleport_projectile(struct client *client, struct projec
 
 	packet_init(&packet, SERVER_ENTITY_TELEPORT);
 
-	packet_pack_int(&packet, &p->id, sizeof(p->id));
-	packet_pack_int(&packet, &a_x, sizeof(a_x));
-	packet_pack_int(&packet, &a_y, sizeof(a_y));
-	packet_pack_int(&packet, &a_z, sizeof(a_z));
-	packet_pack_int(&packet, &new_y, sizeof(new_y));
-	packet_pack_int(&packet, &new_p, sizeof(new_p));
+	packet_pack_varint(&packet, p->id);
+	packet_pack_int(&packet, a_x);
+	packet_pack_int(&packet, a_y);
+	packet_pack_int(&packet, a_z);
+	packet_pack_byte(&packet, new_y);
+	packet_pack_byte(&packet, new_p);
+	packet_pack_bool(&packet, false); // XXX ?
 
 	client_send_packet(client, &packet);
 }

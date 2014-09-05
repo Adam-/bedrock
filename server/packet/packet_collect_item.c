@@ -14,8 +14,8 @@ void packet_send_collect_item(struct client *client, struct dropped_item *di)
 
 		packet_init(&packet, SERVER_COLLECT_ITEM);
 
-		packet_pack_int(&packet, &di->p.id, sizeof(di->p.id));
-		packet_pack_int(&packet, &client->id, sizeof(client->id));
+		packet_pack_varint(&packet, di->p.id);
+		packet_pack_varint(&packet, client->id);
 
 		client_send_packet(c, &packet);
 	}

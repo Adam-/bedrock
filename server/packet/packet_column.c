@@ -40,26 +40,17 @@ static void packet_column_remove_items(struct client *client, struct column *col
 void packet_send_column_empty(struct client *client, struct column *column)
 {
 	bedrock_packet packet;
-	uint8_t b;
-	uint16_t s;
-	uint32_t i;
 
 	packet_column_remove_players(client, column);
 	packet_column_remove_items(client, column);
 
 	packet_init(&packet, SERVER_MAP_COLUMN);
 
-	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
-	packet_pack_int(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
-	b = 1;
-	packet_pack_int(&packet, &b, sizeof(b)); // Ground up continuous
-
-	s = 0;
-	packet_pack_int(&packet, &s, sizeof(s)); // Primary bitmap
-	packet_pack_int(&packet, &s, sizeof(s)); // Add bitmap
-
-	i = 0;
-	packet_pack_int(&packet, &i, sizeof(i)); // Size
+	packet_pack_integer(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "xPos"), sizeof(uint32_t)); // X
+	packet_pack_integer(&packet, nbt_read(column->data, TAG_INT, 2, "Level", "zPos"), sizeof(uint32_t)); // Z
+	packet_pack_bool(&packet, true); // Ground up continuous
+	packet_pack_short(&packet, 0); // Primary bitmap
+	packet_pack_varint(&packet, 0); // Size
 
 	client_send_packet(client, &packet);
 }

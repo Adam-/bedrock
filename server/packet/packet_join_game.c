@@ -8,21 +8,18 @@ void packet_send_join_game(struct client *client)
 {
 	bedrock_packet packet;
 	int32_t dimension;
-	uint8_t b;
 
 	nbt_copy(client->data, TAG_INT, &dimension, sizeof(dimension), 1, "Dimension");
 
 	packet_init(&packet, SERVER_JOIN_GAME);
 
-	packet_pack_int(&packet, &client->id, sizeof(client->id)); /* Entity ID */
-	b = client->gamemode;
-	packet_pack_int(&packet, &b, sizeof(b));
-	b = dimension;
-	packet_pack_int(&packet, &b, sizeof(b));
-	packet_pack_int(&packet, nbt_read(client->world->data, TAG_BYTE, 2, "Data", "hardcore"), sizeof(uint8_t)); /* hardcore */
-	b = server_maxusers;
-	packet_pack_int(&packet, &b, sizeof(b)); /* Max players */
+	packet_pack_int(&packet, client->id); /* Entity ID */
+	packet_pack_byte(&packet, client->gamemode);
+	packet_pack_byte(&packet, dimension);
+	packet_pack_integer(&packet, nbt_read(client->world->data, TAG_BYTE, 2, "Data", "hardcore"), sizeof(uint8_t)); /* hardcore */
+	packet_pack_byte(&packet, server_maxusers); /* Max players */
 	packet_pack_string(&packet, nbt_read_string(client->world->data, 2, "Data", "generatorName")); /* Level type */
+	packet_pack_bool(&packet, false);
 
 	client_send_packet(client, &packet);
 

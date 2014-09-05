@@ -5,11 +5,13 @@ void packet_send_update_window_property(struct client *client, int8_t window_id,
 {
 	bedrock_packet packet;
 
+#if 0
 	packet_init(&packet, SERVER_UPDATE_WINDOW_PROPERTY);
 
-	packet_pack_int(&packet, &window_id, sizeof(window_id));
-	packet_pack_int(&packet, &property, sizeof(property));
-	packet_pack_int(&packet, &value, sizeof(value));
+	packet_pack_byte(&packet, window_id);
+	packet_pack_short(&packet, property);
+	packet_pack_short(&packet, value);
 
 	client_send_packet(client, &packet);
+#endif
 }

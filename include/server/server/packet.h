@@ -128,6 +128,13 @@ struct client_packet_info
 	int (*handler)(struct client *, bedrock_packet *);
 };
 
+struct position
+{
+	int32_t x;
+	int8_t y;
+	int32_t z;
+};
+
 extern struct client_packet_info client_unknown_packet_handlers[], client_status_packet_handlers[], client_login_packet_handlers[], client_packet_handlers[];
 
 extern void packet_init(bedrock_packet *packet, packet_id id);
@@ -136,18 +143,37 @@ extern void packet_free(bedrock_packet *packet);
 extern int packet_parse(struct client *client, bedrock_packet *packet);
 
 extern void packet_read(bedrock_packet *packet, void *dest, size_t dest_size);
-extern void packet_read_int(bedrock_packet *packet, void *dest, size_t dest_size);
+extern void packet_read_integer(bedrock_packet *packet, void *dest, size_t dest_size);
+
+extern void packet_read_bool(bedrock_packet *packet, bool *);
+extern void packet_read_byte(bedrock_packet *packet, int8_t *);
+extern void packet_read_short(bedrock_packet *packet, int16_t *);
+extern void packet_read_int(bedrock_packet *packet, int32_t *);
+extern void packet_read_long(bedrock_packet *packet, int64_t *);
+extern void packet_read_float(bedrock_packet *packet, float *);
+extern void packet_read_double(bedrock_packet *packet, double *);
+extern void packet_read_string(bedrock_packet *packet, char *dest, size_t dest_size);
 extern void packet_read_varint(bedrock_packet *packet, int32_t *dest);
 extern void packet_read_varuint(bedrock_packet *packet, uint32_t *dest);
-extern void packet_read_string(bedrock_packet *packet, char *dest, size_t dest_size);
 extern void packet_read_slot(bedrock_packet *packet, struct item_stack *stack);
+extern void packet_read_position(bedrock_packet *packet, struct position *);
+extern void packet_read_uuid(bedrock_packet *packet, struct uuid *);
 
 extern void packet_pack(bedrock_packet *packet, const void *data, size_t size);
-extern void packet_pack_int(bedrock_packet *packet, const void *data, size_t size);
-extern void packet_pack_varint(bedrock_packet *packet, int32_t data);
-extern void packet_pack_varuint(bedrock_packet *packet, uint32_t data);
+extern void packet_pack_integer(bedrock_packet *packet, const void *data, size_t size);
+
+extern void packet_pack_bool(bedrock_packet *packet, bool);
+extern void packet_pack_byte(bedrock_packet *packet, int8_t);
+extern void packet_pack_short(bedrock_packet *packet, int16_t);
+extern void packet_pack_int(bedrock_packet *packet, int32_t);
+extern void packet_pack_long(bedrock_packet *packet, int64_t);
+extern void packet_pack_float(bedrock_packet *packet, float);
+extern void packet_pack_double(bedrock_packet *packet, double);
 extern void packet_pack_string(bedrock_packet *packet, const char *string);
 extern void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len);
+extern void packet_pack_varint(bedrock_packet *packet, int32_t data);
+extern void packet_pack_varuint(bedrock_packet *packet, uint32_t data);
 extern void packet_pack_slot(bedrock_packet *packet, struct item_stack *stack);
+extern void packet_pack_position(bedrock_packet *packet, struct position *);
 
 #endif // BEDROCK_SERVER_PACKET_H

@@ -36,11 +36,11 @@ enum
 
 int packet_click_window(struct client *client, bedrock_packet *p)
 {
-	uint8_t window;
+	int8_t window;
 	int16_t slot;
-	uint8_t button;
-	uint16_t action;
-	uint8_t mode;
+	int8_t button;
+	int16_t action;
+	int8_t mode;
 	struct item_stack slot_data;
 	bool ok = true;
 
@@ -51,11 +51,11 @@ int packet_click_window(struct client *client, bedrock_packet *p)
 
 	bool crafting_output = false;
 
-	packet_read_int(p, &window, sizeof(window));
-	packet_read_int(p, &slot, sizeof(slot));
-	packet_read_int(p, &button, sizeof(button));
-	packet_read_int(p, &action, sizeof(action));
-	packet_read_int(p, &mode, sizeof(mode));
+	packet_read_byte(p, &window);
+	packet_read_short(p, &slot);
+	packet_read_byte(p, &button);
+	packet_read_short(p, &action);
+	packet_read_byte(p, &mode);
 	packet_read_slot(p, &slot_data);
 
 	if (p->error)

@@ -3,9 +3,9 @@
 
 int packet_player(struct client *client, bedrock_packet *p)
 {
-	uint8_t on_ground;
+	bool on_ground;
 
-	packet_read_int(p, &on_ground, sizeof(on_ground));
+	packet_read_bool(p, &on_ground);
 
 	if (p->error)
 		return p->error;

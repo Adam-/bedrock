@@ -7,7 +7,7 @@ int packet_creative_inventory_action(struct client *client, bedrock_packet *pack
 	struct item_stack slot, *stack;
 	struct item *item;
 
-	packet_read_int(packet, &id, sizeof(id));
+	packet_read_short(packet, &id);
 	packet_read_slot(packet, &slot);
 
 	if (packet->error)

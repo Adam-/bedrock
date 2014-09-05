@@ -8,8 +8,8 @@ void packet_send_entity_head_look(struct client *client, struct client *target)
 
 	packet_init(&packet, SERVER_ENTITY_HEAD_LOOK);
 
-	packet_pack_int(&packet, &target->id, sizeof(target->id));
-	packet_pack_int(&packet, &new_y, sizeof(new_y));
+	packet_pack_varint(&packet, target->id);
+	packet_pack_byte(&packet, new_y);
 
 	client_send_packet(client, &packet);
 }

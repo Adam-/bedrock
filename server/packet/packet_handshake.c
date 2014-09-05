@@ -14,12 +14,12 @@ int packet_handshake(struct client *client, bedrock_packet *p)
 {
 	int32_t proto;
 	char server_address[BEDROCK_MAX_STRING_LENGTH];
-	uint16_t server_port;
+	int16_t server_port;
 	int32_t state;
 
 	packet_read_varint(p, &proto);
 	packet_read_string(p, server_address, sizeof(server_address));
-	packet_read_int(p, &server_port, sizeof(server_port));
+	packet_read_short(p, &server_port);
 	packet_read_varint(p, &state);
 
 	if (p->error)

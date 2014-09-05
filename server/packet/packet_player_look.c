@@ -4,11 +4,11 @@
 int packet_player_look(struct client *client, bedrock_packet *p)
 {
 	float yaw, pitch;
-	uint8_t on_ground;
+	bool on_ground;
 
-	packet_read_int(p, &yaw, sizeof(yaw));
-	packet_read_int(p, &pitch, sizeof(pitch));
-	packet_read_int(p, &on_ground, sizeof(on_ground));
+	packet_read_float(p, &yaw);
+	packet_read_float(p, &pitch);
+	packet_read_bool(p, &on_ground);
 
 	if (p->error)
 		return p->error;

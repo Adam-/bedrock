@@ -4,17 +4,16 @@
 
 int packet_position_and_look(struct client *client, bedrock_packet *p)
 {
-	double x, y, stance, z;
+	double x, y, z;
 	float yaw, pitch;
-	uint8_t on_ground;
+	bool on_ground;
 
-	packet_read_int(p, &x, sizeof(x));
-	packet_read_int(p, &y, sizeof(y));
-	packet_read_int(p, &stance, sizeof(stance));
-	packet_read_int(p, &z, sizeof(z));
-	packet_read_int(p, &yaw, sizeof(yaw));
-	packet_read_int(p, &pitch, sizeof(pitch));
-	packet_read_int(p, &on_ground, sizeof(on_ground));
+	packet_read_double(p, &x);
+	packet_read_double(p, &y);
+	packet_read_double(p, &z);
+	packet_read_float(p, &yaw);
+	packet_read_float(p, &pitch);
+	packet_read_bool(p, &on_ground);
 
 	if (p->error)
 		return p->error;
@@ -25,7 +24,7 @@ int packet_position_and_look(struct client *client, bedrock_packet *p)
 		return ERROR_OK;
 	}
 
-	client_update_position(client, x, y, z, yaw, pitch, stance, on_ground);
+	client_update_position(client, x, y, z, yaw, pitch, y + 1.62, on_ground); // XXX?
 
 	return ERROR_OK;
 }
@@ -33,17 +32,15 @@ int packet_position_and_look(struct client *client, bedrock_packet *p)
 void packet_send_position_and_look(struct client *client)
 {
 	bedrock_packet packet;
-	double real_y;
 
 	packet_init(&packet, SERVER_PLAYER_POS_LOOK);
 
-	packet_pack_int(&packet, &client->x, sizeof(client->x)); // X
-	real_y = client->y + BEDROCK_PLAYER_HEIGHT;
-	packet_pack_int(&packet, &real_y, sizeof(real_y)); // Y
-	packet_pack_int(&packet, &client->z, sizeof(client->z)); // Z
-	packet_pack_int(&packet, &client->yaw, sizeof(client->yaw)); // Yaw
-	packet_pack_int(&packet, &client->pitch, sizeof(client->pitch)); // Pitch
-	packet_pack_int(&packet, &client->on_ground, sizeof(client->on_ground)); // On ground
+	packet_pack_double(&packet, client->x);
+	packet_pack_double(&packet, client->y + BEDROCK_PLAYER_HEIGHT);
+	packet_pack_double(&packet, client->z);
+	packet_pack_float(&packet, client->yaw);
+	packet_pack_float(&packet, client->pitch);
+	packet_pack_byte(&packet, 0);
 
 	client_send_packet(client, &packet);
 }

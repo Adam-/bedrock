@@ -19,7 +19,7 @@
 #define BEDROCK_DEFAULT_VIEW_LENGTH 10
 
 /* Protocol version we support */
-#define BEDROCK_PROTOCOL_VERSION 5
+#define BEDROCK_PROTOCOL_VERSION 47
 
 /* Size of the initial buffer for clients */
 #define BEDROCK_CLIENT_SEND_SIZE 4096

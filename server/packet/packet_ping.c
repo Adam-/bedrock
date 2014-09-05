@@ -3,16 +3,16 @@
 
 int packet_ping(struct client *client, bedrock_packet *p)
 {
-	uint64_t l;
+	int64_t l;
 	bedrock_packet packet;
 
-	packet_read_int(p, &l, sizeof(l));
+	packet_read_long(p, &l);
 
 	if (p->error)
 		return p->error;
 
 	packet_init(&packet, STATUS_SERVER_PING);
-	packet_pack_int(&packet, &l, sizeof(l));
+	packet_pack_long(&packet, l);
 	client_send_packet(client, &packet);
 
 	return ERROR_OK;

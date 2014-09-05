@@ -13,8 +13,8 @@ void packet_send_entity_equipment(struct client *client, struct client *c, uint1
 
 	packet_init(&packet, SERVER_ENTITY_EQUIPMENT);
 
-	packet_pack_int(&packet, &c->id, sizeof(c->id));
-	packet_pack_int(&packet, &slot, sizeof(slot));
+	packet_pack_varint(&packet, c->id);
+	packet_pack_short(&packet, slot);
 	packet_pack_slot(&packet, &stack);
 
 	client_send_packet(client, &packet);

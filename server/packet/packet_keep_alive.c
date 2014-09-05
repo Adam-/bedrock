@@ -5,9 +5,9 @@
 
 int packet_keep_alive(struct client *client, bedrock_packet *p)
 {
-	uint32_t id;
+	int32_t id;
 
-	packet_read_int(p, &id, sizeof(id));
+	packet_read_varint(p, &id);
 
 	if (p->error)
 		return p->error;
@@ -38,7 +38,7 @@ void packet_send_keep_alive(struct client *client, uint32_t id)
 
 	packet_init(&packet, SERVER_KEEP_ALIVE);
 
-	packet_pack_int(&packet, &id, sizeof(id));
+	packet_pack_varuint(&packet, id);
 
 	client_send_packet(client, &packet);
 

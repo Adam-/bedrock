@@ -13,8 +13,8 @@ void packet_send_set_slot(struct client *client, uint8_t window_id, uint16_t slo
 
 	packet_init(&packet, SERVER_SET_SLOT);
 
-	packet_pack_int(&packet, &window_id, sizeof(window_id));
-	packet_pack_int(&packet, &slot, sizeof(slot));
+	packet_pack_byte(&packet, window_id);
+	packet_pack_short(&packet, slot);
 	packet_pack_slot(&packet, &slot_data);
 
 	client_send_packet(client, &packet);

@@ -13,10 +13,10 @@ void packet_send_encryption_request(struct client *client)
 
 	packet_pack_string(&packet, "-"); // server ID
 
-	packet_pack_int(&packet, &pubkey_len, sizeof(pubkey_len));
+	packet_pack_varint(&packet, pubkey_len);
 	packet_pack(&packet, crypto_pubkey(), pubkey_len);
 
-	packet_pack_int(&packet, &verify_token_length, sizeof(verify_token_length));
+	packet_pack_varint(&packet, verify_token_length);
 	packet_pack(&packet, crypto_auth_token(), BEDROCK_VERIFY_TOKEN_LEN);
 
 	client_send_packet(client, &packet);

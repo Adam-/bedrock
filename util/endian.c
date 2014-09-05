@@ -5,7 +5,7 @@
 static uint16_t endian_test_i = 0x0001;
 static char *endian_test_c = (char *) &endian_test_i;
 
-#define IS_LITTLE_ENDIAN *endian_test_c == 0x01
+#define IS_LITTLE_ENDIAN (*endian_test_c == 0x01)
 
 void convert_endianness(unsigned char *data, size_t size)
 {

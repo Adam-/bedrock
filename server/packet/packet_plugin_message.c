@@ -9,7 +9,7 @@ int packet_plugin_message(struct client bedrock_attribute_unused *client, bedroc
 	int16_t s;
 
 	packet_read_string(p, string, sizeof(string));
-	packet_read_int(p, &s, sizeof(s));
+	s = p->buffer.length - p->offset;
 	while (s > 0)
 	{
 		int len = min(s, (int) sizeof(string));

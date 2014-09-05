@@ -87,30 +87,26 @@ static double calculate_block_time(struct client bedrock_attribute_unused *clien
 
 int packet_player_digging(struct client *client, bedrock_packet *p)
 {
-	uint8_t status;
-	int32_t x;
-	uint8_t y;
-	int32_t z;
-	uint8_t face;
+	int8_t status;
+	struct position pos;
+	int8_t face;
 
-	packet_read_int(p, &status, sizeof(status));
-	packet_read_int(p, &x, sizeof(x));
-	packet_read_int(p, &y, sizeof(y));
-	packet_read_int(p, &z, sizeof(z));
-	packet_read_int(p, &face, sizeof(face));
+	packet_read_byte(p, &status);
+	packet_read_position(p, &pos);
+	packet_read_byte(p, &face);
 
 	if (p->error)
 		return p->error;
 
 	if (status == START_DIGGING)
 	{
-		struct chunk *chunk = find_chunk_which_contains(client->world, x, y, z);
+		struct chunk *chunk = find_chunk_which_contains(client->world, pos.x, pos.y, pos.z);
 		uint8_t *block_id;
 		struct block *block;
 		double delay;
 		struct item *item = get_weilded_item(client);
 
-		if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
+		if (abs(client->x - pos.x) > 6 || abs(client->y - pos.y) > 6 || abs(client->z - pos.z) > 6)
 			return ERROR_NOT_ALLOWED;
 
 		// Reset dig state
@@ -119,13 +115,13 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		if (chunk == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		block_id = chunk_get_block(chunk, x, y, z);
+		block_id = chunk_get_block(chunk, pos.x, pos.y, pos.z);
 		if (block_id == NULL)
 			return ERROR_NOT_ALLOWED;
 
 		block = block_find_or_create(*block_id);
 
-		bedrock_log(LEVEL_DEBUG, "player digging: %s is digging coords %d,%d,%d which is of type %s", client->name, x, y, z, block->item.name);
+		bedrock_log(LEVEL_DEBUG, "player digging: %s is digging coords %d,%d,%d which is of type %s", client->name, pos.x, pos.y, pos.z, block->item.name);
 
 		delay = calculate_block_time(client, block, item);
 
@@ -139,9 +135,9 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		}
 		else
 		{
-			client->digging_data.x = x;
-			client->digging_data.y = y;
-			client->digging_data.z = z;
+			client->digging_data.x = pos.x;
+			client->digging_data.y = pos.y;
+			client->digging_data.z = pos.z;
 			client->digging_data.block_id = block->item.id;
 			client->digging_data.item_id = item->id;
 			client->digging_data.end = bedrock_time + (delay * 1000.0);
@@ -157,37 +153,37 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		bedrock_node *node;
 		int i;
 
-		if (abs(client->x - x) > 6 || abs(client->y - y) > 6 || abs(client->z - z) > 6)
+		if (abs(client->x - pos.x) > 6 || abs(client->y - pos.y) > 6 || abs(client->z - pos.z) > 6)
 			return ERROR_NOT_ALLOWED;
 
-		chunk = find_chunk_which_contains(client->world, x, y, z);
+		chunk = find_chunk_which_contains(client->world, pos.x, pos.y, pos.z);
 		if (chunk == NULL)
 			return ERROR_NOT_ALLOWED;
 
-		block_id = chunk_get_block(chunk, x, y, z);
+		block_id = chunk_get_block(chunk, pos.x, pos.y, pos.z);
 		if (block_id == NULL)
 			return ERROR_NOT_ALLOWED;
 
 		if (client->gamemode == GAMEMODE_CREATIVE)
 		{
-			bedrock_log(LEVEL_DEBUG, "player digging: Instant mine for %s at %d,%d,%d", client->name, x, y, z);
+			bedrock_log(LEVEL_DEBUG, "player digging: Instant mine for %s at %d,%d,%d", client->name, pos.x, pos.y, pos.z);
 		}
 		else
 		{
-			if (x != client->digging_data.x || y != client->digging_data.y || z != client->digging_data.z || client->digging_data.end == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
+			if (pos.x != client->digging_data.x || pos.y != client->digging_data.y || pos.z != client->digging_data.z || client->digging_data.end == 0 || client->digging_data.item_id != item->id || client->digging_data.block_id != *block_id)
 			{
 				bedrock_log(LEVEL_DEBUG, "player digging: Mismatch in dig data - saved: X: %d Y: %d Z: %d T: %lu I: %d B: %d - got: X: %d Y: %d Z: %d I: %d B: %d",
 						client->digging_data.x, client->digging_data.y, client->digging_data.z, client->digging_data.end, client->digging_data.item_id, client->digging_data.block_id,
-						x, y, z, item->id, *block_id);
+						pos.x, pos.y, pos.z, item->id, *block_id);
 
-				packet_send_block_change(client, x, y, z, *block_id, 0);
+				packet_send_block_change(client, pos.x, pos.y, pos.z, *block_id, 0);
 				return ERROR_OK;
 			}
 
 			if (bedrock_time < client->digging_data.end)
 			{
 				bedrock_log(LEVEL_DEBUG, "player digging: %s is digging too fast! Expected to end at %ld, but now it is %ld", client->name, client->digging_data.end, bedrock_time);
-				packet_send_block_change(client, x, y, z, *block_id, 0);
+				packet_send_block_change(client, pos.x, pos.y, pos.z, *block_id, 0);
 				return ERROR_OK;
 			}
 		}
@@ -197,16 +193,16 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		column_set_pending(chunk->column, COLUMN_FLAG_DIRTY);
 
 		// This is the height right *above* the highest block
-		height = column_get_height_for(chunk->column, x, z);
-		if (y == *height - 1)
+		height = column_get_height_for(chunk->column, pos.x, pos.z);
+		if (pos.y == *height - 1)
 		{
 			uint8_t *height_block;
 
 			do
-				height_block = column_get_block(chunk->column, x, --(*height) - 1, z);
+				height_block = column_get_block(chunk->column, pos.x, --(*height) - 1, pos.z);
 			while (*height && (height_block == NULL || *height_block == BLOCK_AIR));
 
-			bedrock_log(LEVEL_DEBUG, "player digging: Adjusting height map of %d,%d to %d", x, z, *height);
+			bedrock_log(LEVEL_DEBUG, "player digging: Adjusting height map of %d,%d to %d", pos.x, pos.z, *height);
 		}
 
 		// Notify players in render distance of the column to remove the block
@@ -214,11 +210,11 @@ int packet_player_digging(struct client *client, bedrock_packet *p)
 		{
 			struct client *c = node->data;
 
-			packet_send_block_change(c, x, y, z, BLOCK_AIR, 0);
+			packet_send_block_change(c, pos.x, pos.y, pos.z, BLOCK_AIR, 0);
 		}
 
 		if (block->on_mine != NULL)
-			block->on_mine(client, chunk, x, y, z, block, can_harvest(block, item));
+			block->on_mine(client, chunk, pos.x, pos.y, pos.z, block, can_harvest(block, item));
 
 		// If the chunk is all air delete it;
 		for (i = 0; i < BEDROCK_BLOCKS_PER_CHUNK * BEDROCK_BLOCKS_PER_CHUNK; ++i)

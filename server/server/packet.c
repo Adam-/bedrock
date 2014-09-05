@@ -125,7 +125,12 @@ int packet_parse(struct client *client, bedrock_packet *packet)
 	}
 
 	if (packet->buffer.length < s + length)
+	{
+		bedrock_log(LEVEL_PACKET_DEBUG, "packet: Not enough data yet for 0x%02x, %ld < %ld", id, packet->buffer.length, s + length);
 		return 0;
+	}
+
+	packet->buffer.length = s + length;
 
 	i = handler->handler(client, packet);
 
@@ -140,6 +145,7 @@ int packet_parse(struct client *client, bedrock_packet *packet)
 				error = "unknown error";
 				break;
 			case ERROR_EAGAIN:
+				bedrock_log(LEVEL_PACKET_DEBUG, "packet: EAGAIN for 0x%02x", id);
 				return 0;
 			case ERROR_INVALID_FORMAT:
 				error = "invalid format";
@@ -181,7 +187,7 @@ void packet_read(bedrock_packet *packet, void *dest, size_t dest_size)
 	packet->offset += dest_size;
 }
 
-void packet_read_int(bedrock_packet *packet, void *dest, size_t dest_size)
+void packet_read_integer(bedrock_packet *packet, void *dest, size_t dest_size)
 {
 	if (packet->error)
 		return;
@@ -196,35 +202,39 @@ void packet_read_int(bedrock_packet *packet, void *dest, size_t dest_size)
 	packet->offset += dest_size;
 }
 
-void packet_read_varint(bedrock_packet *packet, int32_t *dest)
+void packet_read_bool(bedrock_packet *packet, bool *b)
 {
-	int i;
-
-	*dest = 0;
-
-	if (packet->error)
-		return;
-	else if (packet->offset >= packet->buffer.length)
-	{
-		packet->error = ERROR_EAGAIN;
-		return;
-	}
-
-	for (i = 0; packet->offset < packet->buffer.length; ++i)
-	{
-		unsigned const char *p = packet->buffer.data + packet->offset++;
-		if (i <= 4)
-			*dest |= (*p & 0x7F) << (7 * i);
-		if (!(*p & 0x80))
-			return;
-	}
-
-	packet->error = ERROR_EAGAIN;
+	packet_read_integer(packet, b, sizeof(uint8_t));
 }
 
-void packet_read_varuint(bedrock_packet *packet, uint32_t *dest)
+void packet_read_byte(bedrock_packet *packet, int8_t *b)
 {
-	packet_read_varint(packet, (int32_t *) dest);
+	packet_read_integer(packet, b, sizeof(uint8_t));
+}
+
+void packet_read_short(bedrock_packet *packet, int16_t *s)
+{
+	packet_read_integer(packet, s, sizeof(int16_t));
+}
+
+void packet_read_int(bedrock_packet *packet, int32_t *i)
+{
+	packet_read_integer(packet, i, sizeof(int32_t));
+}
+
+void packet_read_long(bedrock_packet *packet, int64_t *l)
+{
+	packet_read_integer(packet, l, sizeof(int64_t));
+}
+
+void packet_read_float(bedrock_packet *packet, float *f)
+{
+	packet_read_integer(packet, f, sizeof(float));
+}
+
+void packet_read_double(bedrock_packet *packet, double *d)
+{
+	packet_read_integer(packet, d, sizeof(double));
 }
 
 void packet_read_string(bedrock_packet *packet, char *dest, size_t dest_size)
@@ -270,20 +280,51 @@ void packet_read_string(bedrock_packet *packet, char *dest, size_t dest_size)
 	packet->error = ERROR_UNKNOWN;
 }
 
+void packet_read_varint(bedrock_packet *packet, int32_t *dest)
+{
+	int i;
+
+	*dest = 0;
+
+	if (packet->error)
+		return;
+	else if (packet->offset >= packet->buffer.length)
+	{
+		packet->error = ERROR_EAGAIN;
+		return;
+	}
+
+	for (i = 0; packet->offset < packet->buffer.length; ++i)
+	{
+		unsigned const char *p = packet->buffer.data + packet->offset++;
+		if (i <= 4)
+			*dest |= (*p & 0x7F) << (7 * i);
+		if (!(*p & 0x80))
+			return;
+	}
+
+	packet->error = ERROR_EAGAIN;
+}
+
+void packet_read_varuint(bedrock_packet *packet, uint32_t *dest)
+{
+	packet_read_varint(packet, (int32_t *) dest);
+}
+
 void packet_read_slot(bedrock_packet *packet, struct item_stack *stack)
 {
-	packet_read_int(packet, &stack->id, sizeof(stack->id));
+	packet_read_short(packet, &stack->id);
 	if (packet->error)
 		return;
 	if (stack->id != -1)
 	{
-		int16_t s;
-		packet_read_int(packet, &stack->count, sizeof(stack->count));
-		packet_read_int(packet, &stack->metadata, sizeof(stack->metadata));
-		packet_read_int(packet, &s, sizeof(s));
+		int8_t s;
+		packet_read_byte(packet, &stack->count);
+		packet_read_short(packet, &stack->metadata);
+		packet_read_byte(packet, &s);
 		if (packet->error)
 			return;
-		if (s != -1)
+		if (s != 0)
 			packet->offset += s; // Skip
 	}
 	else
@@ -291,6 +332,35 @@ void packet_read_slot(bedrock_packet *packet, struct item_stack *stack)
 		stack->count = 0;
 		stack->metadata = 0;
 	}
+}
+
+void packet_read_position(bedrock_packet *packet, struct position *pos)
+{
+	int64_t l;
+
+	packet_read_long(packet, &l);
+
+	pos->x = l >> 38;
+	pos->y = l << 26 >> 52;
+	pos->z = l << 38 >> 38;
+}
+
+void packet_read_uuid(bedrock_packet *packet, struct uuid *uid)
+{
+	union
+	{
+		struct
+		{
+			uint64_t h;
+			uint64_t l;
+		} s;
+		struct uuid u;
+	} u;
+
+	packet_read_long(packet, (int64_t *) &u.s.h);
+	packet_read_long(packet, (int64_t *) &u.s.l);
+
+	*uid = u.u;
 }
 
 void packet_pack(bedrock_packet *packet, const void *data, size_t size)
@@ -301,7 +371,7 @@ void packet_pack(bedrock_packet *packet, const void *data, size_t size)
 	packet->offset += size;
 }
 
-void packet_pack_int(bedrock_packet *packet, const void *data, size_t size)
+void packet_pack_integer(bedrock_packet *packet, const void *data, size_t size)
 {
 	size_t old_len;
 
@@ -312,6 +382,60 @@ void packet_pack_int(bedrock_packet *packet, const void *data, size_t size)
 	if (old_len + size == packet->buffer.length)
 		convert_endianness(packet->buffer.data + old_len, size);
 }
+
+void packet_pack_bool(bedrock_packet *packet, bool b)
+{
+	packet_pack_byte(packet, b);
+}
+
+void packet_pack_byte(bedrock_packet *packet, int8_t b)
+{
+	packet_pack_integer(packet, &b, sizeof(b));
+}
+
+void packet_pack_short(bedrock_packet *packet, int16_t s)
+{
+	packet_pack_integer(packet, &s, sizeof(s));
+}
+
+void packet_pack_int(bedrock_packet *packet, int32_t i)
+{
+	packet_pack_integer(packet, &i, sizeof(i));
+}
+
+void packet_pack_long(bedrock_packet *packet, int64_t l)
+{
+	packet_pack_integer(packet, &l, sizeof(l));
+}
+
+void packet_pack_float(bedrock_packet *packet, float f)
+{
+	packet_pack_integer(packet, &f, sizeof(f));
+}
+
+void packet_pack_double(bedrock_packet *packet, double d)
+{
+	packet_pack_integer(packet, &d, sizeof(d));
+}
+
+void packet_pack_string(bedrock_packet *packet, const char *string)
+{
+	bedrock_assert(packet != NULL && string != NULL, return);
+	packet_pack_string_len(packet, string, strlen(string));
+}
+
+void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len)
+{
+	bedrock_assert(packet != NULL && string != NULL, return);
+
+	packet_pack_varuint(packet, len);
+
+	bedrock_buffer_ensure_capacity(&packet->buffer, len);
+	memcpy(packet->buffer.data + packet->buffer.length, string, len); // XXX UTF-8
+	packet->buffer.length += len;
+	packet->offset += len;
+}
+
 
 void packet_pack_varint(bedrock_packet *packet, int32_t data)
 {
@@ -355,33 +479,38 @@ void packet_pack_varuint(bedrock_packet *packet, uint32_t data)
 	packet_pack(packet, outbuf, size);
 }
 
-void packet_pack_string(bedrock_packet *packet, const char *string)
-{
-	bedrock_assert(packet != NULL && string != NULL, return);
-	packet_pack_string_len(packet, string, strlen(string));
-}
-
-void packet_pack_string_len(bedrock_packet *packet, const char *string, uint16_t len)
-{
-	bedrock_assert(packet != NULL && string != NULL, return);
-
-	packet_pack_varuint(packet, len);
-
-	bedrock_buffer_ensure_capacity(&packet->buffer, len);
-	memcpy(packet->buffer.data + packet->buffer.length, string, len); // XXX UTF-8
-	packet->buffer.length += len;
-	packet->offset += len;
-}
-
 void packet_pack_slot(bedrock_packet *packet, struct item_stack *stack)
 {
-	packet_pack_int(packet, &stack->id, sizeof(stack->id));
+	packet_pack_short(packet, stack->id);
 	if (stack->id != -1)
 	{
-		int16_t s = -1;
-		packet_pack_int(packet, &stack->count, sizeof(stack->count));
-		packet_pack_int(packet, &stack->metadata, sizeof(stack->metadata));
-		packet_pack_int(packet, &s, sizeof(s));
+		packet_pack_byte(packet, stack->count);
+		packet_pack_short(packet, stack->metadata);
+		packet_pack_byte(packet, 0);
 	}
+}
+
+void packet_pack_position(bedrock_packet *packet, struct position *pos)
+{
+	int64_t l = (pos->x & 0x3FFFFFF) << 38 | (pos->y & 0xFFF) << 26 | (pos->z & 0x3FFFFFF);
+	packet_pack_long(packet, l);
+}
+
+void packet_pack_uuid(bedrock_packet *packet, struct uuid *uid)
+{
+	union
+	{
+		struct
+		{
+			uint64_t h;
+			uint64_t l;
+		} s;
+		struct uuid u;
+	} u;
+
+	u.u = *uid;
+
+	packet_pack_long(packet, u.s.h);
+	packet_pack_long(packet, u.s.l);
 }
 

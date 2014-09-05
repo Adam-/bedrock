@@ -468,6 +468,8 @@ void client_event_read(evutil_socket_t fd, short bedrock_attribute_unused events
 		client->in_buffer_len -= i;
 
 		packet.offset = 0; // Reset offset
+		packet.buffer.length = client->in_buffer_len;
+
 		bedrock_assert(packet.error == ERROR_OK, ;);
 	}
 }

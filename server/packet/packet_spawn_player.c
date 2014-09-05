@@ -28,24 +28,22 @@ void packet_send_spawn_player(struct client *client, struct client *c)
 	packet_init(&packet, SERVER_SPAWN_PLAYER);
 
 	packet_pack_varuint(&packet, c->id);
-	packet_pack_string(&packet, uuid_to_string(&c->uuid));
-	packet_pack_string(&packet, c->name);
-	packet_pack_varuint(&packet, 0); // data count
-	packet_pack_int(&packet, &abs_x, sizeof(abs_x));
-	packet_pack_int(&packet, &abs_y, sizeof(abs_y));
-	packet_pack_int(&packet, &abs_z, sizeof(abs_z));
-	packet_pack_int(&packet, &y, sizeof(y));
-	packet_pack_int(&packet, &p, sizeof(p));
-	packet_pack_int(&packet, &item->id, sizeof(item->id));
+	packet_pack_uuid(&packet, &c->uuid);
+	packet_pack_int(&packet, abs_x);
+	packet_pack_int(&packet, abs_y);
+	packet_pack_int(&packet, abs_z);
+	packet_pack_byte(&packet, y);
+	packet_pack_byte(&packet, p);
+	packet_pack_short(&packet, item->id);
 
 	// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	{
 		uint8_t health_float = 102;
 		float health = 10;
 		uint8_t b = 127;
-		packet_pack_int(&packet, &health_float, sizeof(health_float));
-		packet_pack_int(&packet, &health, sizeof(health));
-		packet_pack_int(&packet, &b, sizeof(b)); // XXX metadata
+		packet_pack_byte(&packet, health_float);
+		packet_pack_float(&packet, health);
+		packet_pack_byte(&packet, b); // XXX metadata
 	}
 
 	client_send_packet(client, &packet);
